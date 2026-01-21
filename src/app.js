@@ -1,7 +1,11 @@
 const express = require('express');
+const cors = require('cors');
 const characterRoutes = require('./routes/character.routes');
 
 const app = express();
+
+// Activer CORS pour toutes les origines
+app.use(cors());
 
 app.use(express.json());
 
