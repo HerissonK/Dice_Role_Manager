@@ -12,8 +12,10 @@ class Character {
       classId,
       speciesId,
       backgroundId,
-      abilities
+      abilities,
+      userId
     } = data;
+
 
     if (!name) {
       throw new Error('Character name is required');
@@ -25,11 +27,13 @@ class Character {
       await client.query('BEGIN');
 
       const characterResult = await client.query(
-        `INSERT INTO personnage (name, level, class_id, species_id, background_id)
-         VALUES ($1, $2, $3, $4, $5)
-         RETURNING id`,
-        [name, level, classId, speciesId, backgroundId]
+        `INSERT INTO personnage
+        (name, level, class_id, species_id, background_id, user_id)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id`,
+        [name, level, classId, speciesId, backgroundId, userId]
       );
+
 
       const characterId = characterResult.rows[0].id;
 
@@ -52,13 +56,13 @@ class Character {
     }
   }
 
-  static async findById(id) {
+  static async findById(id, userId) {
     const characterResult = await db.query(
-      `SELECT id, name, level, class_id, species_id, background_id
-       FROM personnage
-       WHERE id = $1`,
-      [id]
+      `SELECT * FROM personnage WHERE id = $1 AND user_id = $2`,
+      [id, userId]
     );
+
+    if (!characterResult.rows.length) return null;
 
     if (characterResult.rows.length === 0) {
       return null;
@@ -185,6 +189,19 @@ class Character {
       client.release();
     }
   }
+
+  static async findAllByUser(userId) {
+    const result = await db.query(
+      `SELECT *
+      FROM personnage
+      WHERE user_id = $1
+      ORDER BY id ASC`,
+      [userId]
+    );
+
+    return result.rows;
+  }
+
 }
 
 module.exports = Character;

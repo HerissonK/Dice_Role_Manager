@@ -2,7 +2,10 @@ const Character = require('../models/character.model');
 
 const createCharacter = async (req, res) => {
   try {
-    const characterId = await Character.create(req.body);
+    const characterId = await Character.create({
+      ...req.body,
+      userId: req.user.id
+    });
 
     res.status(201).json({
       id: characterId,
@@ -20,7 +23,7 @@ const getCharacterById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const character = await Character.findById(id);
+    const character = await Character.findById(id, req.user.id);
 
     if (!character) {
       return res.status(404).json({
@@ -38,7 +41,7 @@ const getCharacterById = async (req, res) => {
 
 const getAllCharacters = async (req, res) => {
   try {
-    const characters = await Character.findAll();
+    const characters = await Character.findAllByUser(req.user.id);
     res.json(characters);
   } catch (error) {
     console.error(error);
@@ -53,7 +56,7 @@ const updateCharacter = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const updated = await Character.updateById(id, req.body);
+    await Character.updateById(id, req.user.id, req.body);
 
     if (!updated) {
       return res.status(404).json({ error: 'Character not found' });
@@ -74,7 +77,7 @@ async function deleteCharacter(req, res) {
       return res.status(400).json({ error: 'Invalid character ID' });
     }
 
-    const deleted = await Character.deleteById(id);
+    await Character.deleteById(id, req.user.id);
 
     if (!deleted) {
       return res.status(404).json({ error: 'Character not found' });
