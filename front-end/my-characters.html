@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mes personnages - Character Builder D&D 5e</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="container">
+            <!-- En-tête -->
+            <div class="header">
+                <div class="header-content">
+                    <div>
+                        <h1>Mes personnages</h1>
+                        <p class="subtitle">Gérez vos personnages D&D 5e</p>
+                    </div>
+                    <div class="header-actions">
+                        <a href="builder.html" class="btn btn-primary">Créer un personnage</a>
+                        <a href="index.html" class="btn btn-outline">Accueil</a>
+                        <button id="btn-logout" class="btn btn-outline">Déconnexion</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenu principal -->
+            <div class="max-w-6xl">
+                <!-- Message de chargement -->
+                <div id="loading-message" class="text-center p-8">
+                    <p class="text-lg">Chargement de vos personnages...</p>
+                </div>
+
+                <!-- Message si pas de personnages -->
+                <div id="empty-message" class="text-center p-8" style="display: none;">
+                    <div class="empty-state">
+                        <div class="empty-icon">🎲</div>
+                        <h2>Aucun personnage</h2>
+                        <p class="text-gray-600 mb-6">Vous n'avez pas encore créé de personnage</p>
+                        <a href="builder.html" class="btn btn-primary">Créer votre premier personnage</a>
+                    </div>
+                </div>
+
+                <!-- Liste des personnages -->
+                <div id="characters-grid" class="grid grid-cols-1 md-grid-cols-2 lg-grid-cols-3" style="display: none;">
+                    <!-- Les cartes de personnages seront insérées ici -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Icônes SVG -->
+    <svg style="display: none;">
+        <symbol id="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </symbol>
+        <symbol id="icon-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </symbol>
+        <symbol id="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+        </symbol>
+    </svg>
+
+    <!-- Modal de visualisation -->
+    <div id="character-modal" class="modal" style="display: none;">
+        <div class="modal-overlay" id="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-character-name">Nom du personnage</h2>
+                <button id="modal-close" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Le contenu du personnage sera inséré ici -->
+            </div>
+        </div>
+    </div>
+
+    <script src="dndData.js"></script>
+    <script src="auth.js"></script>
+    <script src="characters-list.js"></script>
+</body>
+</html>

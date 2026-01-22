@@ -1,41 +1,158 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>D&D Character Builder</title>
-<link rel="stylesheet" href="styles.css">
-<!-- Icônes pour le check -->
-<svg style="display:none">
-  <symbol id="icon-check" viewBox="0 0 24 24">
-    <path d="M20 6L9 17l-5-5"/>
-  </symbol>
-  <symbol id="icon-minus" viewBox="0 0 24 24">
-    <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2"/>
-  </symbol>
-  <symbol id="icon-plus" viewBox="0 0 24 24">
-    <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2"/>
-    <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2"/>
-  </symbol>
-</svg>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Builder D&D 5e - Accueil</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div class="container mx-auto p-4">
+    <div class="app-container">
+        <div class="container">
+            <!-- Page d'accueil -->
+            <div class="home-page">
+                <div class="home-hero">
+                    <h1 class="home-title">Character Builder D&D 5e</h1>
+                    <p class="home-subtitle">Créez et gérez vos personnages de Donjons & Dragons 5e édition</p>
+                    
+                    <div class="home-features">
+                        <div class="feature-card">
+                            <div class="feature-icon">🎲</div>
+                            <h3>Création guidée</h3>
+                            <p>Interface intuitive en 7 étapes pour créer votre personnage</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">📊</div>
+                            <h3>Calculs automatiques</h3>
+                            <p>Modificateurs, PV, jets de sauvegarde automatiquement calculés</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">💾</div>
+                            <h3>Sauvegarde cloud</h3>
+                            <p>Vos personnages sont sauvegardés et accessibles partout</p>
+                        </div>
+                    </div>
+                </div>
 
-  <h1 class="text-3xl text-center mb-6">D&D Character Builder</h1>
+                <!-- Section de connexion/inscription -->
+                <div class="auth-section" id="auth-section">
+                    <div class="auth-container">
+                        <!-- Formulaire de connexion -->
+                        <div id="login-form" class="auth-form">
+                            <h2>Connexion</h2>
+                            <form id="form-login">
+                                <div class="form-group">
+                                    <label class="label" for="login-email">Email</label>
+                                    <input 
+                                        type="email" 
+                                        id="login-email" 
+                                        class="input" 
+                                        placeholder="votre@email.com"
+                                        required
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <label class="label" for="login-password">Mot de passe</label>
+                                    <input 
+                                        type="password" 
+                                        id="login-password" 
+                                        class="input" 
+                                        placeholder="••••••••"
+                                        required
+                                    />
+                                </div>
+                                <div id="login-error" class="error-message"></div>
+                                <button type="submit" class="btn btn-primary btn-full">Se connecter</button>
+                            </form>
+                            <p class="auth-toggle">
+                                Pas encore de compte ? 
+                                <a href="#" id="show-register">S'inscrire</a>
+                            </p>
+                        </div>
 
-  <!-- Étapes -->
-  <div id="step-indicator" class="mb-6"></div>
+                        <!-- Formulaire d'inscription -->
+                        <div id="register-form" class="auth-form" style="display: none;">
+                            <h2>Inscription</h2>
+                            <form id="form-register">
+                                <div class="form-group">
+                                    <label class="label" for="register-name">Nom d'utilisateur</label>
+                                    <input 
+                                        type="text" 
+                                        id="register-name" 
+                                        class="input" 
+                                        placeholder="Nom d'utilisateur"
+                                        required
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <label class="label" for="register-email">Email</label>
+                                    <input 
+                                        type="email" 
+                                        id="register-email" 
+                                        class="input" 
+                                        placeholder="votre@email.com"
+                                        required
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <label class="label" for="register-password">Mot de passe</label>
+                                    <input 
+                                        type="password" 
+                                        id="register-password" 
+                                        class="input" 
+                                        placeholder="••••••••"
+                                        required
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <label class="label" for="register-confirm">Confirmer le mot de passe</label>
+                                    <input 
+                                        type="password" 
+                                        id="register-confirm" 
+                                        class="input" 
+                                        placeholder="••••••••"
+                                        required
+                                    />
+                                </div>
+                                <div id="register-error" class="error-message"></div>
+                                <button type="submit" class="btn btn-primary btn-full">S'inscrire</button>
+                            </form>
+                            <p class="auth-toggle">
+                                Déjà un compte ? 
+                                <a href="#" id="show-login">Se connecter</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
-  <!-- Contenu principal -->
-  <div id="main-content" class="mb-6"></div>
+                <!-- Section utilisateur connecté -->
+                <div id="user-section" class="user-section" style="display: none;">
+                    <div class="user-welcome">
+                        <h2>Bienvenue, <span id="user-name"></span> !</h2>
+                        <p>Que souhaitez-vous faire ?</p>
+                    </div>
+                    
+                    <div class="action-cards">
+                        <a href="builder.html" class="action-card">
+                            <div class="action-icon">✨</div>
+                            <h3>Créer un personnage</h3>
+                            <p>Créez un nouveau personnage étape par étape</p>
+                        </a>
+                        
+                        <a href="my-characters.html" class="action-card">
+                            <div class="action-icon">📚</div>
+                            <h3>Mes personnages</h3>
+                            <p>Consultez et gérez vos personnages existants</p>
+                        </a>
+                    </div>
 
-  <!-- Navigation -->
-  <div id="navigation-buttons" class="flex justify-between"></div>
+                    <button id="btn-logout-home" class="btn btn-outline">Déconnexion</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-</div>
-
-<script src="dndData.js"></script>
-<script src="app.js"></script>
+    <script src="auth.js"></script>
+    <script src="home.js"></script>
 </body>
 </html>
