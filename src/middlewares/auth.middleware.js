@@ -13,10 +13,12 @@ function authenticate(req, res, next) {
   }
 
   try {
+    console.log('Token received:', token);
     const decoded = jwt.verify(token, jwtConfig.secret);
     req.user = decoded; // { id, role }
     next();
   } catch (err) {
+    console.error('JWT error:', err.message);
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
 }

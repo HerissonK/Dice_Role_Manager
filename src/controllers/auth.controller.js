@@ -48,4 +48,4 @@ async function login(req, res) {
 }
 
 // --- Exports ---
-module.exports = { register, login};
+module.exports = { register, login };

@@ -7,3 +7,23 @@ curl -X POST http://localhost:3000/api/auth/login \
   "email": "admin2@local",
   "password": "admin123"
 }'
+
+
+curl -X POST http://localhost:3000/api/characters \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Mywicm9sZSI6InBsYXllciIsImlhdCI6MTc2OTExNDczOSwiZXhwIjoxNzY5MjAxMTM5fQ.9teYXWxFv0iqGNp8lTlTPeydqSNdDp85bvjBPm5qRzM" \
+-d '{
+  "name": "Thorgar Martefer",
+  "level": 1,
+  "classId": 1,
+  "speciesId": 2,
+  "backgroundId": 3,
+  "abilities": {
+    "str": 16,
+    "dex": 12,
+    "con": 14,
+    "int": 10,
+    "wis": 11,
+    "cha": 8
+  }
+}'

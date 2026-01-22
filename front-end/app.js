@@ -939,6 +939,7 @@ function buildApiAbilities(frontAbilities) {
 
 
 async function handleSave() {
+    // Vérification des données du personnage
     if (!appState.selectedRace || !appState.selectedClass || !appState.abilityScores || !appState.selectedBackground) {
         alert('Données du personnage incomplètes');
         return;
@@ -970,12 +971,24 @@ async function handleSave() {
 
         const API_URL = 'http://localhost:3000/api/characters';
 
+        // ✅ Récupérer le token depuis localStorage
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            alert('Vous devez être connecté pour enregistrer un personnage.');
+            return;
+        }
+
+        // ✅ Envoyer le token dans l'en-tête Authorization
         const response = await fetch(API_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` // <- très important
+            },
             body: JSON.stringify(characterData)
         });
 
+        // Gestion des erreurs
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.error || 'Erreur lors de l’enregistrement');
@@ -985,7 +998,7 @@ async function handleSave() {
         alert(`Personnage enregistré avec succès ! ID: ${result.id}`);
 
     } catch (error) {
-        console.error(error);
+        console.error('Erreur handleSave:', error);
         alert(`Erreur: ${error.message}`);
     } finally {
         const btnSave = document.getElementById('btn-save');
