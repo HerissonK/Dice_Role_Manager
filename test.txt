@@ -27,3 +27,15 @@ curl -X POST http://localhost:3000/api/characters \
     "cha": 8
   }
 }'
+
+SELECT
+    p.id,
+    p.name,
+    p.level,
+    c.name AS classe_name,
+    e.name AS espece_name,
+    b.name AS background_name
+FROM personnage p
+JOIN classe c ON p.class_id = c.id
+JOIN espece e ON p.espece_id = e.id
+JOIN background b ON p.background_id = b.id;

@@ -1,5 +1,8 @@
 const Character = require('../models/character.model');
 
+/**
+ * CREATE
+ */
 const createCharacter = async (req, res) => {
   try {
     const characterId = await Character.create({
@@ -12,34 +15,14 @@ const createCharacter = async (req, res) => {
       status: 'created'
     });
   } catch (error) {
-    res.status(400).json({
-      error: error.message
-    });
+    res.status(400).json({ error: error.message });
   }
 };
 
-
-const getCharacterById = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const character = await Character.findById(id, req.user.id);
-
-    if (!character) {
-      return res.status(404).json({
-        error: 'Character not found'
-      });
-    }
-
-    res.json(character);
-  } catch (error) {
-    res.status(500).json({
-      error: 'Server error'
-    });
-  }
-};
-
-const getAllCharacters = async (req, res) => {
+/**
+ * GET ALL CHARACTERS (by user)
+ */
+const getCharacters = async (req, res) => {
   try {
     const characters = await Character.findAllByUser(req.user.id);
     res.json(characters);
@@ -49,14 +32,38 @@ const getAllCharacters = async (req, res) => {
   }
 };
 
-const updateCharacter = async (req, res) => {
-  console.log('PUT /api/characters/:id HIT');
-  console.log(req.body);
-
+/**
+ * GET ONE CHARACTER
+ */
+const getCharacterById = async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params.id, 10);
 
-    await Character.updateById(id, req.user.id, req.body);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid character ID' });
+    }
+
+    const character = await Character.findById(id, req.user.id);
+
+    if (!character) {
+      return res.status(404).json({ error: 'Character not found' });
+    }
+
+    res.json(character);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+/**
+ * UPDATE
+ */
+const updateCharacter = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+
+    const updated = await Character.updateById(id, req.user.id, req.body);
 
     if (!updated) {
       return res.status(404).json({ error: 'Character not found' });
@@ -69,32 +76,30 @@ const updateCharacter = async (req, res) => {
   }
 };
 
-async function deleteCharacter(req, res) {
+/**
+ * DELETE
+ */
+const deleteCharacter = async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
 
-    if (isNaN(id)) {
-      return res.status(400).json({ error: 'Invalid character ID' });
-    }
-
-    await Character.deleteById(id, req.user.id);
+    const deleted = await Character.deleteById(id, req.user.id);
 
     if (!deleted) {
       return res.status(404).json({ error: 'Character not found' });
     }
 
-    return res.status(200).json({ message: 'Character deleted successfully' });
-
+    res.json({ status: 'deleted' });
   } catch (error) {
-    console.error('Delete Character Error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error('DELETE ERROR:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
-}
+};
 
 module.exports = {
   createCharacter,
+  getCharacters,
   getCharacterById,
-  getAllCharacters,
   updateCharacter,
   deleteCharacter
 };

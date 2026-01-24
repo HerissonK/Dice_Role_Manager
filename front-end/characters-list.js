@@ -138,6 +138,12 @@ function showCharacterModal(character) {
     const abilities = character.abilities || {};
     const getModifier = (score) => Math.floor((score - 10) / 2);
     
+    console.log('RAW character:', character);
+    console.log('JSON stringify:', JSON.stringify(character, null, 2));
+    console.log('Keys:', Object.keys(character || {}));
+
+
+
     modalBody.innerHTML = `
         <div class="character-details">
             <div class="detail-section">

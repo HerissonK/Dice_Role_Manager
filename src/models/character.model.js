@@ -1,8 +1,11 @@
 const db = require('../config/database');
-const pool = require('../config/database');
 const RuleValidator = require('../validators/ruleValidator');
 
 class Character {
+
+  /* ======================
+     CREATE
+  ====================== */
   static async create(data) {
     RuleValidator.validateCharacter(data);
 
@@ -16,7 +19,6 @@ class Character {
       userId
     } = data;
 
-
     if (!name) {
       throw new Error('Character name is required');
     }
@@ -26,20 +28,20 @@ class Character {
     try {
       await client.query('BEGIN');
 
-      const characterResult = await client.query(
+      const result = await client.query(
         `INSERT INTO personnage
-        (name, level, class_id, species_id, background_id, user_id)
-        VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING id`,
+         (name, level, class_id, species_id, background_id, user_id)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING id`,
         [name, level, classId, speciesId, backgroundId, userId]
       );
 
-
-      const characterId = characterResult.rows[0].id;
+      const characterId = result.rows[0].id;
 
       for (const [ability, value] of Object.entries(abilities)) {
         await client.query(
-          `INSERT INTO personnage_caracteristique (personnage_id, caracteristique, valeur)
+          `INSERT INTO personnage_caracteristique
+           (personnage_id, caracteristique, valeur)
            VALUES ($1, $2, $3)`,
           [characterId, ability, value]
         );
@@ -56,17 +58,27 @@ class Character {
     }
   }
 
+  /* ======================
+     FIND ONE (DETAIL)
+  ====================== */
   static async findById(id, userId) {
     const characterResult = await db.query(
-      `SELECT * FROM personnage WHERE id = $1 AND user_id = $2`,
+      `SELECT
+        p.id,
+        p.name,
+        p.level,
+        c.name AS class,
+        e.name AS species,
+        b.name AS background
+      FROM personnage p
+      JOIN classe c ON c.id = p.class_id
+      JOIN espece e ON e.id = p.species_id
+      JOIN background b ON b.id = p.background_id
+      WHERE p.id = $1 AND p.user_id = $2`,
       [id, userId]
     );
 
     if (!characterResult.rows.length) return null;
-
-    if (characterResult.rows.length === 0) {
-      return null;
-    }
 
     const character = characterResult.rows[0];
 
@@ -83,67 +95,78 @@ class Character {
     }
 
     return {
-      id: character.id,
-      name: character.name,
-      level: character.level,
-      classId: character.class_id,
-      speciesId: character.species_id,
-      backgroundId: character.background_id,
+      ...character,
       abilities
     };
   }
 
-  static async findAll() {
+  /* ======================
+     FIND ALL (LIST)
+  ====================== */
+  static async findAllByUser(userId) {
     const result = await db.query(
-      'SELECT * FROM personnage ORDER BY id ASC'
+      `SELECT
+        p.id,
+        p.name,
+        p.level,
+        c.name AS class,
+        e.name AS species,
+        b.name AS background
+      FROM personnage p
+      JOIN classe c ON c.id = p.class_id
+      JOIN espece e ON e.id = p.species_id
+      JOIN background b ON b.id = p.background_id
+      WHERE p.user_id = $1
+      ORDER BY p.id DESC`,
+      [userId]
     );
+
     return result.rows;
   }
 
-
-  static async updateById(id, data) {
+  /* ======================
+     UPDATE
+  ====================== */
+  static async updateById(id, userId, data) {
     RuleValidator.validateCharacter(data);
     const client = await db.connect();
 
     try {
       await client.query('BEGIN');
 
-    // 1️⃣ Mettre à jour les infos du personnage
-      await client.query(
+      const updateResult = await client.query(
         `UPDATE personnage
          SET name = $1,
              level = $2,
              class_id = $3,
              species_id = $4,
              background_id = $5
-         WHERE id = $6`,
-        [data.name, data.level, data.classId, data.speciesId, data.backgroundId, id]
+         WHERE id = $6 AND user_id = $7`,
+        [
+          data.name,
+          data.level,
+          data.classId,
+          data.speciesId,
+          data.backgroundId,
+          id,
+          userId
+        ]
       );
 
-    // 2️⃣ Mettre à jour les abilities
-      for (const [ability, value] of Object.entries(data.abilities)) {
-        const exists = await client.query(
-          `SELECT 1 FROM personnage_caracteristique
-           WHERE personnage_id = $1 AND caracteristique = $2`,
-          [id, ability]
-        );
+      if (updateResult.rowCount === 0) {
+        await client.query('ROLLBACK');
+        return false;
+      }
 
-        if (exists.rows.length > 0) {
-        // Update si existant
-          await client.query(
-            `UPDATE personnage_caracteristique
-             SET valeur = $1
-             WHERE personnage_id = $2 AND caracteristique = $3`,
-            [value, id, ability]
-          );
-        } else {
-        // Insert si pas existant
-          await client.query(
-            `INSERT INTO personnage_caracteristique (personnage_id, caracteristique, valeur)
-             VALUES ($1, $2, $3)`,
-            [id, ability, value]
-          );
-        }
+      for (const [ability, value] of Object.entries(data.abilities)) {
+        await client.query(
+          `INSERT INTO personnage_caracteristique
+           (personnage_id, caracteristique, valeur)
+           VALUES ($1, $2, $3)
+           ON CONFLICT (personnage_id, caracteristique)
+           DO UPDATE SET valeur = EXCLUDED.valeur`,
+          [id, ability, value]
+        );
       }
 
       await client.query('COMMIT');
@@ -157,29 +180,28 @@ class Character {
     }
   }
 
-  static async deleteById(id) {
+  /* ======================
+     DELETE
+  ====================== */
+  static async deleteById(id, userId) {
     const client = await db.connect();
 
     try {
       await client.query('BEGIN');
 
-    // 1️⃣ Supprimer les caractéristiques associées
       await client.query(
         `DELETE FROM personnage_caracteristique
          WHERE personnage_id = $1`,
         [id]
       );
-  
-     // 2️⃣ Supprimer le personnage
+
       const result = await client.query(
         `DELETE FROM personnage
-         WHERE id = $1`,
-        [id]
+         WHERE id = $1 AND user_id = $2`,
+        [id, userId]
       );
 
       await client.query('COMMIT');
-
-    // Retourne true si au moins une ligne a été supprimée
       return result.rowCount > 0;
 
     } catch (error) {
@@ -189,19 +211,6 @@ class Character {
       client.release();
     }
   }
-
-  static async findAllByUser(userId) {
-    const result = await db.query(
-      `SELECT *
-      FROM personnage
-      WHERE user_id = $1
-      ORDER BY id ASC`,
-      [userId]
-    );
-
-    return result.rows;
-  }
-
 }
 
 module.exports = Character;
