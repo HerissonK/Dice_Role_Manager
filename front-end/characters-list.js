@@ -67,11 +67,11 @@ function displayCharacters(characters) {
                 <div class="character-stats">
                     <div class="stat-item">
                         <span class="stat-label">PV</span>
-                        <span class="stat-value">${character.hp || '?'}</span>
+                        <span class="stat-value">${character.pv !== undefined ? character.pv : '?'}</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">CA</span>
-                        <span class="stat-value">${character.ac || '?'}</span>
+                        <span class="stat-value">${character.ac !== undefined ? character.ac : '?'}</span>
                     </div>
                 </div>
                 
@@ -162,12 +162,12 @@ function showCharacterModal(character) {
                     ${Object.entries(abilities).map(([ability, value]) => {
                         const modifier = getModifier(value);
                         const abilityLabel = {
-                            strength: 'Force',
-                            dexterity: 'Dextérité',
-                            constitution: 'Constitution',
-                            intelligence: 'Intelligence',
-                            wisdom: 'Sagesse',
-                            charisma: 'Charisme'
+                            str: 'Force',
+                            dex: 'Dextérité',
+                            con: 'Constitution',
+                            int: 'Intelligence',
+                            wis: 'Sagesse',
+                            cha: 'Charisme'
                         }[ability] || ability;
                         
                         return `

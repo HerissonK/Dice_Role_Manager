@@ -58,9 +58,9 @@ class Character {
     }
   }
 
-  /* ======================
-     FIND ONE (DETAIL)
-  ====================== */
+/* ======================
+   FIND ONE (DETAIL)
+====================== */
   static async findById(id, userId) {
     const characterResult = await db.query(
       `SELECT
@@ -68,41 +68,69 @@ class Character {
         p.name,
         p.level,
         c.name AS class,
+        c.hit_die,
         e.name AS species,
-        b.name AS background
+        b.name AS background,
+        pc.str,
+        pc.dex,
+        pc.con,
+        pc.int,
+        pc.wis,
+        pc.cha
       FROM personnage p
       JOIN classe c ON c.id = p.class_id
       JOIN espece e ON e.id = p.species_id
       JOIN background b ON b.id = p.background_id
+      LEFT JOIN (
+        SELECT personnage_id,
+              MAX(CASE WHEN caracteristique = 'str' THEN valeur END) AS str,
+              MAX(CASE WHEN caracteristique = 'dex' THEN valeur END) AS dex,
+              MAX(CASE WHEN caracteristique = 'con' THEN valeur END) AS con,
+              MAX(CASE WHEN caracteristique = 'int' THEN valeur END) AS int,
+              MAX(CASE WHEN caracteristique = 'wis' THEN valeur END) AS wis,
+              MAX(CASE WHEN caracteristique = 'cha' THEN valeur END) AS cha
+        FROM personnage_caracteristique
+        GROUP BY personnage_id
+      ) pc ON pc.personnage_id = p.id
       WHERE p.id = $1 AND p.user_id = $2`,
       [id, userId]
     );
 
     if (!characterResult.rows.length) return null;
 
-    const character = characterResult.rows[0];
+    const row = characterResult.rows[0];
 
-    const abilitiesResult = await db.query(
-      `SELECT caracteristique, valeur
-       FROM personnage_caracteristique
-       WHERE personnage_id = $1`,
-      [id]
-    );
+    const abilities = {
+      str: row.str ?? 10,
+      dex: row.dex ?? 10,
+      con: row.con ?? 10,
+      int: row.int ?? 10,
+      wis: row.wis ?? 10,
+      cha: row.cha ?? 10
+    };
 
-    const abilities = {};
-    for (const row of abilitiesResult.rows) {
-      abilities[row.caracteristique] = row.valeur;
-    }
+    const conMod = Math.floor((abilities.con - 10) / 2);
+    const baseHit = row.hit_die;
+    const level = row.level;
+
+    const pv = Math.floor(baseHit + conMod + ((baseHit / 2) + 1 + conMod) * (level - 1));
 
     return {
-      ...character,
-      abilities
+      id: row.id,
+      name: row.name,
+      level: row.level,
+      class: row.class,
+      species: row.species,
+      background: row.background,
+      pv,
+      abilities // ⚡️ IMPORTANT pour le front
     };
   }
 
-  /* ======================
-     FIND ALL (LIST)
-  ====================== */
+
+/* ======================
+   FIND ALL (LIST)
+====================== */
   static async findAllByUser(userId) {
     const result = await db.query(
       `SELECT
@@ -110,19 +138,64 @@ class Character {
         p.name,
         p.level,
         c.name AS class,
+        c.hit_die,
         e.name AS species,
-        b.name AS background
+        b.name AS background,
+        pc.str,
+        pc.dex,
+        pc.con,
+        pc.int,
+        pc.wis,
+        pc.cha
       FROM personnage p
       JOIN classe c ON c.id = p.class_id
       JOIN espece e ON e.id = p.species_id
       JOIN background b ON b.id = p.background_id
+      LEFT JOIN (
+        SELECT personnage_id,
+              MAX(CASE WHEN caracteristique = 'str' THEN valeur END) AS str,
+              MAX(CASE WHEN caracteristique = 'dex' THEN valeur END) AS dex,
+              MAX(CASE WHEN caracteristique = 'con' THEN valeur END) AS con,
+              MAX(CASE WHEN caracteristique = 'int' THEN valeur END) AS int,
+              MAX(CASE WHEN caracteristique = 'wis' THEN valeur END) AS wis,
+              MAX(CASE WHEN caracteristique = 'cha' THEN valeur END) AS cha
+        FROM personnage_caracteristique
+        GROUP BY personnage_id
+      ) pc ON pc.personnage_id = p.id
       WHERE p.user_id = $1
       ORDER BY p.id DESC`,
       [userId]
     );
 
-    return result.rows;
+    return result.rows.map(row => {
+      const abilities = {
+        str: row.str ?? 10,
+        dex: row.dex ?? 10,
+        con: row.con ?? 10,
+        int: row.int ?? 10,
+        wis: row.wis ?? 10,
+        cha: row.cha ?? 10
+      };
+
+      const conMod = Math.floor((abilities.con - 10) / 2);
+      const baseHit = row.hit_die;
+      const level = row.level;
+
+      const pv = Math.floor(baseHit + conMod + ((baseHit / 2) + 1 + conMod) * (level - 1));
+
+      return {
+        id: row.id,
+        name: row.name,
+        level: row.level,
+        class: row.class,
+        species: row.species,
+        background: row.background,
+        pv,
+        abilities // ⚡️ IMPORTANT pour le front
+      };
+    });
   }
+
 
   /* ======================
      UPDATE
