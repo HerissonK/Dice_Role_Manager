@@ -166,7 +166,76 @@ const classes = [
         weaponProficiencies: ['Armes de guerre'],
         skills: ['Athlétisme', 'Intimidation', 'Persuasion', 'Religion'],
         skillChoices: 2,
-    },
+
+        // ✅ ÉQUIPEMENT
+        equipmentChoices: [
+            {
+                id: 'weapon_main',
+                label: 'Arme principale',
+                options: [
+                    {
+                        id: 'martial_weapon_shield',
+                        name: 'Arme de guerre + bouclier',
+                        items: ['Arme de guerre', 'Bouclier']
+                    },
+                    {
+                        id: 'two_martial_weapons',
+                        name: 'Deux armes de guerre',
+                        items: ['Arme de guerre', 'Arme de guerre']
+                    }
+                ]
+            },
+            {
+                id: 'javelins_or_weapon',
+                label: 'Arme secondaire',
+                options: [
+                    {
+                        id: 'javelins',
+                        name: 'Cinq javelots',
+                        items: ['Javelot x5']
+                    },
+                    {
+                        id: 'simple_weapon',
+                        name: 'Arme courante',
+                        items: ['Arme courante']
+                    }
+                ]
+            },
+            {
+                id: 'pack',
+                label: 'Paquetage',
+                options: [
+                    {
+                        id: 'priest_pack',
+                        name: 'Paquetage de prêtre',
+                        items: ['Sac', 'Bougies', 'Encens', 'Vêtements', 'Rations']
+                    },
+                    {
+                        id: 'explorer_pack',
+                        name: 'Paquetage d’explorateur',
+                        items: ['Sac', 'Torche', 'Corde', 'Rations']
+                    }
+                ]
+            },
+            {
+                id: 'holy_symbol',
+                label: 'Symbole sacré',
+                options: [
+                    {
+                        id: 'emblem',
+                        name: 'Emblème sacré',
+                        items: ['Emblème sacré']
+                    },
+                    {
+                        id: 'amulet',
+                        name: 'Amulette',
+                        items: ['Amulette']
+                    }
+                ]
+            }
+        ]
+    }
+
 ];
 
 /* ============================
@@ -228,3 +297,4 @@ const abilityDescriptions = {
     wisdom: 'Perception',
     charisma: 'Présence',
 };
+

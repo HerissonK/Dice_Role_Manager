@@ -1,3 +1,13 @@
+question Axel
+
+est ce que c'est important de recuperer avec un get mes tables 
+classes
+species
+background
+
+
+psql -U herissonk -d dnd -f schema.sql
+
 psql -U herissonk -d dnd
 Reception123+
 

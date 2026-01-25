@@ -16,10 +16,11 @@ const appState = {
 
     // compétences finales (fusion des deux)
     selectedSkills: [],
+    selectedEquipment: {}
 };
 
 
-const steps = ['Nom', 'Espèce', 'Classe', 'Caractéristiques', 'Historique', 'Compétences', 'Fiche'];
+const steps = ['Nom', 'Espèce', 'Classe', 'Caractéristiques', 'Historique', 'Compétences', 'Équipement', 'Fiche'];
 
 // Constantes pour Point Buy
 const POINT_BUY_MAX = 27;
@@ -91,6 +92,9 @@ function renderMainContent() {
             renderSkillSelection(container);
             break;
         case 6:
+            renderEquipmentSelection(container);
+            break;
+        case 7:
             renderCharacterSheet(container);
             break;
     }
@@ -570,8 +574,74 @@ function renderSkillSelection(container) {
     });
 }
 
+// Étape 7: Sélection de l'équipement
+    function renderEquipmentSelection(container) {
+        console.log('CLASS:', appState.selectedClass);
+        console.log('EQUIPMENT CHOICES:', appState.selectedClass?.equipmentChoices);
+        if (!appState.selectedClass) {
+            container.innerHTML = `
+                <div class="card p-6 text-center text-red-600">
+                    Aucune classe sélectionnée.
+                </div>
+            `;
+            return;
+        }
 
-// Étape 6: Fiche de personnage
+        const choices = appState.selectedClass.equipmentChoices || [];
+
+        const choicesHTML = choices.map(choice => {
+            const selectedOption = appState.selectedEquipment[choice.id];
+
+            const optionsHTML = choice.options.map(option => {
+                const isSelected = selectedOption === option.id;
+
+                return `
+                    <button
+                        class="card selection-card card-clickable ${isSelected ? 'card-selected' : ''}"
+                        data-choice="${choice.id}"
+                        data-option="${option.id}"
+                    >
+                        <h4>${option.name}</h4>
+                        <ul class="text-sm text-gray-700 mt-2">
+                            ${option.items.map(i => `<li>${i}</li>`).join('')}
+                        </ul>
+                    </button>
+                `;
+            }).join('');
+
+            return `
+                <div class="mb-6">
+                    <h3 class="mb-3">${choice.label}</h3>
+                    <div class="grid grid-cols-1 md-grid-cols-2 gap-4">
+                        ${optionsHTML}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        container.innerHTML = `
+            <div class="max-w-4xl">
+                <h2 class="mb-6 text-center">Choisissez votre équipement</h2>
+                ${choicesHTML}
+            </div>
+        `;
+
+        container.querySelectorAll('[data-choice]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const choiceId = btn.getAttribute('data-choice');
+                const optionId = btn.getAttribute('data-option');
+
+                appState.selectedEquipment[choiceId] = optionId;
+
+                renderEquipmentSelection(container);
+                renderNavigationButtons();
+            });
+        });
+    }
+
+
+
+// Étape 7: Fiche de personnage
 function renderCharacterSheet(container) {
     if (!appState.selectedRace || !appState.selectedClass || !appState.abilityScores || !appState.selectedBackground) {
         container.innerHTML = '<p>Données manquantes...</p>';
@@ -877,6 +947,9 @@ function canGoNext() {
             return appState.selectedBackground !== null;
         case 5:
             return appState.classSkills.length === appState.selectedClass.skillChoices;
+        case 6:
+            return Object.keys(appState.selectedEquipment).length ===
+                   (appState.selectedClass.equipmentChoices?.length || 0);
         default:
             return false; // 🔥 IMPORTANT
     }
@@ -937,6 +1010,23 @@ function buildApiAbilities(frontAbilities) {
     return apiAbilities;
 }
 
+function buildEquipmentItems() {
+    const items = [];
+    const choices = appState.selectedClass.equipmentChoices || [];
+
+    for (const choice of choices) {
+        const optionId = appState.selectedEquipment[choice.id];
+        const option = choice.options.find(o => o.id === optionId);
+        if (option) items.push(...option.items);
+    }
+
+    if (appState.selectedBackground?.equipment) {
+        items.push(...appState.selectedBackground.equipment);
+    }
+
+    return items;
+}
+
 
 async function handleSave() {
     // Vérification des données du personnage
@@ -959,7 +1049,8 @@ async function handleSave() {
         classId: appState.selectedClass.id,
         speciesId: appState.selectedRace.id,
         backgroundId: appState.selectedBackground.id,
-        abilities: apiAbilities
+        abilities: apiAbilities,
+        equipment: buildEquipmentItems()
     };
 
     try {
