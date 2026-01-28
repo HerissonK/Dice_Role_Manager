@@ -640,6 +640,44 @@ function renderSkillSelection(container) {
     }
 
 
+// calcul de la CA
+function computeArmorClass(dexModifier) {
+    let baseArmor = null;
+    let dexRule = 'full';
+    let shieldBonus = 0;
+
+    const choices = appState.selectedClass?.equipmentChoices || [];
+
+    for (const choice of choices) {
+        const optionId = appState.selectedEquipment[choice.id];
+        const option = choice.options.find(o => o.id === optionId);
+        if (!option || !option.itemsData) continue;
+
+        for (const item of option.itemsData) {
+            if (item.category?.startsWith('armor')) {
+                baseArmor = item.armor_class;
+                dexRule = item.dex_modifier_rule;
+            }
+
+            if (item.category === 'shield') {
+                shieldBonus += item.armor_class || 2;
+            }
+        }
+    }
+
+    // Pas d’armure
+    if (!baseArmor) {
+        return 10 + dexModifier + shieldBonus;
+    }
+
+    let dexBonus = 0;
+    if (dexRule === 'full') dexBonus = dexModifier;
+    if (dexRule === 'max2') dexBonus = Math.min(dexModifier, 2);
+    if (dexRule === 'none') dexBonus = 0;
+
+    return baseArmor + dexBonus + shieldBonus;
+}
+
 
 // Étape 7: Fiche de personnage
 function renderCharacterSheet(container) {
@@ -661,6 +699,9 @@ function renderCharacterSheet(container) {
         }
     });
     
+    const dexMod = getAbilityModifier(finalScores.dexterity);
+    const armorClass = computeArmorClass(dexMod);
+
     // Calculer les points de vie
     const constitutionMod = getAbilityModifier(finalScores.constitution);
     const maxHP = cls.hitDie + constitutionMod;
@@ -756,7 +797,7 @@ function renderCharacterSheet(container) {
                     </div>
                     <div class="stat-box">
                         <label class="stat-label">Classe d'armure</label>
-                        <p class="stat-value">10 + ${getAbilityModifier(finalScores.dexterity)}</p>
+                        <p class="stat-value">${armorClass}</p>
                     </div>
                     <div class="stat-box">
                         <label class="stat-label">Initiative</label>

@@ -91,6 +91,98 @@ const races = [
     },
 ];
 
+
+/* ============================
+   ARMURES
+============================ */
+const armors = {
+    padded: {
+        id: 'padded',
+        name: 'Armure matelassée',
+        category: 'armor_light',
+        armor_class: 11,
+        dex_modifier_rule: 'full',
+    },
+    leather: {
+        id: 'leather',
+        name: 'Armure de cuir',
+        category: 'armor_light',
+        armor_class: 11,
+        dex_modifier_rule: 'full',
+    },
+    studded_leather: {
+        id: 'studded_leather',
+        name: 'Armure de cuir cloutée',
+        category: 'armor_light',
+        armor_class: 12,
+        dex_modifier_rule: 'full',
+    },
+    hide: {
+        id: 'hide',
+        name: 'Armure de peau',
+        category: 'armor_medium',
+        armor_class: 12,
+        dex_modifier_rule: 'max2',
+    },
+    chain_shirt: {
+        id: 'chain_shirt',
+        name: 'Chemise de mailles',
+        category: 'armor_medium',
+        armor_class: 13,
+        dex_modifier_rule: 'max2',
+    },
+    scale_mail: {
+        id: 'scale_mail',
+        name: 'Cotte d’écailles',
+        category: 'armor_medium',
+        armor_class: 14,
+        dex_modifier_rule: 'max2',
+    },
+    breastplate: {
+        id: 'breastplate',
+        name: 'Cuirasse',
+        category: 'armor_medium',
+        armor_class: 14,
+        dex_modifier_rule: 'max2',
+    },
+    half_plate: {
+        id: 'half_plate',
+        name: 'Demi-plate',
+        category: 'armor_medium',
+        armor_class: 15,
+        dex_modifier_rule: 'max2',
+    },
+    ring_mail: {
+        id: 'ring_mail',
+        name: 'Armure annelée',
+        category: 'armor_heavy',
+        armor_class: 14,
+        dex_modifier_rule: 'none',
+    },
+    chain_mail: {
+        id: 'chain_mail',
+        name: 'Cotte de mailles',
+        category: 'armor_heavy',
+        armor_class: 16,
+        dex_modifier_rule: 'none',
+    },
+    splint: {
+        id: 'splint',
+        name: 'Armure à plaques',
+        category: 'armor_heavy',
+        armor_class: 17,
+        dex_modifier_rule: 'none',
+    },
+    plate: {
+        id: 'plate',
+        name: 'Armure de plates',
+        category: 'armor_heavy',
+        armor_class: 18,
+        dex_modifier_rule: 'none',
+    }
+};
+
+
 /* ============================
    CLASSES
 ============================ */
@@ -176,7 +268,11 @@ const classes = [
                     {
                         id: 'martial_weapon_shield',
                         name: 'Arme de guerre + bouclier',
-                        items: ['Arme de guerre', 'Bouclier']
+                        items: ['weapon_martial', 'shield', 'chain_mail'],
+                        itemsData: [
+                            armors.chain_mail,
+                            { name: 'Bouclier', category: 'shield', armor_class: 2 }
+                        ]
                     },
                     {
                         id: 'two_martial_weapons',
@@ -297,4 +393,3 @@ const abilityDescriptions = {
     wisdom: 'Perception',
     charisma: 'Présence',
 };
-

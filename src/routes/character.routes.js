@@ -6,7 +6,7 @@ const {
   getCharacters,
   getCharacterById,
   updateCharacter,
-  deleteCharacter
+  deleteCharacter,
 } = require('../controllers/character.controller');
 
 const { authenticate } = require('../middlewares/auth.middleware');

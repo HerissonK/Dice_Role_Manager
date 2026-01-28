@@ -49,3 +49,33 @@ FROM personnage p
 JOIN classe c ON p.class_id = c.id
 JOIN espece e ON p.espece_id = e.id
 JOIN background b ON p.background_id = b.id;
+
+
+
+-- Armure de cuir
+INSERT INTO personnage_item (personnage_id, item_id, equipped)
+VALUES (45, 1, true);
+
+-- Bouclier
+INSERT INTO personnage_item (personnage_id, item_id, equipped)
+VALUES (45, 8, true);
+
+-- Arme (facultatif pour l’AC)
+INSERT INTO personnage_item (personnage_id, item_id, equipped)
+VALUES (45, 9, true);
+
+SELECT
+  i.id,
+  i.name,
+  i.category,
+  i.armor_class,
+  i.dex_modifier_rule,
+  i.damage_dice,
+  i.damage_type
+FROM personnage_item pi
+JOIN item i ON i.id = pi.item_id
+WHERE pi.personnage_id = 45
+  AND pi.equipped = true;
+
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Miwicm9sZSI6InBsYXllciIsImlhdCI6MTc2OTYxODI5MywiZXhwIjoxNzY5NzA0NjkzfQ.bSg0BRvDOOvn-7BobkUTISDUWW63h3PiHaxsyMbyiuU

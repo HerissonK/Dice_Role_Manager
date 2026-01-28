@@ -58,9 +58,9 @@ class Character {
     }
   }
 
-/* ======================
-   FIND ONE (DETAIL)
-====================== */
+  /* ======================
+     FIND ONE (DETAIL)
+  ====================== */
   static async findById(id, userId) {
     const characterResult = await db.query(
       `SELECT
@@ -113,7 +113,13 @@ class Character {
     const baseHit = row.hit_die;
     const level = row.level;
 
-    const pv = Math.floor(baseHit + conMod + ((baseHit / 2) + 1 + conMod) * (level - 1));
+    const pv = Math.floor(
+      baseHit + conMod + ((baseHit / 2) + 1 + conMod) * (level - 1)
+    );
+
+    const items = await this.getEquippedItems(id, userId);
+    const armorClass = this.calculateArmorClass(abilities, items);
+
 
     return {
       id: row.id,
@@ -123,14 +129,15 @@ class Character {
       species: row.species,
       background: row.background,
       pv,
-      abilities // ⚡️ IMPORTANT pour le front
+      armorClass,
+      items,
+      abilities
     };
   }
 
-
-/* ======================
-   FIND ALL (LIST)
-====================== */
+  /* ======================
+     FIND ALL (LIST)
+  ====================== */
   static async findAllByUser(userId) {
     const result = await db.query(
       `SELECT
@@ -181,7 +188,9 @@ class Character {
       const baseHit = row.hit_die;
       const level = row.level;
 
-      const pv = Math.floor(baseHit + conMod + ((baseHit / 2) + 1 + conMod) * (level - 1));
+      const pv = Math.floor(
+        baseHit + conMod + ((baseHit / 2) + 1 + conMod) * (level - 1)
+      );
 
       return {
         id: row.id,
@@ -191,9 +200,63 @@ class Character {
         species: row.species,
         background: row.background,
         pv,
-        abilities // ⚡️ IMPORTANT pour le front
+        abilities
       };
     });
+  }
+
+  /* ======================
+     EQUIPPED ITEMS  🆕
+  ====================== */
+  static async getEquippedItems(characterId, userId) {
+    const result = await db.query(
+      `SELECT
+        i.id,
+        i.name,
+        i.category,
+        i.armor_class,
+        i.dex_modifier_rule,
+        i.damage_dice,
+        i.damage_type
+      FROM personnage_item pi
+      JOIN item i ON i.id = pi.item_id
+      JOIN personnage p ON p.id = pi.personnage_id
+      WHERE pi.personnage_id = $1
+        AND pi.equipped = true
+        AND p.user_id = $2`,
+      [characterId, userId]
+    );
+
+    return result.rows;
+  }
+
+  static calculateArmorClass(abilities, items) {
+    const dexMod = Math.floor((abilities.dex - 10) / 2);
+
+    let baseArmor = 10;
+    let shieldBonus = 0;
+    let dexRule = 'full';
+
+    for (const item of items) {
+      if (item.category.startsWith('armor')) {
+        baseArmor = item.armor_class;
+        dexRule = item.dex_modifier_rule;
+      }
+
+      if (item.category === 'shield') {
+        shieldBonus += item.armor_class;
+      }
+    }
+
+    let dexBonus = 0;
+
+    if (dexRule === 'full') {
+      dexBonus = dexMod;
+    } else if (dexRule === 'max2') {
+      dexBonus = Math.min(dexMod, 2);
+    } // none => 0
+
+    return baseArmor + dexBonus + shieldBonus;
   }
 
 

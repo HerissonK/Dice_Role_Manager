@@ -1,4 +1,5 @@
 const Character = require('../models/character.model');
+const { calculateArmorClass } = require('../services/armor.service');
 
 /**
  * CREATE
@@ -57,6 +58,40 @@ const getCharacterById = async (req, res) => {
 };
 
 /**
+ * ARMOR CLASS
+ */
+const getCharacterArmorClass = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid character ID' });
+    }
+
+    const character = await Character.findById(id, req.user.id);
+    if (!character) {
+      return res.status(404).json({ error: 'Character not found' });
+    }
+
+    const dex = character.dexterity;
+    const dexModifier = Math.floor((dex - 10) / 2);
+
+    const equippedItems = await Character.getEquippedItems(id, req.user.id);
+
+    const armorClass = calculateArmorClass(equippedItems, dexModifier);
+
+    res.json({
+      characterId: id,
+      armorClass,
+      equippedItems
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to calculate armor class' });
+  }
+};
+
+/**
  * UPDATE
  */
 const updateCharacter = async (req, res) => {
@@ -100,6 +135,7 @@ module.exports = {
   createCharacter,
   getCharacters,
   getCharacterById,
+  getCharacterArmorClass,
   updateCharacter,
   deleteCharacter
 };
