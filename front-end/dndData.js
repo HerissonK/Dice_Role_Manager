@@ -91,6 +91,110 @@ const races = [
     },
 ];
 
+/* ============================
+   ARMES
+============================ */
+
+const weapons = {
+    longsword: {
+        id: 'longsword',
+        name: 'Épée longue',
+        category: 'martial_melee',
+        damage: '1d8',
+        damageType: 'slashing',
+        properties: ['versatile'],
+        versatileDamage: '1d10'
+    },
+
+    shortsword: {
+        id: 'shortsword',
+        name: 'Epée courte',
+        category: 'martial_melee',
+        damage: '1d6',
+        damageType: 'piercing',
+        properties: ['finesse', 'light'],
+        versatileDamage: '1d8'
+    },
+
+    greatsword: {
+        id: 'greatsword',
+        name: 'Epée a deux mains',
+        category: 'martial_melee',
+        damage: '2d6',
+        damageType: 'slashing',
+        properties: ['heavy', 'two-handed'],
+        versatileDamage: '2d6'
+    },
+
+    javelin: {
+        id: 'javelin',
+        name: 'Javelot',
+        category: 'simple_melee',
+        damage: '1d6',
+        damageType: 'piercing',
+        properties: ['thrown', 'range'],
+        range: '30/120'
+    },
+
+    morningstar: {
+        id: 'morningstar',
+        name: 'Étoile du matin',
+        category: 'martial_melee',
+        damage: '1d8',
+        damageType: 'piercing',
+        properties: []
+    },
+
+    shortbow: {
+        id: 'shortbow',
+        name: 'Arc court',
+        category: 'simple_ranged',
+        damage: '1d6',
+        damageType: 'piercing',
+        properties: ['range'],
+        range: '80/320'
+    },
+
+    longbow: {
+        id: 'longbow',
+        name: 'Arc long',
+        category: 'martial_ranged',
+        damage: '1d8',
+        damageType: 'piercing',
+        properties: ['heavy', 'range', 'two-handed'],
+        range: '150/600'
+    },
+
+    dagger: {
+        id: 'dagger',
+        name: 'Dague',
+        category: 'simple_melee',
+        damage: '1d4',
+        damageType: 'piercing',
+        properties: ['finesse', 'light', 'thrown'],
+        range: '20/60'
+    },
+
+    crossbow_light: {
+        id: 'crossbow_light',
+        name: 'Arbalète légère',
+        category: 'simple_ranged',
+        damage: '1d8',
+        damageType: 'piercing',
+        properties: ['loading', 'range', 'two-handed'],
+        range: '80/320'
+    },
+
+    Rapier: {
+        id: 'rapier',
+        name: 'Rapière',
+        category: 'martial_melee',
+        damage: '1d8',
+        damageType: 'piercing',
+        properties: ['finesse']
+    }
+};
+
 
 /* ============================
    ARMURES
@@ -154,7 +258,7 @@ const armors = {
     },
     ring_mail: {
         id: 'ring_mail',
-        name: 'Armure annelée',
+        name: 'Broigne',
         category: 'armor_heavy',
         armor_class: 14,
         dex_modifier_rule: 'none',
@@ -168,14 +272,14 @@ const armors = {
     },
     splint: {
         id: 'splint',
-        name: 'Armure à plaques',
+        name: 'Clibanion',
         category: 'armor_heavy',
         armor_class: 17,
         dex_modifier_rule: 'none',
     },
     plate: {
         id: 'plate',
-        name: 'Armure de plates',
+        name: 'Harnois',
         category: 'armor_heavy',
         armor_class: 18,
         dex_modifier_rule: 'none',
@@ -198,6 +302,51 @@ const classes = [
         weaponProficiencies: ['Armes courantes', 'Armes de guerre'],
         skills: ['Acrobaties', 'Athlétisme', 'Dressage', 'Histoire', 'Intimidation', 'Intuition', 'Perception', 'Survie'],
         skillChoices: 2,
+
+        // ✅ ÉQUIPEMENT
+        equipmentChoices: [
+            {
+                id: 'weapon_main',
+                label: 'Arme principale',
+                options: [
+                    {
+                        id: 'martial_weapon_shield',
+                        name: 'Protecteur',
+                        items: ['Epée longue', 'Bouclier', 'Cotte de mailles'],
+                        itemsData: [
+                            armors.chain_mail,
+                            weapons.longsword,
+                            { name: 'Bouclier', category: 'shield', armor_class: 2 }
+                        ]
+                    },
+                    {
+                        id: 'two_martial_weapons',
+                        name: 'Combattant à deux mains',
+                        items: ['Epée à deux mains', 'Cotte de mailles'],
+                        itemsData: [
+                            armors.chain_mail,
+                            weapons.greatsword
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 'pack',
+                label: 'Paquetage',
+                options: [
+                    {
+                        id: 'priest_pack',
+                        name: 'Paquetage d’explorateur souterain',
+                        items: ['Sac', 'Bougies', 'Encens', 'Vêtements', 'Rations']
+                    },
+                    {
+                        id: 'explorer_pack',
+                        name: 'Paquetage d’explorateur',
+                        items: ['Sac', 'Torche', 'Corde', 'Rations']
+                    }
+                ]
+            }
+        ]
     },
     {
         id: 2,
@@ -210,6 +359,43 @@ const classes = [
         weaponProficiencies: ['Dague', 'Bâton'],
         skills: ['Arcanes', 'Histoire', 'Intuition', 'Investigation', 'Médecine', 'Religion'],
         skillChoices: 2,
+
+        // ✅ ÉQUIPEMENT
+        equipmentChoices: [
+            {
+                id: 'weapon_main',
+                label: 'Arme principale',
+                options: [
+                    {
+                        id: 'martial_weapon_shield',
+                        name: 'Arme de guerre + bouclier',
+                        items: ['weapon_martial', 'shield', 'chain_mail'],
+                        
+                    },
+                    {
+                        id: 'two_martial_weapons',
+                        name: 'Deux armes de guerre',
+                        items: ['Arme de guerre', 'Arme de guerre']
+                    }
+                ]
+            },
+            {
+                id: 'pack',
+                label: 'Paquetage',
+                options: [
+                    {
+                        id: 'priest_pack',
+                        name: 'Paquetage de l’erudit',
+                        items: ['Sac', 'Bougies', 'Encens', 'Vêtements', 'Rations']
+                    },
+                    {
+                        id: 'explorer_pack',
+                        name: 'Paquetage d’explorateur',
+                        items: ['Sac', 'Torche', 'Corde', 'Rations']
+                    }
+                ]
+            }
+        ]
     },
     {
         id: 3,
@@ -222,6 +408,48 @@ const classes = [
         weaponProficiencies: ['Armes courantes'],
         skills: ['Acrobaties', 'Athlétisme', 'Discrétion', 'Escamotage', 'Intimidation', 'Perception', 'Persuasion'],
         skillChoices: 4,
+
+        // ✅ ÉQUIPEMENT
+        equipmentChoices: [
+            {
+                id: 'weapon_main',
+                label: 'Arme principale',
+                options: [
+                    {
+                        id: 'martial_weapon_shield',
+                        name: 'Arme de guerre + bouclier',
+                        items: ['weapon_martial', 'shield', 'chain_mail'],
+                        itemsData: [
+                            armors.leather,
+                        ]
+                    },
+                    {
+                        id: 'two_martial_weapons',
+                        name: 'Deux armes de guerre',
+                        items: ['Arme de guerre', 'Arme de guerre'],
+                        itemsData: [
+                            armors.leather,
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 'pack',
+                label: 'Paquetage',
+                options: [
+                    {
+                        id: 'priest_pack',
+                        name: 'Paquetage du cambrioleur',
+                        items: ['Sac', 'Bougies', 'Encens', 'Vêtements', 'Rations']
+                    },
+                    {
+                        id: 'explorer_pack',
+                        name: 'Paquetage d’explorateur',
+                        items: ['Sac', 'Torche', 'Corde', 'Rations']
+                    }
+                ]
+            }
+        ]
     },
     {
         id: 4,
@@ -234,6 +462,50 @@ const classes = [
         weaponProficiencies: ['Armes courantes'],
         skills: ['Histoire', 'Intuition', 'Médecine', 'Religion'],
         skillChoices: 2,
+
+        // ✅ ÉQUIPEMENT
+        equipmentChoices: [
+            {
+                id: 'weapon_main',
+                label: 'Arme principale',
+                options: [
+                    {
+                        id: 'martial_weapon_shield',
+                        name: 'Arme de guerre + bouclier',
+                        items: ['weapon_martial', 'shield', 'chain_mail'],
+                        itemsData: [
+                            armors.scale_mail,
+                            { name: 'Bouclier', category: 'shield', armor_class: 2 }
+                        ]
+                    },
+                    {
+                        id: 'two_martial_weapons',
+                        name: 'Deux armes de guerre',
+                        items: ['Arme de guerre', 'Arme de guerre'],
+                        itemsData: [
+                            armors.leather,
+                            { name: 'Bouclier', category: 'shield', armor_class: 2 }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 'pack',
+                label: 'Paquetage',
+                options: [
+                    {
+                        id: 'priest_pack',
+                        name: 'Paquetage de l’ecclésiastique',
+                        items: ['Sac', 'Bougies', 'Encens', 'Vêtements', 'Rations']
+                    },
+                    {
+                        id: 'explorer_pack',
+                        name: 'Paquetage d’explorateur',
+                        items: ['Sac', 'Torche', 'Corde', 'Rations']
+                    }
+                ]
+            }
+        ]
     },
     {
         id: 5,
@@ -246,6 +518,48 @@ const classes = [
         weaponProficiencies: ['Armes de guerre'],
         skills: ['Athlétisme', 'Discrétion', 'Nature', 'Perception', 'Survie'],
         skillChoices: 3,
+
+        // ✅ ÉQUIPEMENT
+        equipmentChoices: [
+            {
+                id: 'weapon_main',
+                label: 'Archetype d\'equipment',
+                options: [
+                    {
+                        id: 'martial_weapon_shield',
+                        name: 'Guerrier',
+                        items: ['armure en ecailles', '2 epees courtes', 'arc long', 'carquois avec 20 fleches'],
+                        itemsData: [
+                            armors.scale_mail,
+                        ]
+                    },
+                    {
+                        id: 'two_martial_weapons',
+                        name: 'Rôdeur',
+                        items: ['armure en cuir', '2 armes courantes', 'arc long', 'carquois avec 20 fleches'],
+                        itemsData: [
+                            armors.leather,
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 'pack',
+                label: 'Paquetage',
+                options: [
+                    {
+                        id: 'priest_pack',
+                        name: 'Paquetage de l’explorateur soutairrain',
+                        items: ['Sac', 'Bougies', 'Encens', 'Vêtements', 'Rations']
+                    },
+                    {
+                        id: 'explorer_pack',
+                        name: 'Paquetage d’explorateur',
+                        items: ['Sac', 'Torche', 'Corde', 'Rations']
+                    }
+                ]
+            },
+        ]
     },
     {
         id: 6,
@@ -267,8 +581,8 @@ const classes = [
                 options: [
                     {
                         id: 'martial_weapon_shield',
-                        name: 'Arme de guerre + bouclier',
-                        items: ['weapon_martial', 'shield', 'chain_mail'],
+                        name: 'Épée longue + bouclier',
+                        items: ['Arme de guerre', 'bouclier'],
                         itemsData: [
                             armors.chain_mail,
                             { name: 'Bouclier', category: 'shield', armor_class: 2 }
@@ -276,24 +590,11 @@ const classes = [
                     },
                     {
                         id: 'two_martial_weapons',
-                        name: 'Deux armes de guerre',
-                        items: ['Arme de guerre', 'Arme de guerre']
-                    }
-                ]
-            },
-            {
-                id: 'javelins_or_weapon',
-                label: 'Arme secondaire',
-                options: [
-                    {
-                        id: 'javelins',
-                        name: 'Cinq javelots',
-                        items: ['Javelot x5']
-                    },
-                    {
-                        id: 'simple_weapon',
-                        name: 'Arme courante',
-                        items: ['Arme courante']
+                        name: 'Épée à deux mains',
+                        items: ['Arme de guerre', 'Arme de guer'],
+                        itemsData: [
+                            armors.chain_mail,
+                        ]
                     }
                 ]
             },
@@ -313,22 +614,6 @@ const classes = [
                     }
                 ]
             },
-            {
-                id: 'holy_symbol',
-                label: 'Symbole sacré',
-                options: [
-                    {
-                        id: 'emblem',
-                        name: 'Emblème sacré',
-                        items: ['Emblème sacré']
-                    },
-                    {
-                        id: 'amulet',
-                        name: 'Amulette',
-                        items: ['Amulette']
-                    }
-                ]
-            }
         ]
     }
 
