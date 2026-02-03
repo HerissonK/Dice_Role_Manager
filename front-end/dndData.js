@@ -185,7 +185,7 @@ const weapons = {
         range: '80/320'
     },
 
-    Rapier: {
+    rapier: {
         id: 'rapier',
         name: 'Rapière',
         category: 'martial_melee',
@@ -368,14 +368,20 @@ const classes = [
                 options: [
                     {
                         id: 'martial_weapon_shield',
-                        name: 'Arme de guerre + bouclier',
-                        items: ['weapon_martial', 'shield', 'chain_mail'],
+                        name: 'Dague',
+                        items: ['dagger'],
+                        itemsData: [
+                            weapons.dagger,
+                        ]
                         
                     },
                     {
                         id: 'two_martial_weapons',
-                        name: 'Deux armes de guerre',
-                        items: ['Arme de guerre', 'Arme de guerre']
+                        name: 'Dague',
+                        items: ['dagger'],
+                        itemsData: [
+                            weapons.dagger,
+                        ]
                     }
                 ]
             },
@@ -417,17 +423,21 @@ const classes = [
                 options: [
                     {
                         id: 'martial_weapon_shield',
-                        name: 'Arme de guerre + bouclier',
-                        items: ['weapon_martial', 'shield', 'chain_mail'],
+                        name: 'Rapiere + arc court',
+                        items: ['Rapiere', 'arc court', 'armure de cuir'],
                         itemsData: [
+                            weapons.rapier,
+                            weapons.shortbow,
                             armors.leather,
                         ]
                     },
                     {
                         id: 'two_martial_weapons',
-                        name: 'Deux armes de guerre',
-                        items: ['Arme de guerre', 'Arme de guerre'],
+                        name: 'Deux epees courtes',
+                        items: ['2 Epee courte', 'armure de cuir'],
                         itemsData: [
+                            weapons.shortsword,
+                            weapons.shortsword,
                             armors.leather,
                         ]
                     }
@@ -471,19 +481,21 @@ const classes = [
                 options: [
                     {
                         id: 'martial_weapon_shield',
-                        name: 'Arme de guerre + bouclier',
-                        items: ['weapon_martial', 'shield', 'chain_mail'],
+                        name: 'Masse + bouclier',
+                        items: ['Morgenstern', 'bouclier', 'armure d\'écailles'],
                         itemsData: [
                             armors.scale_mail,
+                            weapons.morningstar,
                             { name: 'Bouclier', category: 'shield', armor_class: 2 }
                         ]
                     },
                     {
                         id: 'two_martial_weapons',
-                        name: 'Deux armes de guerre',
-                        items: ['Arme de guerre', 'Arme de guerre'],
+                        name: 'Masse + bouclier',
+                        items: ['Morgenstern', 'bouclier', 'Armure de cuir'],
                         itemsData: [
                             armors.leather,
+                            weapons.morningstar,
                             { name: 'Bouclier', category: 'shield', armor_class: 2 }
                         ]
                     }
@@ -531,14 +543,20 @@ const classes = [
                         items: ['armure en ecailles', '2 epees courtes', 'arc long', 'carquois avec 20 fleches'],
                         itemsData: [
                             armors.scale_mail,
+                            weapons.shortsword,
+                            weapons.shortsword,
+                            weapons.longbow
                         ]
                     },
                     {
                         id: 'two_martial_weapons',
                         name: 'Rôdeur',
-                        items: ['armure en cuir', '2 armes courantes', 'arc long', 'carquois avec 20 fleches'],
+                        items: ['armure en cuir', '2 epees courtes', 'arc long', 'carquois avec 20 fleches'],
                         itemsData: [
                             armors.leather,
+                            weapons.shortsword,
+                            weapons.shortsword,
+                            weapons.longbow
                         ]
                     }
                 ]
@@ -582,18 +600,20 @@ const classes = [
                     {
                         id: 'martial_weapon_shield',
                         name: 'Épée longue + bouclier',
-                        items: ['Arme de guerre', 'bouclier'],
+                        items: ['Epee longue', 'bouclier'],
                         itemsData: [
                             armors.chain_mail,
+                            weapons.longsword,
                             { name: 'Bouclier', category: 'shield', armor_class: 2 }
                         ]
                     },
                     {
                         id: 'two_martial_weapons',
                         name: 'Épée à deux mains',
-                        items: ['Arme de guerre', 'Arme de guer'],
+                        items: ['Epee a deux mains'],
                         itemsData: [
                             armors.chain_mail,
+                            weapons.greatsword
                         ]
                     }
                 ]

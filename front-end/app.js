@@ -678,6 +678,44 @@ function computeArmorClass(dexModifier) {
     return baseArmor + dexBonus + shieldBonus;
 }
 
+function getEquippedWeapons() {
+    const weapons = [];
+
+    const choices = appState.selectedClass.equipmentChoices || [];
+
+    for (const choice of choices) {
+        const optionId = appState.selectedEquipment[choice.id];
+        const option = choice.options.find(o => o.id === optionId);
+
+        if (!option?.itemsData) continue;
+
+        for (const item of option.itemsData) {
+            if (item.damage) weapons.push(item);
+        }
+    }
+
+    return weapons;
+}
+
+function getAttackAbility(weapon, abilities) {
+    const strMod = getAbilityModifier(abilities.strength);
+    const dexMod = getAbilityModifier(abilities.dexterity);
+
+    // 🎯 Armes à distance → DEX
+    if (weapon.category?.includes('ranged')) {
+        return dexMod;
+    }
+
+    // 🗡️ Armes finesse → meilleur des deux
+    if (weapon.properties?.includes('finesse')) {
+        return Math.max(strMod, dexMod);
+    }
+
+    // 🪓 Mêlée classique → STR
+    return strMod;
+}
+
+
 
 // Étape 7: Fiche de personnage
 function renderCharacterSheet(container) {
@@ -725,6 +763,30 @@ function renderCharacterSheet(container) {
         `;
     }).join('');
     
+    const equippedWeapons = getEquippedWeapons();
+
+    const weaponsHTML = equippedWeapons.map(w => {
+        const abilityMod = getAttackAbility(w, finalScores);
+        const attackBonus = abilityMod + proficiencyBonus;
+
+        return `
+            <div class="weapon-card">
+                <h4>${w.name}</h4>
+                <p>
+                    Attaque :
+                    <strong>${attackBonus >= 0 ? '+' : ''}${attackBonus}</strong>
+                </p>
+                <p>
+                    Dégâts :
+                    <strong>${w.damage}</strong>
+                    (${w.damageType})
+                    ${abilityMod >= 0 ? '+' : ''}${abilityMod}
+                </p>
+            </div>
+        `;
+    }).join('');
+
+
     // Jets de sauvegarde
     const savesHTML = Object.keys(abilityNames).map(ability => {
         const modifier = getAbilityModifier(finalScores[ability]);
@@ -853,7 +915,15 @@ function renderCharacterSheet(container) {
                         </div>
                     </div>
                 </div>
-                
+                <div class="separator"></div>
+
+                <div class="mb-6">
+                    <h3 class="mb-4">Armes</h3>
+                    <div class="grid grid-cols-1 md-grid-cols-2 gap-4">
+                        ${weaponsHTML || '<p>Aucune arme équipée</p>'}
+                    </div>
+                </div>
+
                 <div class="separator"></div>
                 
                 <!-- Compétences maîtrisées -->
