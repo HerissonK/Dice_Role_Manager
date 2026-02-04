@@ -79,3 +79,9 @@ WHERE pi.personnage_id = 45
 
 
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Miwicm9sZSI6InBsYXllciIsImlhdCI6MTc2OTYxODI5MywiZXhwIjoxNzY5NzA0NjkzfQ.bSg0BRvDOOvn-7BobkUTISDUWW63h3PiHaxsyMbyiuU
+
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=Reception123+
+DB_NAME=postgres
