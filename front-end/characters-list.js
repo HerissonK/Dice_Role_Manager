@@ -1,4 +1,23 @@
 // Script pour la page de liste des personnages
+function abilityModifier(score) {
+    return Math.floor((score - 10) / 2);
+}
+
+function getAttackAbilityMod(weapon, abilities) {
+    if (weapon.category?.includes('ranged')) {
+        return abilityModifier(abilities.dex);
+    }
+
+    if (weapon.properties?.includes('finesse')) {
+        return Math.max(
+            abilityModifier(abilities.str),
+            abilityModifier(abilities.dex)
+        );
+    }
+
+    return abilityModifier(abilities.str);
+}
+
 
 document.addEventListener('DOMContentLoaded', () => {
     // Vérifier l'authentification
@@ -71,7 +90,8 @@ function displayCharacters(characters) {
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">CA</span>
-                        <span class="stat-value">${character.ac !== undefined ? character.ac : '?'}</span>
+                        <span class="stat-value">${character.armorClass !== undefined ? character.armorClass : '?'}</span>
+
                     </div>
                 </div>
                 
@@ -128,6 +148,10 @@ async function viewCharacter(characterId) {
 
 // Afficher le modal avec les détails du personnage
 function showCharacterModal(character) {
+    const proficiencyBonus = 2;
+    const weapons = (character.items || []).filter(
+        i => i.damage_dice
+    );    
     const modal = document.getElementById('character-modal');
     const modalName = document.getElementById('modal-character-name');
     const modalBody = document.getElementById('modal-body');
@@ -179,6 +203,38 @@ function showCharacterModal(character) {
                         `;
                     }).join('')}
                 </div>
+            </div>
+            <div class="separator"></div>
+            <div class="detail-section">
+                <h4>Armes</h4>
+                ${
+                    weapons.length === 0
+                        ? '<p class="text-sm text-gray-500">Aucune arme équipée</p>'
+                        : `
+                            <div class="weapons-grid">
+                                ${weapons.map(w => {
+                                    const attackMod = getAttackAbilityMod(w, abilities);
+                                    const attackBonus = attackMod + proficiencyBonus;
+
+                                    return `
+                                        <div class="weapon-card">
+                                            <strong>${w.name}</strong>
+                                            <p class="text-sm">
+                                                Attaque :
+                                                <strong>${attackBonus >= 0 ? '+' : ''}${attackBonus}</strong>
+                                            </p>
+                                            <p class="text-sm">
+                                                Dégâts :
+                                                <strong>${w.damage_dice}</strong>
+                                                (${w.damage_type})
+                                                ${attackMod >= 0 ? '+' : ''}${attackMod}
+                                            </p>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        `
+                }
             </div>
         </div>
     `;
