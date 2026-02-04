@@ -1185,7 +1185,7 @@ async function handleSave() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` // <- très important
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify(characterData)
         });

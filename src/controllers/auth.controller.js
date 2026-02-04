@@ -33,9 +33,7 @@ function validateRegistration(req, res, next) {
   }
   
   next();
-}
-
-module.exports = { validateRegistration };
+};
 
 async function login(req, res) {
   try {
@@ -66,4 +64,4 @@ async function login(req, res) {
 }
 
 // --- Exports ---
-module.exports = { login };
+module.exports = { validateRegistration,login };

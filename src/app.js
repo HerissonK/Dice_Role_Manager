@@ -1,39 +1,41 @@
 const express = require('express');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
+
 const characterRoutes = require('./routes/character.routes');
 const authRoutes = require('./routes/auth.routes');
 
 const app = express();
 
+/* ✅ 1. CORS EN PREMIER */
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:8080',
+  origin: true, //process.env.FRONTEND_URL || 'http://localhost:8080',
   credentials: true,
-  optionsSuccessStatus: 200
 };
 
-const rateLimit = require('express-rate-limit');
+app.use(cors(corsOptions));
 
-// Limiter les tentatives de connexion
+/* ✅ 2. JSON */
+app.use(express.json());
+
+
+/* ✅ 3. RATE LIMITERS */
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 tentatives max
-  message: 'Too many login attempts, please try again later'
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: 'Too many login attempts, please try again later',
 });
 
 app.use('/api/auth/login', loginLimiter);
 
-// Limiter les créations
 const createLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 heure
-  max: 10
+  windowMs: 60 * 60 * 1000,
+  max: 10,
 });
 
 app.use('/api/characters', createLimiter);
 
-app.use(cors(corsOptions));
-
-app.use(express.json());
-
+/* ✅ 4. ROUTES */
 app.use('/api/characters', characterRoutes);
 app.use('/api/auth', authRoutes);
 

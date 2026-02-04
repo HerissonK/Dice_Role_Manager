@@ -59,7 +59,7 @@ async function login(email, password) {
 // Inscription
 async function register(username, email, password) {
     try {
-        const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        const response = await fetch(`${API_BASE_URL}/auth/validateRegistration`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, email, password }) // ⚡ username et non name

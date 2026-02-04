@@ -26,10 +26,8 @@ class Character {
     const client = await db.connect();
 
     try {
-      await client.query(
-        `INSERT INTO personnage (...) VALUES ($1, $2, $3)`,
-        [name, level, classId]
-      );
+      await client.query('BEGIN');
+      
       const result = await client.query(
         `INSERT INTO personnage
          (name, level, class_id, species_id, background_id, user_id)
