@@ -1,4 +1,4 @@
-export function getAttackAbilityMod(weapon, abilities) {
+function getAttackAbilityMod(weapon, abilities) {
     if (weapon.rangeType === 'ranged') {
         return abilityModifier(abilities.dexterity);
     }
@@ -12,3 +12,5 @@ export function getAttackAbilityMod(weapon, abilities) {
 
     return abilityModifier(abilities.strength);
 }
+
+module.exports = { getAttackAbilityMod };

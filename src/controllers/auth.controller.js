@@ -4,20 +4,38 @@ const User = require('../models/user.model');
 const jwtConfig = require('../config/jwt');
 
 // --- Controllers ---
-async function register(req, res) {
-  try {
-    const { username, email, password } = req.body;
-    if (!username || !email || !password) {
-      return res.status(400).json({ error: 'Missing fields' });
-    }
-    const passwordHash = await bcrypt.hash(password, 10);
-    const user = await User.create({ username, email, passwordHash });
-    res.status(201).json(user);
-  } catch (error) {
-    console.error(error);
-    res.status(400).json({ error: 'User already exists' });
+const validator = require('validator');
+
+function validateRegistration(req, res, next) {
+  const { username, email, password } = req.body;
+  
+  const errors = [];
+  
+  if (!username || username.length < 3 || username.length > 50) {
+    errors.push('Username must be 3-50 characters');
   }
+  
+  if (!validator.isEmail(email)) {
+    errors.push('Invalid email format');
+  }
+  
+  if (!password || password.length < 8) {
+    errors.push('Password must be at least 8 characters');
+  }
+  
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+  if (!passwordRegex.test(password)) {
+    errors.push('Password must contain uppercase, lowercase and number');
+  }
+  
+  if (errors.length > 0) {
+    return res.status(400).json({ errors });
+  }
+  
+  next();
 }
+
+module.exports = { validateRegistration };
 
 async function login(req, res) {
   try {
@@ -48,4 +66,4 @@ async function login(req, res) {
 }
 
 // --- Exports ---
-module.exports = { register, login };
+module.exports = { login };
