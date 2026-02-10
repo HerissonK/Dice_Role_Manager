@@ -62,14 +62,14 @@ class Character {
      FIND ONE (DETAIL)
   ====================== */
   static async findById(id, userId) {
-    const characterResult = await db.query(
+      const characterResult = await db.query(
       `SELECT
         p.id,
         p.name,
         p.level,
         c.name AS class,
         c.hit_die,
-        e.name AS species,
+        s.name AS species,
         b.name AS background,
         pc.str,
         pc.dex,
@@ -78,23 +78,24 @@ class Character {
         pc.wis,
         pc.cha
       FROM personnage p
-      JOIN classe c ON c.id = p.class_id
-      JOIN espece e ON e.id = p.species_id
-      JOIN background b ON b.id = p.background_id
+      JOIN dnd_class c ON c.id = p.class_id
+      JOIN dnd_species s ON s.id = p.species_id
+      JOIN dnd_background b ON b.id = p.background_id
       LEFT JOIN (
         SELECT personnage_id,
-              MAX(CASE WHEN caracteristique = 'str' THEN valeur END) AS str,
-              MAX(CASE WHEN caracteristique = 'dex' THEN valeur END) AS dex,
-              MAX(CASE WHEN caracteristique = 'con' THEN valeur END) AS con,
-              MAX(CASE WHEN caracteristique = 'int' THEN valeur END) AS int,
-              MAX(CASE WHEN caracteristique = 'wis' THEN valeur END) AS wis,
-              MAX(CASE WHEN caracteristique = 'cha' THEN valeur END) AS cha
+          MAX(CASE WHEN caracteristique = 'str' THEN valeur END) AS str,
+          MAX(CASE WHEN caracteristique = 'dex' THEN valeur END) AS dex,
+          MAX(CASE WHEN caracteristique = 'con' THEN valeur END) AS con,
+          MAX(CASE WHEN caracteristique = 'int' THEN valeur END) AS int,
+          MAX(CASE WHEN caracteristique = 'wis' THEN valeur END) AS wis,
+          MAX(CASE WHEN caracteristique = 'cha' THEN valeur END) AS cha
         FROM personnage_caracteristique
         GROUP BY personnage_id
       ) pc ON pc.personnage_id = p.id
       WHERE p.id = $1 AND p.user_id = $2`,
       [id, userId]
     );
+
 
     if (!characterResult.rows.length) return null;
 
@@ -117,9 +118,10 @@ class Character {
       baseHit + conMod + ((baseHit / 2) + 1 + conMod) * (level - 1)
     );
 
-    const items = await this.getEquippedItems(id, userId);
+    const items = await this.getEquippedItems(row.id, userId);
     const armorClass = this.calculateArmorClass(abilities, items);
 
+    console.log('Abilities sent to front:', abilities);
 
     return {
       id: row.id,
@@ -130,8 +132,8 @@ class Character {
       background: row.background,
       pv,
       armorClass,
-      items,
-      abilities
+      abilities,
+      items
     };
   }
 
@@ -144,9 +146,10 @@ class Character {
         p.id,
         p.name,
         p.level,
+        p.created_at,
         c.name AS class,
         c.hit_die,
-        e.name AS species,
+        s.name AS species,
         b.name AS background,
         pc.str,
         pc.dex,
@@ -155,9 +158,9 @@ class Character {
         pc.wis,
         pc.cha
       FROM personnage p
-      JOIN classe c ON c.id = p.class_id
-      JOIN espece e ON e.id = p.species_id
-      JOIN background b ON b.id = p.background_id
+      JOIN dnd_class c ON c.id = p.class_id
+      JOIN dnd_species s ON s.id = p.species_id
+      JOIN dnd_background b ON b.id = p.background_id
       LEFT JOIN (
         SELECT personnage_id,
               MAX(CASE WHEN caracteristique = 'str' THEN valeur END) AS str,
@@ -170,7 +173,7 @@ class Character {
         GROUP BY personnage_id
       ) pc ON pc.personnage_id = p.id
       WHERE p.user_id = $1
-      ORDER BY p.id DESC`,
+      ORDER BY p.created_at DESC`,
       [userId]
     );
 
@@ -185,11 +188,8 @@ class Character {
       };
 
       const conMod = Math.floor((abilities.con - 10) / 2);
-      const baseHit = row.hit_die;
-      const level = row.level;
-
       const pv = Math.floor(
-        baseHit + conMod + ((baseHit / 2) + 1 + conMod) * (level - 1)
+        row.hit_die + conMod + ((row.hit_die / 2) + 1 + conMod) * (row.level - 1)
       );
 
       return {
@@ -200,34 +200,41 @@ class Character {
         species: row.species,
         background: row.background,
         pv,
-        abilities
+        created_at: row.created_at
       };
     });
   }
 
+
   /* ======================
-     EQUIPPED ITEMS  🆕
+     EQUIPPED ITEMS
   ====================== */
   static async getEquippedItems(characterId, userId) {
-    const result = await db.query(
-      `SELECT
-        i.id,
-        i.name,
-        i.category,
-        i.armor_class,
-        i.dex_modifier_rule,
-        i.damage_dice,
-        i.damage_type
-      FROM personnage_item pi
-      JOIN item i ON i.id = pi.item_id
-      JOIN personnage p ON p.id = pi.personnage_id
-      WHERE pi.personnage_id = $1
-        AND pi.equipped = true
-        AND p.user_id = $2`,
-      [characterId, userId]
-    );
+    try {
+      const result = await db.query(
+        `SELECT
+          i.id,
+          i.name,
+          i.category,
+          i.armor_class,
+          i.dex_modifier_rule,
+          i.damage_dice,
+          i.damage_type
+        FROM personnage_item pi
+        JOIN item i ON i.id = pi.item_id
+        JOIN personnage p ON p.id = pi.personnage_id
+        WHERE pi.personnage_id = $1
+          AND pi.equipped = true
+          AND p.user_id = $2`,
+        [characterId, userId]
+      );
 
-    return result.rows;
+      return result.rows;
+
+    } catch (err) {
+      console.error('getEquippedItems error:', err.message);
+      return [];
+    }
   }
 
   static calculateArmorClass(abilities, items) {

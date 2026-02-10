@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Jouer - Personnage</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1 id="character-name">Chargement...</h1>
+    <div id="character-stats"></div>
+    <div id="dice-roller">
+        <h2>Lancer de dé</h2>
+        <label for="ability">Caractéristique :</label>
+        <select id="ability">
+            <option value="str">Force</option>
+            <option value="dex">Dextérité</option>
+            <option value="con">Constitution</option>
+            <option value="int">Intelligence</option>
+            <option value="wis">Sagesse</option>
+            <option value="cha">Charisme</option>
+        </select>
+        <button id="roll-ability">Lancer</button>
+        <p id="roll-result"></p>
+    </div>
+
+    <script>
+    const params = new URLSearchParams(window.location.search);
+    const characterId = params.get('id');
+
+    async function loadCharacter() {
+        const response = await fetch(`http://localhost:3000/api/play/${characterId}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+
+        if (!response.ok) {
+            alert('Erreur lors du chargement du personnage');
+            return;
+        }
+
+        const character = await response.json();
+
+        document.getElementById('character-name').textContent = character.name;
+        const statsDiv = document.getElementById('character-stats');
+        statsDiv.innerHTML = `
+            <p>Classe: ${character.class} | Niveau: ${character.level}</p>
+            <p>PV: ${character.pv} | CA: ${character.armorClass}</p>
+            <div>
+                ${Object.entries(character.abilities).map(([key, value]) => {
+                    return `<span>${key.toUpperCase()}: ${value}</span> `;
+                }).join('')}
+            </div>
+        `;
+    }
+
+    document.getElementById('roll-ability').addEventListener('click', async () => {
+        const ability = document.getElementById('ability').value;
+        const response = await fetch(`http://localhost:3000/api/play/${characterId}/roll/ability`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ ability, value: 0 })
+        });
+
+        const result = await response.json();
+        document.getElementById('roll-result').textContent = `Résultat du dé: ${result.roll}`;
+    });
+
+    loadCharacter();
+    </script>
+</body>
+</html>

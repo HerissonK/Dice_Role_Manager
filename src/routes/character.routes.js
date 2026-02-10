@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const authenticate = require('../middlewares/auth.middleware');
 
 const {
   createCharacter,
@@ -8,8 +9,6 @@ const {
   updateCharacter,
   deleteCharacter,
 } = require('../controllers/character.controller');
-
-const { authenticate } = require('../middlewares/auth.middleware');
 
 // Auth obligatoire
 router.use(authenticate);

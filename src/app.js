@@ -4,6 +4,7 @@ const rateLimit = require('express-rate-limit');
 
 const characterRoutes = require('./routes/character.routes');
 const authRoutes = require('./routes/auth.routes');
+const playRoutes = require('./routes/play.routes');
 
 const app = express();
 
@@ -22,7 +23,7 @@ app.use(express.json());
 /* ✅ 3. RATE LIMITERS */
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5,
+  max: 15,
   message: 'Too many login attempts, please try again later',
 });
 
@@ -30,7 +31,7 @@ app.use('/api/auth/login', loginLimiter);
 
 const createLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 10,
+  max: 20,
 });
 
 app.use('/api/characters', createLimiter);
@@ -38,5 +39,6 @@ app.use('/api/characters', createLimiter);
 /* ✅ 4. ROUTES */
 app.use('/api/characters', characterRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api', playRoutes);
 
 module.exports = app;

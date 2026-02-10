@@ -46,6 +46,9 @@ async function loadCharacters() {
         }
         
         const characters = await response.json();
+
+
+
         
         loadingMessage.style.display = 'none';
         
@@ -66,6 +69,11 @@ async function loadCharacters() {
         `;
     }
 }
+
+function playCharacter(id) {
+  window.location.href = `/front-end/play?id=${id}`;
+}
+
 
 // Afficher les personnages
 function displayCharacters(characters) {
@@ -123,7 +131,15 @@ function displayCharacters(characters) {
                     <svg class="icon"><use href="#icon-trash"/></svg>
                     Supprimer
                 </button>
+                <button 
+                    class="btn btn-primary btn-sm"
+                    onclick="playCharacter(${character.id})"
+                >
+                    🎲 Jouer
+                </button>
+
             </div>
+
         </div>
     `).join('');
 }
