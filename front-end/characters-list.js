@@ -29,7 +29,10 @@ document.addEventListener('DOMContentLoaded', () => {
     loadCharacters();
     
     // Bouton de déconnexion
-    document.getElementById('btn-logout').addEventListener('click', logout);
+    const logoutBtn = document.getElementById('btn-logout');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', logout);
+    }
 });
 
 // Charger la liste des personnages
@@ -46,9 +49,8 @@ async function loadCharacters() {
         }
         
         const characters = await response.json();
-
-
-
+        
+        console.log('📋 Personnages chargés:', characters);
         
         loadingMessage.style.display = 'none';
         
@@ -70,16 +72,34 @@ async function loadCharacters() {
     }
 }
 
+/**
+ * Rediriger vers la page de jeu
+ * 🔍 DEBUG: Affiche l'URL avant redirection
+ */
 function playCharacter(id) {
-  window.location.href = `/front-end/play?id=${id}`;
+    console.log('🎲 playCharacter appelé avec id:', id);
+    console.log('📍 Type de id:', typeof id);
+    
+    if (!id) {
+        console.error('❌ ID manquant!');
+        alert('Erreur: ID du personnage manquant');
+        return;
+    }
+    
+    const url = `play.html?id=${id}`;
+    console.log('🔗 Redirection vers:', url);
+    window.location.href = url;
 }
-
 
 // Afficher les personnages
 function displayCharacters(characters) {
     const grid = document.getElementById('characters-grid');
     
-    grid.innerHTML = characters.map(character => `
+    // Construire le HTML
+    const html = characters.map(character => {
+        console.log('🎭 Affichage personnage:', character.id, character.name);
+        
+        return `
         <div class="card character-card p-6">
             <div class="character-card-header">
                 <div>
@@ -99,7 +119,6 @@ function displayCharacters(characters) {
                     <div class="stat-item">
                         <span class="stat-label">CA</span>
                         <span class="stat-value">${character.armorClass !== undefined ? character.armorClass : '?'}</span>
-
                     </div>
                 </div>
                 
@@ -118,8 +137,19 @@ function displayCharacters(characters) {
             
             <div class="character-card-actions">
                 <button 
+                    class="btn btn-primary btn-sm btn-play"
+                    data-character-id="${character.id}"
+                    title="Jouer avec ce personnage"
+                >
+                    🎲 Jouer
+                </button>
+
+                    🎲 Jouer
+                </button>
+                <button 
                     class="btn btn-outline btn-sm" 
                     onclick="viewCharacter(${character.id})"
+                    title="Voir les détails"
                 >
                     <svg class="icon"><use href="#icon-eye"/></svg>
                     Voir
@@ -127,21 +157,26 @@ function displayCharacters(characters) {
                 <button 
                     class="btn btn-outline btn-sm" 
                     onclick="deleteCharacter(${character.id}, '${character.name.replace(/'/g, "\\'")}')"
+                    title="Supprimer ce personnage"
                 >
                     <svg class="icon"><use href="#icon-trash"/></svg>
                     Supprimer
                 </button>
-                <button 
-                    class="btn btn-primary btn-sm"
-                    onclick="playCharacter(${character.id})"
-                >
-                    🎲 Jouer
-                </button>
-
             </div>
-
         </div>
-    `).join('');
+    `;
+    }).join('');
+    
+    grid.innerHTML = html;
+    
+    // 🔍 DEBUG: Vérifier que les boutons ont bien été créés
+    const playButtons = grid.querySelectorAll('[data-character-id]');
+    console.log('🎮 Nombre de boutons "Jouer" créés:', playButtons.length);
+    
+    playButtons.forEach(btn => {
+        const id = btn.getAttribute('data-character-id');
+        console.log('  → Bouton pour personnage ID:', id);
+    });
 }
 
 // Voir un personnage en détail
@@ -177,12 +212,6 @@ function showCharacterModal(character) {
     // Calculer les modificateurs
     const abilities = character.abilities || {};
     const getModifier = (score) => Math.floor((score - 10) / 2);
-    
-    console.log('RAW character:', character);
-    console.log('JSON stringify:', JSON.stringify(character, null, 2));
-    console.log('Keys:', Object.keys(character || {}));
-
-
 
     modalBody.innerHTML = `
         <div class="character-details">

@@ -1,0 +1,400 @@
+/**
+ * Styles pour la page play.html
+ * Version complète avec compétences
+ */
+
+/* ===========================
+   BANNIÈRE DE RÉSULTAT
+=========================== */
+
+.roll-result-banner {
+    position: fixed;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    z-index: 9999;
+    max-width: 600px;
+    width: 90%;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.roll-result-banner.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+.roll-result-content {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+                0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    font-size: 1.125rem;
+    font-weight: 600;
+    border-left: 4px solid #2563eb;
+}
+
+.roll-result-success .roll-result-content {
+    border-left-color: #16a34a;
+    background: linear-gradient(to right, #f0fdf4, white);
+}
+
+.roll-result-error .roll-result-content {
+    border-left-color: #dc2626;
+    background: linear-gradient(to right, #fef2f2, white);
+    color: #dc2626;
+}
+
+/* ===========================
+   LANCEUR DE DÉS
+=========================== */
+
+.dice-roller-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.dice-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1.5rem 1rem;
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #374151;
+}
+
+.dice-btn:hover {
+    border-color: #2563eb;
+    background: #eff6ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.dice-btn:active {
+    transform: translateY(0);
+}
+
+.dice-icon {
+    font-size: 2rem;
+}
+
+/* ===========================
+   CARTE DE CARACTÉRISTIQUE CLIQUABLE
+=========================== */
+
+.ability-card.card-clickable {
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+}
+
+.ability-card.card-clickable:hover {
+    border-color: #2563eb;
+    background: #eff6ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.ability-card.card-clickable:active {
+    transform: translateY(0);
+}
+
+/* ===========================
+   ✨ COMPÉTENCES
+=========================== */
+
+.skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.75rem;
+}
+
+.skill-card {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.skill-card:hover {
+    border-color: #2563eb;
+    background: #eff6ff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.skill-card:active {
+    transform: translateY(0);
+}
+
+/* Compétence maîtrisée */
+.skill-proficient {
+    border-color: #16a34a;
+    background: linear-gradient(to right, #f0fdf4, white);
+}
+
+.skill-proficient:hover {
+    border-color: #15803d;
+    background: linear-gradient(to right, #dcfce7, #f0fdf4);
+}
+
+.skill-card-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.skill-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.skill-name {
+    font-weight: 600;
+    color: #111827;
+    font-size: 0.95rem;
+}
+
+.skill-card-bonus {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #2563eb;
+}
+
+.skill-proficient .skill-card-bonus {
+    color: #16a34a;
+}
+
+.skill-proficiency-badge {
+    color: #f59e0b;
+    font-size: 1rem;
+    margin-left: 0.25rem;
+}
+
+.badge-sm {
+    padding: 0.125rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+.ml-2 {
+    margin-left: 0.5rem;
+}
+
+/* ===========================
+   LANCEUR PERSONNALISÉ
+=========================== */
+
+.custom-dice-roller {
+    background: #f9fafb;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+}
+
+.custom-dice-roller h3 {
+    color: #111827;
+    font-weight: 600;
+}
+
+/* ===========================
+   GRILLES POUR ARMES/ABILITIES
+=========================== */
+
+.weapons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.weapon-card {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.weapon-card strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #111827;
+}
+
+.abilities-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+}
+
+/* ===========================
+   RESPONSIVE
+=========================== */
+
+@media (max-width: 768px) {
+    .dice-roller-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .skills-grid {
+        grid-template-columns: repeat(1, 1fr);
+    }
+
+    .custom-dice-roller .flex {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .custom-dice-roller .btn {
+        width: 100%;
+    }
+
+    .roll-result-banner {
+        width: 95%;
+    }
+
+    .roll-result-content {
+        font-size: 1rem;
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .dice-roller-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dice-btn {
+        padding: 1rem 0.5rem;
+    }
+
+    .dice-icon {
+        font-size: 1.5rem;
+    }
+}
+
+/* ===========================
+   DARK MODE
+=========================== */
+
+@media (prefers-color-scheme: dark) {
+    .roll-result-content {
+        background: #1f2937;
+        color: #f9fafb;
+    }
+
+    .roll-result-success .roll-result-content {
+        background: linear-gradient(to right, #052e16, #1f2937);
+    }
+
+    .roll-result-error .roll-result-content {
+        background: linear-gradient(to right, #450a0a, #1f2937);
+        color: #fca5a5;
+    }
+
+    .dice-btn {
+        background: #1f2937;
+        border-color: #374151;
+        color: #f9fafb;
+    }
+
+    .dice-btn:hover {
+        background: #1e3a8a;
+        border-color: #3b82f6;
+    }
+
+    .skill-card {
+        background: #1f2937;
+        border-color: #374151;
+    }
+
+    .skill-card:hover {
+        background: #1e3a8a;
+        border-color: #3b82f6;
+    }
+
+    .skill-proficient {
+        background: linear-gradient(to right, #052e16, #1f2937);
+        border-color: #16a34a;
+    }
+
+    .skill-proficient:hover {
+        background: linear-gradient(to right, #064e3b, #052e16);
+    }
+
+    .skill-name {
+        color: #f9fafb;
+    }
+
+    .custom-dice-roller {
+        background: #1f2937;
+        border-color: #374151;
+    }
+
+    .custom-dice-roller h3 {
+        color: #f9fafb;
+    }
+
+    .weapon-card {
+        background: #1f2937;
+        border-color: #374151;
+    }
+
+    .weapon-card strong {
+        color: #f9fafb;
+    }
+}
+
+/* ===========================
+   ANIMATIONS
+=========================== */
+
+@keyframes roll-dice {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    25% {
+        transform: rotate(-10deg) scale(1.1);
+    }
+    75% {
+        transform: rotate(10deg) scale(1.1);
+    }
+}
+
+.dice-btn:active .dice-icon,
+.skill-card:active,
+.ability-card.card-clickable:active {
+    animation: roll-dice 0.3s ease;
+}
+
+/* Réduire les animations si préférence utilisateur */
+@media (prefers-reduced-motion: reduce) {
+    .roll-result-banner,
+    .dice-btn,
+    .ability-card,
+    .skill-card {
+        transition: none;
+    }
+
+    .dice-btn:active .dice-icon,
+    .skill-card:active,
+    .ability-card.card-clickable:active {
+        animation: none;
+    }
+}

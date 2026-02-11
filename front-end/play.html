@@ -1,73 +1,164 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>Jouer - Personnage</title>
-<link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jouer - D&D Character</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="play.css">
 </head>
 <body>
-    <h1 id="character-name">Chargement...</h1>
-    <div id="character-stats"></div>
-    <div id="dice-roller">
-        <h2>Lancer de dé</h2>
-        <label for="ability">Caractéristique :</label>
-        <select id="ability">
-            <option value="str">Force</option>
-            <option value="dex">Dextérité</option>
-            <option value="con">Constitution</option>
-            <option value="int">Intelligence</option>
-            <option value="wis">Sagesse</option>
-            <option value="cha">Charisme</option>
-        </select>
-        <button id="roll-ability">Lancer</button>
-        <p id="roll-result"></p>
+    <div class="app-container">
+        <div class="container">
+            <!-- En-tête -->
+            <header class="header">
+                <div class="header-content">
+                    <div>
+                        <h1 id="charName">Chargement...</h1>
+                        <p id="charClass" class="subtitle"></p>
+                    </div>
+                    <div class="header-actions">
+                        <a href="my-characters.html" class="btn btn-outline">← Retour</a>
+                        <button id="btn-logout" class="btn btn-outline">Déconnexion</button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Zone de résultat des dés -->
+            <div id="roll-result-banner" class="roll-result-banner" style="display: none;">
+                <div class="roll-result-content">
+                    <span id="roll-result-text"></span>
+                </div>
+            </div>
+
+            <!-- Contenu principal -->
+            <main class="max-w-6xl">
+                <!-- Statistiques du personnage -->
+                <section class="card p-6 mb-6">
+                    <h2 class="mb-4">Statistiques</h2>
+                    <div class="character-sheet-grid cols-4">
+                        <div class="stat-box">
+                            <label class="stat-label">Points de vie</label>
+                            <p id="charPV" class="stat-value text-red-600">--</p>
+                        </div>
+                        <div class="stat-box">
+                            <label class="stat-label">Classe d'armure</label>
+                            <p id="charAC" class="stat-value">--</p>
+                        </div>
+                        <div class="stat-box">
+                            <label class="stat-label">Initiative</label>
+                            <p id="charInit" class="stat-value">--</p>
+                        </div>
+                        <div class="stat-box">
+                            <label class="stat-label">Bonus de maîtrise</label>
+                            <p class="stat-value">+2</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Caractéristiques -->
+                <section class="card p-6 mb-6">
+                    <h2 class="mb-4">Caractéristiques</h2>
+                    <p class="text-sm text-gray-600 mb-4">Cliquez sur une caractéristique pour lancer 1d20</p>
+                    <div id="abilities" class="grid grid-cols-2 md-grid-cols-3 lg-grid-cols-6 gap-4">
+                        <!-- Les caractéristiques seront insérées ici -->
+                    </div>
+                </section>
+
+                <!-- ✨ NOUVEAU: Compétences -->
+                <section class="card p-6 mb-6">
+                    <h2 class="mb-4">Compétences</h2>
+                    <p class="text-sm text-gray-600 mb-4">
+                        Cliquez sur une compétence pour lancer 1d20 + modificateur
+                        <span class="badge badge-secondary ml-2">★ = Maîtrise (+2)</span>
+                    </p>
+                    <div id="skills" class="skills-grid">
+                        <!-- Les compétences seront insérées ici -->
+                    </div>
+                </section>
+
+                <!-- Lanceur de dés libre -->
+                <section class="card p-6 mb-6">
+                    <h2 class="mb-4">Lancer de dés</h2>
+                    <div class="dice-roller-grid">
+                        <button class="dice-btn" onclick="rollFree(1, 4)">
+                            <span class="dice-icon">🎲</span>
+                            <span>d4</span>
+                        </button>
+                        <button class="dice-btn" onclick="rollFree(1, 6)">
+                            <span class="dice-icon">🎲</span>
+                            <span>d6</span>
+                        </button>
+                        <button class="dice-btn" onclick="rollFree(1, 8)">
+                            <span class="dice-icon">🎲</span>
+                            <span>d8</span>
+                        </button>
+                        <button class="dice-btn" onclick="rollFree(1, 10)">
+                            <span class="dice-icon">🎲</span>
+                            <span>d10</span>
+                        </button>
+                        <button class="dice-btn" onclick="rollFree(1, 12)">
+                            <span class="dice-icon">🎲</span>
+                            <span>d12</span>
+                        </button>
+                        <button class="dice-btn" onclick="rollFree(1, 20)">
+                            <span class="dice-icon">🎲</span>
+                            <span>d20</span>
+                        </button>
+                        <button class="dice-btn" onclick="rollFree(1, 100)">
+                            <span class="dice-icon">🎲</span>
+                            <span>d100</span>
+                        </button>
+                    </div>
+
+                    <!-- Lanceur personnalisé -->
+                    <div class="custom-dice-roller mt-6">
+                        <h3 class="mb-3 text-lg">Lancer personnalisé</h3>
+                        <div class="flex gap-4 items-end">
+                            <div class="form-group flex-1">
+                                <label class="label" for="dice-count">Nombre de dés</label>
+                                <input 
+                                    type="number" 
+                                    id="dice-count" 
+                                    class="input" 
+                                    value="1" 
+                                    min="1" 
+                                    max="20"
+                                />
+                            </div>
+                            <div class="form-group flex-1">
+                                <label class="label" for="dice-sides">Faces du dé</label>
+                                <select id="dice-sides" class="input">
+                                    <option value="4">d4</option>
+                                    <option value="6">d6</option>
+                                    <option value="8">d8</option>
+                                    <option value="10">d10</option>
+                                    <option value="12">d12</option>
+                                    <option value="20" selected>d20</option>
+                                    <option value="100">d100</option>
+                                </select>
+                            </div>
+                            <button 
+                                id="btn-custom-roll" 
+                                class="btn btn-primary"
+                                onclick="rollCustom()"
+                            >
+                                Lancer
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Message de chargement/erreur -->
+                <div id="error-message" class="card p-6 text-center" style="display: none;">
+                    <p class="text-red-600" id="error-text"></p>
+                </div>
+            </main>
+        </div>
     </div>
 
-    <script>
-    const params = new URLSearchParams(window.location.search);
-    const characterId = params.get('id');
-
-    async function loadCharacter() {
-        const response = await fetch(`http://localhost:3000/api/play/${characterId}`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
-
-        if (!response.ok) {
-            alert('Erreur lors du chargement du personnage');
-            return;
-        }
-
-        const character = await response.json();
-
-        document.getElementById('character-name').textContent = character.name;
-        const statsDiv = document.getElementById('character-stats');
-        statsDiv.innerHTML = `
-            <p>Classe: ${character.class} | Niveau: ${character.level}</p>
-            <p>PV: ${character.pv} | CA: ${character.armorClass}</p>
-            <div>
-                ${Object.entries(character.abilities).map(([key, value]) => {
-                    return `<span>${key.toUpperCase()}: ${value}</span> `;
-                }).join('')}
-            </div>
-        `;
-    }
-
-    document.getElementById('roll-ability').addEventListener('click', async () => {
-        const ability = document.getElementById('ability').value;
-        const response = await fetch(`http://localhost:3000/api/play/${characterId}/roll/ability`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({ ability, value: 0 })
-        });
-
-        const result = await response.json();
-        document.getElementById('roll-result').textContent = `Résultat du dé: ${result.roll}`;
-    });
-
-    loadCharacter();
-    </script>
+    <!-- Scripts -->
+    <script src="auth.js"></script>
+    <script src="play.js"></script>
 </body>
 </html>
