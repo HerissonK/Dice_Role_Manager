@@ -19,7 +19,7 @@ exports.rollAbility = (req, res) => {
   const { ability } = req.body;
   const value = req.body.value ?? 0;
 
-  const roll = Math.floor(Math.random() * 20) + 1 + value;
+  const roll = Math.floor((Math.random() * 20) + 1) + 1 + value;
   res.json({ roll });
 };
 

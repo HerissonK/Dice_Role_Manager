@@ -60,6 +60,7 @@ function getCharacterIdFromUrl() {
     return id;
 }
 
+
 function abilityModifier(score) {
     return Math.floor((score - 10) / 2);
 }
@@ -130,7 +131,7 @@ function showRollResult(text, type = 'success') {
         setTimeout(() => {
             banner.style.display = 'none';
         }, 300);
-    }, 5000);
+    }, 1000);
 }
 
 function showError(message) {

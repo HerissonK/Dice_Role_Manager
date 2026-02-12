@@ -74,7 +74,7 @@ async function loadCharacters() {
 
 /**
  * Rediriger vers la page de jeu
- * 🔍 DEBUG: Affiche l'URL avant redirection
+ * ✅ FIX: Utilise 'play' au lieu de 'play.html' pour serveur sans extension
  */
 function playCharacter(id) {
     console.log('🎲 playCharacter appelé avec id:', id);
@@ -86,7 +86,8 @@ function playCharacter(id) {
         return;
     }
     
-    const url = `play.html?id=${id}`;
+    // ✅ CORRECTION: pas de .html car le serveur retire les extensions
+    const url = `play?id=${id}`;
     console.log('🔗 Redirection vers:', url);
     window.location.href = url;
 }
@@ -143,9 +144,6 @@ function displayCharacters(characters) {
                 >
                     🎲 Jouer
                 </button>
-
-                    🎲 Jouer
-                </button>
                 <button 
                     class="btn btn-outline btn-sm" 
                     onclick="viewCharacter(${character.id})"
@@ -169,14 +167,22 @@ function displayCharacters(characters) {
     
     grid.innerHTML = html;
     
-    // 🔍 DEBUG: Vérifier que les boutons ont bien été créés
-    const playButtons = grid.querySelectorAll('[data-character-id]');
-    console.log('🎮 Nombre de boutons "Jouer" créés:', playButtons.length);
+    // Ajouter les event listeners APRÈS avoir inséré le HTML
+    const playButtons = grid.querySelectorAll('.btn-play');
+    console.log('🎮 Nombre de boutons "Jouer" trouvés:', playButtons.length);
     
-    playButtons.forEach(btn => {
-        const id = btn.getAttribute('data-character-id');
-        console.log('  → Bouton pour personnage ID:', id);
+    playButtons.forEach((btn, index) => {
+        const characterId = btn.getAttribute('data-character-id');
+        console.log(`  → Bouton ${index + 1}: ID = ${characterId}`);
+        
+        // Ajouter l'event listener
+        btn.addEventListener('click', (event) => {
+            console.log('🖱️ Clic sur bouton Play');
+            playCharacter(characterId);
+        });
     });
+    
+    console.log('✅ Tous les event listeners configurés');
 }
 
 // Voir un personnage en détail
