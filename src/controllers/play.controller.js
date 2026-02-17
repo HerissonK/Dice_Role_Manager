@@ -7,28 +7,32 @@ exports.rollAttack = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    // 1. Récupérer le personnage
     const character = await Character.findById(id, userId);
     if (!character) {
       return res.status(404).json({ message: 'Personnage introuvable' });
     }
 
-    // 2. Trouver l'arme
-    const weapon = character.items.find(item => item.id === weaponId);
-    if (!weapon || !weapon.damage_dice) {
-      return res.status(400).json({ message: 'Arme introuvable' });
+    // ✅ Cherche par id numérique OU par nom (fallback)
+    const weapon = character.items.find(item =>
+      item.id === weaponId || item.id === Number(weaponId)
+    );
+    if (!weapon) {
+      return res.status(400).json({ message: `Arme id=${weaponId} introuvable dans les items du personnage` });
     }
 
-    // 3. Calculer le modificateur
+    // ✅ Accepte damage_dice (DB) OU damage (data.js legacy)
+    const damageDice = weapon.damage_dice || weapon.damage;
+    if (!damageDice) {
+      return res.status(400).json({ message: 'Cet item n\'est pas une arme' });
+    }
+
     const abilities = character.abilities;
     const attackMod = getAttackModifier(weapon, abilities);
-    const proficiencyBonus = 2; // Niveau 1-4
+    const proficiencyBonus = 2;
 
-    // 4. Lancer le d20
     const d20Roll = Math.floor(Math.random() * 20) + 1;
     const totalAttack = d20Roll + attackMod + proficiencyBonus;
 
-    // 5. Réponse
     res.json({
       weaponName: weapon.name,
       d20: d20Roll,
@@ -45,53 +49,53 @@ exports.rollAttack = async (req, res) => {
   }
 };
 
-// ✅ NOUVEAU: Jet de dégâts
 exports.rollDamage = async (req, res) => {
   const { id } = req.params;
   const { weaponId, isCritical } = req.body;
   const userId = req.user.id;
 
   try {
-    // 1. Récupérer le personnage
     const character = await Character.findById(id, userId);
     if (!character) {
       return res.status(404).json({ message: 'Personnage introuvable' });
     }
 
-    // 2. Trouver l'arme
-    const weapon = character.items.find(item => item.id === weaponId);
-    if (!weapon || !weapon.damage_dice) {
-      return res.status(400).json({ message: 'Arme introuvable' });
+    const weapon = character.items.find(item =>
+      item.id === weaponId || item.id === Number(weaponId)
+    );
+    if (!weapon) {
+      return res.status(400).json({ message: `Arme id=${weaponId} introuvable` });
     }
 
-    // 3. Parser les dés (ex: "1d6" -> 1 dé de 6 faces)
-    const [count, sides] = weapon.damage_dice.split('d').map(Number);
-    
-    // 4. Lancer les dés
+    // ✅ Accepte damage_dice (DB) OU damage (data.js legacy)
+    const damageDice = weapon.damage_dice || weapon.damage;
+    if (!damageDice) {
+      return res.status(400).json({ message: 'Cet item n\'est pas une arme' });
+    }
+
+    const [count, sides] = damageDice.split('d').map(Number);
+
     let rolls = [];
     for (let i = 0; i < count; i++) {
       rolls.push(Math.floor(Math.random() * sides) + 1);
     }
-    
-    // 5. Coup critique = doubler les dés
+
+    // Coup critique = doubler les dés
     if (isCritical) {
       for (let i = 0; i < count; i++) {
         rolls.push(Math.floor(Math.random() * sides) + 1);
       }
     }
-    
-    const diceTotal = rolls.reduce((sum, r) => sum + r, 0);
 
-    // 6. Ajouter le modificateur
+    const diceTotal = rolls.reduce((sum, r) => sum + r, 0);
     const abilities = character.abilities;
     const damageMod = getAttackModifier(weapon, abilities);
     const totalDamage = diceTotal + damageMod;
 
-    // 7. Réponse
     res.json({
       weaponName: weapon.name,
-      damageType: weapon.damage_type,
-      dice: weapon.damage_dice,
+      damageType: weapon.damage_type || weapon.damageType || '',
+      dice: damageDice,
       rolls: rolls,
       diceTotal: diceTotal,
       damageModifier: damageMod,
@@ -110,17 +114,18 @@ function getAttackModifier(weapon, abilities) {
   const strMod = Math.floor((abilities.str - 10) / 2);
   const dexMod = Math.floor((abilities.dex - 10) / 2);
 
-  // Arme à distance → DEX
-  if (weapon.category?.includes('ranged')) {
-    return dexMod;
-  }
+  const category = weapon.category || '';
+  const isRanged = category.includes('ranged');
 
-  // Arme finesse → meilleur des deux
-  if (weapon.properties?.includes('finesse')) {
-    return Math.max(strMod, dexMod);
+  // ✅ Accepte properties en JSON string ou array
+  let properties = weapon.properties || [];
+  if (typeof properties === 'string') {
+    try { properties = JSON.parse(properties); } catch { properties = []; }
   }
+  const hasFinesse = properties.includes('finesse');
 
-  // Mêlée classique → FOR
+  if (isRanged) return dexMod;
+  if (hasFinesse) return Math.max(strMod, dexMod);
   return strMod;
 }
 

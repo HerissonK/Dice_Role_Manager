@@ -293,7 +293,10 @@ function renderWeapons(character) {
 
     weaponsDiv.innerHTML = '';
 
-    const weapons = character.items.filter(item => item.damage_dice);
+    // ✅ Accepte damage_dice (DB) OU damage (data.js)
+    const weapons = (character.items || []).filter(item =>
+        item.damage_dice || item.damage
+    );
 
     if (weapons.length === 0) {
         weaponsDiv.innerHTML = '<p class="text-gray-600">Aucune arme équipée</p>';
@@ -306,13 +309,17 @@ function renderWeapons(character) {
         const proficiencyBonus = 2;
         const attackBonus = attackMod + proficiencyBonus;
 
+        // ✅ Normaliser les champs (DB = damage_dice/damage_type, data.js = damage/damageType)
+        const damageDice = weapon.damage_dice || weapon.damage || '?';
+        const damageType = weapon.damage_type || weapon.damageType || '';
+
         const weaponCard = document.createElement('div');
         weaponCard.className = 'weapon-card';
 
         weaponCard.innerHTML = `
             <div class="weapon-card-header">
                 <h4 class="weapon-name">⚔️ ${weapon.name}</h4>
-                <span class="badge badge-outline">${weapon.damage_type}</span>
+                <span class="badge badge-outline">${damageType}</span>
             </div>
             <div class="weapon-stats">
                 <div class="weapon-stat">
@@ -321,7 +328,7 @@ function renderWeapons(character) {
                 </div>
                 <div class="weapon-stat">
                     <span class="weapon-stat-label">Dégâts</span>
-                    <span class="weapon-stat-value">${weapon.damage_dice} ${attackMod >= 0 ? '+' : ''}${attackMod}</span>
+                    <span class="weapon-stat-value">${damageDice} ${attackMod >= 0 ? '+' : ''}${attackMod}</span>
                 </div>
             </div>
             <div class="weapon-actions">
@@ -351,18 +358,18 @@ function getWeaponAttackMod(weapon, abilities) {
     const strMod = abilityModifier(abilities.str);
     const dexMod = abilityModifier(abilities.dex);
 
-    // Arme à distance → DEX
-    if (weapon.category?.includes('ranged')) {
-        return dexMod;
+    let properties = weapon.properties || [];
+    if (typeof properties === 'string') {
+        try { properties = JSON.parse(properties); } catch { properties = []; }
     }
 
-    // Arme finesse → meilleur des deux
-    if (weapon.properties?.includes('finesse')) {
-        return Math.max(strMod, dexMod);
-    }
+    const hasRange   = properties.includes('range');
+    const isThrown   = properties.includes('thrown');
+    const hasFinesse = properties.includes('finesse');
 
-    // Mêlée → FOR
-    return strMod;
+    if (hasRange && !isThrown && !hasFinesse) return dexMod;  // Arc, Arbalète
+    if (hasFinesse) return Math.max(strMod, dexMod);           // Rapière, Épée courte
+    return strMod;                                              // Mêlée classique
 }
 
 /**
@@ -571,3 +578,376 @@ function rollCustom() {
 
     rollFree(count, sides);
 }
+
+
+/* =========================
+   📜 JOURNAL DES LANCERS
+========================= */
+
+const JOURNAL_KEY = `dnd_journal_${characterId || 'default'}`;
+const JOURNAL_MAX = 100; // garder les 100 derniers lancers
+
+/**
+ * Charger le journal depuis localStorage
+ */
+function loadJournal() {
+    try {
+        const raw = localStorage.getItem(JOURNAL_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch {
+        return [];
+    }
+}
+
+/**
+ * Sauvegarder le journal
+ */
+function saveJournal(entries) {
+    try {
+        // Garder seulement les N derniers
+        const trimmed = entries.slice(-JOURNAL_MAX);
+        localStorage.setItem(JOURNAL_KEY, JSON.stringify(trimmed));
+    } catch (e) {
+        console.warn('Journal: erreur localStorage', e);
+    }
+}
+
+/**
+ * Ajouter une entrée au journal
+ * @param {Object} entry
+ * @param {string} entry.type     - 'ability' | 'skill' | 'attack' | 'damage' | 'free' | 'critical'
+ * @param {string} entry.label    - Nom affiché (ex: "Force", "Perception ★", "Épée longue")
+ * @param {string} entry.dice     - Expression dés (ex: "1d20", "2d6")
+ * @param {number} entry.d20      - Résultat brut du d20 (pour attack)
+ * @param {number[]} entry.rolls  - Tous les dés lancés
+ * @param {number} entry.mod      - Modificateur appliqué
+ * @param {number} entry.total    - Résultat final
+ * @param {string} [entry.detail] - Détail optionnel (ex: "tranchant", "CRITIQUE !")
+ */
+function addJournalEntry(entry) {
+    const entries = loadJournal();
+
+    const fullEntry = {
+        ...entry,
+        id: Date.now(),
+        ts: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    };
+
+    entries.push(fullEntry);
+    saveJournal(entries);
+    renderJournal();
+}
+
+/**
+ * Vider le journal
+ */
+function clearJournal() {
+    if (!confirm('Effacer tout l\'historique des lancers ?')) return;
+    localStorage.removeItem(JOURNAL_KEY);
+    renderJournal();
+}
+
+/**
+ * Obtenir l'emoji du dé selon le type
+ */
+function getDieBadgeText(entry) {
+    if (entry.type === 'attack')   return 'd20';
+    if (entry.type === 'critical') return 'NAT';
+    if (entry.type === 'ability')  return 'd20';
+    if (entry.type === 'skill')    return 'd20';
+    if (entry.type === 'free')     return entry.dice || 'd?';
+    if (entry.type === 'damage') {
+        const dice = entry.dice || '';
+        return dice.split('d')[1] ? `d${dice.split('d')[1]}` : 'd?';
+    }
+    return 'd20';
+}
+
+/**
+ * Classe CSS pour le total selon la valeur
+ */
+function getTotalClass(entry) {
+    if (entry.type === 'critical' || (entry.d20 === 20)) return 'critical';
+    if (entry.d20 === 1) return 'low';
+    if (entry.type === 'attack' || entry.type === 'ability' || entry.type === 'skill') {
+        if (entry.total >= 18) return 'high';
+        if (entry.total <= 5)  return 'low';
+    }
+    if (entry.type === 'damage') {
+        if (entry.total >= 10) return 'high';
+    }
+    return '';
+}
+
+/**
+ * Formater la ligne de résultat
+ */
+function formatResult(entry) {
+    const sign = (n) => n >= 0 ? `+${n}` : `${n}`;
+
+    if (entry.type === 'attack') {
+        const crit = entry.d20 === 20 ? ' 🌟' : entry.d20 === 1 ? ' 💀' : '';
+        return `1d20(${entry.d20})${crit} ${sign(entry.mod)} = <span class="roll-total ${getTotalClass(entry)}">${entry.total}</span>`;
+    }
+
+    if (entry.type === 'damage' || entry.type === 'critical') {
+        const rollsStr = entry.rolls ? `[${entry.rolls.join('+')}]` : '';
+        return `${entry.dice}${rollsStr} ${sign(entry.mod)} = <span class="roll-total ${getTotalClass(entry)}">${entry.total}</span>`;
+    }
+
+    if (entry.type === 'ability' || entry.type === 'skill') {
+        return `1d20(${entry.d20}) ${sign(entry.mod)} = <span class="roll-total ${getTotalClass(entry)}">${entry.total}</span>`;
+    }
+
+    // free
+    return `${entry.dice} = <span class="roll-total ${getTotalClass(entry)}">${entry.total}</span>`;
+}
+
+/**
+ * Rendu complet du journal
+ */
+function renderJournal() {
+    const entries = loadJournal();
+    const list    = document.getElementById('journal-list');
+    const empty   = document.getElementById('journal-empty');
+    const counter = document.getElementById('journal-count');
+
+    if (!list) return;
+
+    // Compteur
+    if (counter) counter.textContent = entries.length;
+
+    // Vide
+    if (entries.length === 0) {
+        if (empty) empty.style.display = 'flex';
+        list.innerHTML = '';
+        return;
+    }
+
+    if (empty) empty.style.display = 'none';
+
+    list.innerHTML = entries.map((entry, idx) => {
+        const badgeText = getDieBadgeText(entry);
+        const resultHtml = formatResult(entry);
+        const detailHtml = entry.detail
+            ? `<div class="journal-entry-detail">${entry.detail}</div>`
+            : '';
+
+        // Séparateur si premier de la liste (plus ancien)
+        const isFirst = idx === 0;
+        const sep = isFirst
+            ? `<li class="journal-date-sep">— début de session —</li>`
+            : '';
+
+        return `
+            ${sep}
+            <li class="journal-entry" data-type="${entry.type}">
+                <div class="journal-die-badge">${badgeText}</div>
+                <div class="journal-entry-content">
+                    <div class="journal-entry-label">${entry.label}</div>
+                    <div class="journal-entry-result">${resultHtml}</div>
+                    ${detailHtml}
+                </div>
+                <div class="journal-entry-time">${entry.ts}</div>
+            </li>
+        `;
+    }).join('');
+}
+
+// ─────────────────────────────────────────────────────
+// PATCH DES FONCTIONS EXISTANTES pour alimenter le journal
+// ─────────────────────────────────────────────────────
+
+/**
+ * Remplacer rollAbility pour alimenter le journal
+ */
+async function rollAbility(ability, modifier, name) {
+    try {
+        const response = await fetch(`http://localhost:3000/api/play/${characterId}/roll/ability`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ ability, value: modifier }),
+        });
+        if (!response.ok) throw new Error('Erreur jet caractéristique');
+
+        const data = await response.json();
+        const total = data.roll + modifier;
+
+        showRollResult(
+            `🎲 ${name} : 1d20 = ${data.roll} ${modifier >= 0 ? '+' : ''}${modifier} = ${total}`,
+            'success'
+        );
+
+        addJournalEntry({
+            type:  'ability',
+            label: name,
+            dice:  '1d20',
+            d20:   data.roll,
+            mod:   modifier,
+            total: total
+        });
+
+    } catch (err) {
+        showRollResult(`❌ ${err.message}`, 'error');
+    }
+}
+
+/**
+ * Remplacer rollSkill pour alimenter le journal
+ */
+async function rollSkill(skillName, ability, bonus, isProficient) {
+    try {
+        const response = await fetch(`http://localhost:3000/api/play/${characterId}/roll/ability`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ ability, value: bonus }),
+        });
+        if (!response.ok) throw new Error('Erreur jet compétence');
+
+        const data = await response.json();
+        const total = data.roll + bonus;
+
+        const profText = isProficient ? ' (Maîtrise ★)' : '';
+        showRollResult(
+            `🎲 ${skillName}${profText} : 1d20 = ${data.roll} ${bonus >= 0 ? '+' : ''}${bonus} = ${total}`,
+            'success'
+        );
+
+        addJournalEntry({
+            type:   'skill',
+            label:  `${skillName}${isProficient ? ' ★' : ''}`,
+            dice:   '1d20',
+            d20:    data.roll,
+            mod:    bonus,
+            total:  total,
+            detail: isProficient ? 'Compétence maîtrisée' : null
+        });
+
+    } catch (err) {
+        showRollResult(`❌ ${err.message}`, 'error');
+    }
+}
+
+/**
+ * Remplacer rollWeaponAttack pour alimenter le journal
+ */
+async function rollWeaponAttack(weaponId) {
+    try {
+        const response = await fetch(`http://localhost:3000/api/play/${characterId}/roll/attack`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ weaponId })
+        });
+        if (!response.ok) throw new Error('Erreur jet d\'attaque');
+
+        const data = await response.json();
+        const totalMod = data.attackModifier + data.proficiencyBonus;
+
+        let resultText = `⚔️ ${data.weaponName} — Attaque : 1d20 = ${data.d20}`;
+        if (data.d20 === 20) resultText += ' 🌟 CRITIQUE !';
+        else if (data.d20 === 1) resultText += ' 💀 ÉCHEC';
+        resultText += ` ${totalMod >= 0 ? '+' : ''}${totalMod} = ${data.total}`;
+
+        showRollResult(resultText, data.isCritical ? 'success' : 'info');
+
+        addJournalEntry({
+            type:   data.isCritical ? 'critical' : 'attack',
+            label:  `${data.weaponName} — Attaque`,
+            dice:   '1d20',
+            d20:    data.d20,
+            mod:    totalMod,
+            total:  data.total,
+            detail: data.isCritical ? '🌟 Coup critique !' : data.isFumble ? '💀 Échec critique' : null
+        });
+
+        if (data.isCritical) {
+            setTimeout(() => {
+                if (confirm('Coup critique ! Lancer les dégâts ?')) {
+                    rollWeaponDamage(weaponId, true);
+                }
+            }, 800);
+        }
+
+    } catch (err) {
+        showRollResult(`❌ ${err.message}`, 'error');
+    }
+}
+
+/**
+ * Remplacer rollWeaponDamage pour alimenter le journal
+ */
+async function rollWeaponDamage(weaponId, isCritical = false) {
+    try {
+        const response = await fetch(`http://localhost:3000/api/play/${characterId}/roll/damage`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ weaponId, isCritical })
+        });
+        if (!response.ok) throw new Error('Erreur jet de dégâts');
+
+        const data = await response.json();
+
+        let resultText = `💥 ${data.weaponName} — Dégâts${isCritical ? ' CRITIQUES' : ''} : `;
+        resultText += `${data.dice}=[${data.rolls.join(', ')}] ${data.damageModifier >= 0 ? '+' : ''}${data.damageModifier} = ${data.total} ${data.damageType}`;
+
+        showRollResult(resultText, isCritical ? 'warning' : 'success');
+
+        addJournalEntry({
+            type:   'damage',
+            label:  `${data.weaponName} — Dégâts${isCritical ? ' critiques' : ''}`,
+            dice:   data.dice,
+            rolls:  data.rolls,
+            mod:    data.damageModifier,
+            total:  data.total,
+            detail: `${data.damageType}${isCritical ? ' · Dés doublés 🌟' : ''}`
+        });
+
+    } catch (err) {
+        showRollResult(`❌ ${err.message}`, 'error');
+    }
+}
+
+/**
+ * Remplacer rollFree pour alimenter le journal
+ */
+async function rollFree(count, sides) {
+    try {
+        const response = await fetch('http://localhost:3000/api/play/roll', {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ dice: `${count}d${sides}` }),
+        });
+        if (!response.ok) throw new Error('Erreur lancer de dés');
+
+        const data = await response.json();
+
+        showRollResult(`🎲 ${count}d${sides} = ${data.roll}`, 'success');
+
+        addJournalEntry({
+            type:  'free',
+            label: `Dé libre`,
+            dice:  `${count}d${sides}`,
+            d20:   data.roll,
+            mod:   0,
+            total: data.roll
+        });
+
+    } catch (err) {
+        showRollResult(`❌ ${err.message}`, 'error');
+    }
+}
+
+// ─────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────
+
+// Charger le journal au démarrage
+document.addEventListener('DOMContentLoaded', () => {
+    // ... votre code d'init existant ...
+
+    // Journal
+    renderJournal();
+
+    const clearBtn = document.getElementById('journal-clear');
+    if (clearBtn) clearBtn.addEventListener('click', clearJournal);
+});

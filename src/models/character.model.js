@@ -5,8 +5,8 @@ class Character {
 
   /* ======================
      CREATE
-     ✅ SAUVEGARDE LES COMPÉTENCES
   ====================== */
+
   static async create(data) {
     RuleValidator.validateCharacter(data);
 
@@ -18,7 +18,8 @@ class Character {
       backgroundId,
       abilities,
       userId,
-      skills // ✅ NOUVEAU: récupérer les compétences choisies
+      skills,
+      equipment
     } = data;
 
     if (!name) {
@@ -29,7 +30,7 @@ class Character {
 
     try {
       await client.query('BEGIN');
-      
+
       // 1. Créer le personnage
       const result = await client.query(
         `INSERT INTO personnage
@@ -41,7 +42,7 @@ class Character {
 
       const characterId = result.rows[0].id;
 
-      // 2. Sauvegarder les caractéristiques (SANS bonus raciaux)
+      // 2. Sauvegarder les caractéristiques
       for (const [ability, value] of Object.entries(abilities)) {
         await client.query(
           `INSERT INTO personnage_caracteristique
@@ -51,7 +52,7 @@ class Character {
         );
       }
 
-      // ✅ 3. NOUVEAU: Sauvegarder les compétences choisies
+      // 3. Sauvegarder les compétences choisies
       if (skills && Array.isArray(skills) && skills.length > 0) {
         for (const skillName of skills) {
           await client.query(
@@ -62,8 +63,77 @@ class Character {
             [characterId, skillName, 'class']
           );
         }
-        
         console.log(`✅ ${skills.length} compétences sauvegardées pour personnage ${characterId}`);
+      }
+
+      // ✅ 4. Sauvegarder les items équipés
+      if (equipment && Array.isArray(equipment) && equipment.length > 0) {
+        let itemsSaved = 0;
+
+        for (const item of equipment) {
+          // Ignorer les items sans damage_dice ET sans armor_class (= équipement non-combat)
+          // On garde seulement les armes, armures et boucliers
+          const isCombatItem = item.damage_dice || item.damage || item.armor_class || item.category;
+          if (!isCombatItem) continue;
+
+          let itemId = null;
+
+          // 🔑 Chercher par nom (insensible à la casse et aux accents)
+          if (item.name) {
+            const itemResult = await client.query(
+              `SELECT id FROM item 
+               WHERE LOWER(TRIM(name)) = LOWER(TRIM($1)) 
+               LIMIT 1`,
+              [item.name]
+            );
+
+            if (itemResult.rows.length > 0) {
+              itemId = itemResult.rows[0].id;
+            } else {
+              // ⚠️ Item non trouvé : l'insérer à la volée
+              console.warn(`⚠️ Item "${item.name}" non trouvé en DB → insertion à la volée`);
+
+              // Déterminer la catégorie
+              let dbCategory = 'gear';
+              if (item.damage_dice || item.damage) dbCategory = 'weapon';
+              else if (item.category === 'shield') dbCategory = 'shield';
+              else if (item.category?.startsWith('armor')) dbCategory = 'armor';
+
+              // Normaliser damage_dice (peut s'appeler "damage" dans data.js)
+              const damageDice = item.damage_dice || item.damage || null;
+
+              const insertResult = await client.query(
+                `INSERT INTO item (name, category, damage_dice, damage_type, armor_class, dex_modifier_rule, properties)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7)
+                 RETURNING id`,
+                [
+                  item.name,
+                  dbCategory,
+                  damageDice,
+                  item.damage_type || item.damageType || null,
+                  item.armor_class || null,
+                  item.dex_modifier_rule || null,
+                  JSON.stringify(item.properties || [])
+                ]
+              );
+
+              itemId = insertResult.rows[0].id;
+              console.log(`✅ Item "${item.name}" inséré avec id ${itemId}`);
+            }
+          }
+
+          if (itemId) {
+            await client.query(
+              `INSERT INTO personnage_item (personnage_id, item_id, equipped)
+               VALUES ($1, $2, true)
+               ON CONFLICT (personnage_id, item_id) DO NOTHING`,
+              [characterId, itemId]
+            );
+            itemsSaved++;
+          }
+        }
+
+        console.log(`✅ ${itemsSaved} items équipés pour personnage ${characterId}`);
       }
 
       await client.query('COMMIT');
@@ -291,7 +361,8 @@ class Character {
           i.armor_class,
           i.dex_modifier_rule,
           i.damage_dice,
-          i.damage_type
+          i.damage_type,
+          i.properties
         FROM personnage_item pi
         JOIN item i ON i.id = pi.item_id
         JOIN personnage p ON p.id = pi.personnage_id
@@ -317,27 +388,24 @@ class Character {
     let dexRule = 'full';
 
     for (const item of items) {
-      if (item.category.startsWith('armor')) {
-        baseArmor = item.armor_class;
-        dexRule = item.dex_modifier_rule;
+      // ✅ Accepte 'armor' (table item) ET 'armor_light'/'armor_heavy' (ancienne logique)
+      if (item.category === 'armor' || item.category?.startsWith('armor')) {
+        baseArmor = item.armor_class || 10;
+        dexRule = item.dex_modifier_rule || 'full';
       }
 
       if (item.category === 'shield') {
-        shieldBonus += item.armor_class;
+        shieldBonus += item.armor_class || 2;
       }
     }
 
     let dexBonus = 0;
-
-    if (dexRule === 'full') {
-      dexBonus = dexMod;
-    } else if (dexRule === 'max2') {
-      dexBonus = Math.min(dexMod, 2);
-    } // none => 0
+    if (dexRule === 'full') dexBonus = dexMod;
+    else if (dexRule === 'max2') dexBonus = Math.min(dexMod, 2);
+    // none → 0
 
     return baseArmor + dexBonus + shieldBonus;
   }
-
 
   /* ======================
      UPDATE

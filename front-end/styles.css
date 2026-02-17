@@ -1157,3 +1157,278 @@ h3 {
         max-height: 90vh;
     }
 }
+
+
+/* ===========================
+   📜 JOURNAL DES LANCERS
+=========================== */
+
+.dice-journal-section {
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    font-family: 'Crimson Text', 'Georgia', serif;
+}
+
+/* EN-TÊTE */
+.journal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+    border-radius: 14px 14px 0 0;
+}
+
+.journal-title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.journal-icon {
+    font-size: 1.4rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+}
+
+.journal-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #e0d7ff;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.journal-count {
+    background: rgba(255,255,255,0.15);
+    color: #c4b5fd;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    min-width: 1.5rem;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+}
+
+.journal-clear-btn {
+    background: rgba(255,255,255,0.08);
+    color: #a5b4fc;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.journal-clear-btn:hover {
+    background: rgba(239, 68, 68, 0.25);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #fca5a5;
+}
+
+/* CORPS */
+.journal-body {
+    background: #faf9f7;
+    max-height: 420px;
+    overflow-y: auto;
+    border-radius: 0 0 14px 14px;
+    scroll-behavior: smooth;
+}
+
+.journal-body::-webkit-scrollbar {
+    width: 6px;
+}
+.journal-body::-webkit-scrollbar-track {
+    background: #f3f4f6;
+}
+.journal-body::-webkit-scrollbar-thumb {
+    background: #c4b5fd;
+    border-radius: 3px;
+}
+
+/* ÉTAT VIDE */
+.journal-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2rem;
+    color: #9ca3af;
+    text-align: center;
+    gap: 0.5rem;
+}
+
+.journal-empty-icon {
+    font-size: 2.5rem;
+    opacity: 0.4;
+    animation: gentle-float 3s ease-in-out infinite;
+}
+
+@keyframes gentle-float {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-6px); }
+}
+
+.journal-empty p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* LISTE */
+.journal-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column-reverse; /* ← les derniers en haut */
+}
+
+/* ENTRÉE INDIVIDUELLE */
+.journal-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid #f0ece8;
+    animation: entry-slide-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+}
+
+@keyframes entry-slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(-12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.journal-entry:last-child {
+    border-bottom: none;
+}
+
+/* BADGE DÉ */
+.journal-die-badge {
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    font-weight: 900;
+    font-family: 'Courier New', monospace;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+/* Couleurs selon le type */
+.journal-entry[data-type="ability"] .journal-die-badge {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+}
+.journal-entry[data-type="skill"] .journal-die-badge {
+    background: linear-gradient(135deg, #10b981, #047857);
+    color: white;
+}
+.journal-entry[data-type="attack"] .journal-die-badge {
+    background: linear-gradient(135deg, #f59e0b, #b45309);
+    color: white;
+}
+.journal-entry[data-type="damage"] .journal-die-badge {
+    background: linear-gradient(135deg, #ef4444, #991b1b);
+    color: white;
+}
+.journal-entry[data-type="free"] .journal-die-badge {
+    background: linear-gradient(135deg, #8b5cf6, #5b21b6);
+    color: white;
+}
+.journal-entry[data-type="critical"] .journal-die-badge {
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    color: white;
+    animation: critical-pulse 0.6s ease-out;
+}
+
+@keyframes critical-pulse {
+    0%   { transform: scale(1); box-shadow: 0 0 0 0 rgba(249,115,22,0.7); }
+    50%  { transform: scale(1.15); box-shadow: 0 0 0 8px rgba(249,115,22,0); }
+    100% { transform: scale(1); }
+}
+
+/* CONTENU */
+.journal-entry-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.journal-entry-label {
+    font-size: 0.82rem;
+    color: #6b7280;
+    margin-bottom: 0.15rem;
+    font-family: 'Crimson Text', 'Georgia', serif;
+    font-style: italic;
+}
+
+.journal-entry-result {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1f2937;
+    font-family: 'Courier New', monospace;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.journal-entry-detail {
+    font-size: 0.78rem;
+    color: #9ca3af;
+    margin-top: 0.1rem;
+    font-family: 'Courier New', monospace;
+}
+
+/* TIMESTAMP */
+.journal-entry-time {
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    color: #d1d5db;
+    font-family: 'Courier New', monospace;
+    align-self: center;
+}
+
+/* SCORE TOTAL mis en valeur */
+.roll-total {
+    color: #1e1b4b;
+}
+
+.roll-total.high {
+    color: #059669;
+}
+
+.roll-total.low {
+    color: #dc2626;
+}
+
+.roll-total.critical {
+    color: #ea580c;
+    font-size: 1.1rem;
+}
+
+/* SÉPARATEUR JOUR */
+.journal-date-sep {
+    text-align: center;
+    font-size: 0.7rem;
+    color: #d1d5db;
+    padding: 0.4rem 0;
+    background: #f9fafb;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-family: 'Courier New', monospace;
+    border-bottom: 1px solid #f0ece8;
+}

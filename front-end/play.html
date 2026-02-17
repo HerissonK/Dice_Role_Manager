@@ -83,6 +83,28 @@
                         <!-- Les armes seront insérées ici -->
                     </div>
                 </section>
+                <!-- 📜 JOURNAL DES LANCERS -->
+                <section class="card p-0 overflow-hidden dice-journal-section">
+                    <div class="journal-header">
+                        <div class="journal-title-group">
+                            <span class="journal-icon">📜</span>
+                            <h2 class="journal-title">Journal des lancers</h2>
+                            <span class="journal-count" id="journal-count">0</span>
+                        </div>
+                        <button class="journal-clear-btn" id="journal-clear" title="Vider le journal">
+                            ✕ Effacer
+                        </button>
+                    </div>
+
+                    <div class="journal-body" id="journal-body">
+                        <div class="journal-empty" id="journal-empty">
+                            <div class="journal-empty-icon">🎲</div>
+                            <p>Aucun lancer pour l'instant.<br>Lancez un dé pour commencer !</p>
+                        </div>
+                        <!-- Les entrées apparaissent ici -->
+                        <ul class="journal-list" id="journal-list"></ul>
+                    </div>
+                </section>
                 <!-- Lanceur de dés libre -->
                 <section class="card p-6 mb-6">
                     <h2 class="mb-4">Lancer de dés</h2>

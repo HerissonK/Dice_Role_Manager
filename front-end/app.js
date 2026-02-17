@@ -1123,16 +1123,20 @@ function buildApiAbilities(frontAbilities) {
 
 function buildEquipmentItems() {
     const items = [];
-    const choices = appState.selectedClass.equipmentChoices || [];
+    const choices = appState.selectedClass?.equipmentChoices || [];
 
     for (const choice of choices) {
         const optionId = appState.selectedEquipment[choice.id];
         const option = choice.options.find(o => o.id === optionId);
-        if (option) items.push(...option.items);
-    }
 
-    if (appState.selectedBackground?.equipment) {
-        items.push(...appState.selectedBackground.equipment);
+        if (!option) continue;
+
+        // itemsData contient les vrais objets avec armor_class, damage_dice, etc.
+        if (option.itemsData && option.itemsData.length > 0) {
+            items.push(...option.itemsData);
+        } else if (option.items) {
+            items.push(...option.items.map(name => ({ name })));
+        }
     }
 
     return items;
@@ -1153,7 +1157,7 @@ async function handleSave() {
         alert(err.message);
         return;
     }
-
+    console.log('🔧 Equipment à envoyer:', buildEquipmentItems());
     const characterData = {
         name: appState.characterName,
         level: 1,
