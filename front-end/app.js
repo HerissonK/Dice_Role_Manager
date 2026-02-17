@@ -1161,6 +1161,7 @@ async function handleSave() {
         speciesId: appState.selectedRace.id,
         backgroundId: appState.selectedBackground.id,
         abilities: apiAbilities,
+        skills: appState.selectedSkills,
         equipment: buildEquipmentItems()
     };
 

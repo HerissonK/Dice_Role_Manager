@@ -131,7 +131,7 @@ function showRollResult(text, type = 'success') {
         setTimeout(() => {
             banner.style.display = 'none';
         }, 300);
-    }, 1000);
+    }, 10000);
 }
 
 function showError(message) {
@@ -203,8 +203,11 @@ function renderCharacter(character) {
     // Caractéristiques
     renderAbilities(character.abilities);
     
-    // ✨ NOUVEAU: Compétences
+    // Compétences
     renderSkills(character);
+
+    // Armes
+    renderWeapons(character);
 }
 
 function renderAbilities(abilities) {
@@ -238,7 +241,7 @@ function renderAbilities(abilities) {
 }
 
 /**
- * ✨ NOUVEAU: Afficher les compétences
+ * ✨ Afficher les compétences
  */
 function renderSkills(character) {
     const skillsDiv = document.getElementById('skills');
@@ -279,6 +282,166 @@ function renderSkills(character) {
 
         skillsDiv.appendChild(skillCard);
     });
+}
+
+/**
+ * ⚔️ Afficher les armes avec boutons d'attaque
+ */
+function renderWeapons(character) {
+    const weaponsDiv = document.getElementById('weapons');
+    if (!weaponsDiv) return;
+
+    weaponsDiv.innerHTML = '';
+
+    const weapons = character.items.filter(item => item.damage_dice);
+
+    if (weapons.length === 0) {
+        weaponsDiv.innerHTML = '<p class="text-gray-600">Aucune arme équipée</p>';
+        return;
+    }
+
+    weapons.forEach(weapon => {
+        const abilities = character.abilities;
+        const attackMod = getWeaponAttackMod(weapon, abilities);
+        const proficiencyBonus = 2;
+        const attackBonus = attackMod + proficiencyBonus;
+
+        const weaponCard = document.createElement('div');
+        weaponCard.className = 'weapon-card';
+
+        weaponCard.innerHTML = `
+            <div class="weapon-card-header">
+                <h4 class="weapon-name">⚔️ ${weapon.name}</h4>
+                <span class="badge badge-outline">${weapon.damage_type}</span>
+            </div>
+            <div class="weapon-stats">
+                <div class="weapon-stat">
+                    <span class="weapon-stat-label">Attaque</span>
+                    <span class="weapon-stat-value">${attackBonus >= 0 ? '+' : ''}${attackBonus}</span>
+                </div>
+                <div class="weapon-stat">
+                    <span class="weapon-stat-label">Dégâts</span>
+                    <span class="weapon-stat-value">${weapon.damage_dice} ${attackMod >= 0 ? '+' : ''}${attackMod}</span>
+                </div>
+            </div>
+            <div class="weapon-actions">
+                <button 
+                    class="btn btn-primary btn-sm"
+                    onclick="rollWeaponAttack(${weapon.id})"
+                >
+                    🎲 Attaque
+                </button>
+                <button 
+                    class="btn btn-outline btn-sm"
+                    onclick="rollWeaponDamage(${weapon.id}, false)"
+                >
+                    💥 Dégâts
+                </button>
+            </div>
+        `;
+
+        weaponsDiv.appendChild(weaponCard);
+    });
+}
+
+/**
+ * Calculer le modificateur d'attaque d'une arme
+ */
+function getWeaponAttackMod(weapon, abilities) {
+    const strMod = abilityModifier(abilities.str);
+    const dexMod = abilityModifier(abilities.dex);
+
+    // Arme à distance → DEX
+    if (weapon.category?.includes('ranged')) {
+        return dexMod;
+    }
+
+    // Arme finesse → meilleur des deux
+    if (weapon.properties?.includes('finesse')) {
+        return Math.max(strMod, dexMod);
+    }
+
+    // Mêlée → FOR
+    return strMod;
+}
+
+/**
+ * ⚔️ Jet d'attaque
+ */
+async function rollWeaponAttack(weaponId) {
+    try {
+        const response = await fetch(`http://localhost:3000/api/play/${characterId}/roll/attack`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ weaponId })
+        });
+
+        if (!response.ok) {
+            throw new Error('Erreur lors du jet d\'attaque');
+        }
+
+        const data = await response.json();
+
+        // Afficher le résultat
+        let resultText = `⚔️ ${data.weaponName} - Attaque : 1d20 = ${data.d20}`;
+        
+        if (data.d20 === 20) {
+            resultText += ' 🌟 CRITIQUE !';
+        } else if (data.d20 === 1) {
+            resultText += ' 💀 ÉCHEC CRITIQUE';
+        }
+        
+        resultText += ` ${data.attackModifier + data.proficiencyBonus >= 0 ? '+' : ''}${data.attackModifier + data.proficiencyBonus} = ${data.total}`;
+
+        showRollResult(resultText, data.isCritical ? 'success' : 'info');
+
+        console.log('Attack roll:', data);
+
+        // Si critique, proposer les dégâts
+        if (data.isCritical) {
+            setTimeout(() => {
+                if (confirm('Coup critique ! Lancer les dégâts ?')) {
+                    rollWeaponDamage(weaponId, true);
+                }
+            }, 1000);
+        }
+
+    } catch (err) {
+        console.error('Erreur jet d\'attaque:', err);
+        showRollResult(`❌ ${err.message}`, 'error');
+    }
+}
+
+/**
+ * 💥 Jet de dégâts
+ */
+async function rollWeaponDamage(weaponId, isCritical = false) {
+    try {
+        const response = await fetch(`http://localhost:3000/api/play/${characterId}/roll/damage`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ weaponId, isCritical })
+        });
+
+        if (!response.ok) {
+            throw new Error('Erreur lors du jet de dégâts');
+        }
+
+        const data = await response.json();
+
+        // Afficher le résultat
+        let resultText = `💥 ${data.weaponName} - Dégâts${isCritical ? ' CRITIQUES' : ''} : `;
+        resultText += `${data.dice} = [${data.rolls.join(', ')}]`;
+        resultText += ` ${data.damageModifier >= 0 ? '+' : ''}${data.damageModifier} = ${data.total} ${data.damageType}`;
+
+        showRollResult(resultText, isCritical ? 'warning' : 'success');
+
+        console.log('Damage roll:', data);
+
+    } catch (err) {
+        console.error('Erreur jet de dégâts:', err);
+        showRollResult(`❌ ${err.message}`, 'error');
+    }
 }
 
 /* =========================

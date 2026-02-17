@@ -6,7 +6,7 @@ species
 background
 
 
-psql -U herissonk -d dnd -f schema.sql
+psql -U herissonk -d dnd -f init.sql
 
 psql -U herissonk -d dnd
 Reception123+

@@ -375,6 +375,50 @@ INSERT INTO dnd_armor (id, name, category, armor_class, dex_modifier_rule) VALUE
 ON CONFLICT (id) DO NOTHING;
 
 -- =====================================================
+-- AJOUT TABLE: PERSONNAGE_SKILL
+-- Pour stocker les compétences choisies par le joueur
+-- =====================================================
+
+-- Créer la table si elle n'existe pas
+CREATE TABLE IF NOT EXISTS personnage_skill (
+    personnage_id INTEGER NOT NULL REFERENCES personnage(id) ON DELETE CASCADE,
+    skill_name VARCHAR(50) NOT NULL,
+    source VARCHAR(20) NOT NULL DEFAULT 'class',
+    
+    PRIMARY KEY (personnage_id, skill_name),
+    
+    CONSTRAINT chk_skill_source CHECK (source IN ('class', 'background', 'feat', 'other'))
+);
+
+-- Index pour performances
+CREATE INDEX IF NOT EXISTS idx_perso_skill_perso ON personnage_skill(personnage_id);
+
+-- Commentaires
+COMMENT ON TABLE personnage_skill IS 'Compétences maîtrisées par personnage (choisies par le joueur)';
+COMMENT ON COLUMN personnage_skill.skill_name IS 'Nom de la compétence (ex: Acrobaties, Perception)';
+COMMENT ON COLUMN personnage_skill.source IS 'Origine: class (choix de classe), background (auto), feat, other';
+
+-- Feedback
+DO $$
+BEGIN
+    RAISE NOTICE '========================================';
+    RAISE NOTICE '✅ Table personnage_skill créée';
+    RAISE NOTICE '========================================';
+    RAISE NOTICE 'Cette table stocke les compétences choisies';
+    RAISE NOTICE 'par le joueur lors de la création du personnage.';
+    RAISE NOTICE '========================================';
+END $$;
+
+-- Vérification
+SELECT 
+    table_name, 
+    column_name, 
+    data_type 
+FROM information_schema.columns 
+WHERE table_name = 'personnage_skill'
+ORDER BY ordinal_position;
+
+-- =====================================================
 -- CRÉATION DE L'ADMINISTRATEUR PAR DÉFAUT
 -- =====================================================
 -- Email: admin@dice.local
