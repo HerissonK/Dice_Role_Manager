@@ -1,651 +1,451 @@
-/**
- * 🎨 PLAY.CSS - DESIGN MODERNE
- * Version finale sans dark mode
- */
+/* ===============================
+   DESIGN SYSTEM (fallback sûr)
+   =============================== */
 
-/* ===========================
-   ✨ BANNIÈRE DE RÉSULTAT
-=========================== */
+:root {
+  --color-primary: #7c5c2e;
+  --color-primary-light: #a0783a;
+  --color-primary-dark: #5a421f;
 
-.roll-result-banner {
-    position: fixed;
-    top: 2rem;
-    right: 2rem;
-    z-index: 9999;
-    max-width: 420px;
-    width: auto;
-    min-width: 320px;
-    opacity: 0;
-    transform: translateX(500px) scale(0.9);
-    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    pointer-events: none;
+  --color-accent: #c9a24d;
+  --color-success: #3f7f5f;
+  --color-warning: #c97a2b;
+  --color-danger: #8b2e2e;
+  --color-info: #3a6f8f;
+
+  --color-bg: #f4efe6;
+  --color-surface: #ffffff;
+  --color-border: #d6cbb8;
+  --color-text: #2b2115;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  --shadow-soft: 0 4px 6px rgba(0, 0, 0, 0.25);
+  --shadow-hover: 0 6px 10px rgba(0, 0, 0, 0.35);
 }
 
-.roll-result-banner.show {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-    pointer-events: auto;
-}
+/* ===============================
+   ROLL RESULT
+   =============================== */
 
 .roll-result-content {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 16px;
-    padding: 1.25rem 1.5rem;
-    padding-right: 3rem;
-    box-shadow: 
-        0 20px 25px -5px rgba(0, 0, 0, 0.15),
-        0 10px 10px -5px rgba(0, 0, 0, 0.08),
-        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
-    text-align: left;
-    font-size: 1rem;
-    font-weight: 600;
-    color: white;
-    position: relative;
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-light),
+    var(--color-primary-dark)
+  );
+  color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-soft);
+  animation: fadeInUp 0.3s ease-out;
 }
 
-/* Animation de fond */
-.roll-result-content::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
-    animation: shimmer 3s linear infinite;
-}
-
-@keyframes shimmer {
-    0% {
-        transform: translate(-25%, -25%) rotate(0deg);
-    }
-    100% {
-        transform: translate(-25%, -25%) rotate(360deg);
-    }
-}
-
-/* Icône du dé animée */
-.roll-result-content::after {
-    content: '🎲';
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 2rem;
-    opacity: 0.4;
-    animation: dice-roll 0.6s ease-out;
-}
-
-@keyframes dice-roll {
-    0%, 100% {
-        transform: translateY(-50%) rotate(0deg);
-    }
-    25% {
-        transform: translateY(-50%) rotate(90deg) scale(1.2);
-    }
-    50% {
-        transform: translateY(-50%) rotate(180deg) scale(1.1);
-    }
-    75% {
-        transform: translateY(-50%) rotate(270deg) scale(1.2);
-    }
-}
-
-/* Bouton fermer */
-.roll-result-close {
-    position: absolute;
-    top: 0.75rem;
-    right: 0.75rem;
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    color: white;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    line-height: 1;
-    opacity: 0.7;
-    transition: all 0.2s;
-    font-weight: 400;
-    padding: 0;
-}
-
-.roll-result-close:hover {
-    opacity: 1;
-    background: rgba(255, 255, 255, 0.3);
-    transform: scale(1.1);
-}
-
-/* Variantes de couleur */
 .roll-result-success .roll-result-content {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-success),
+    var(--color-primary-dark)
+  );
 }
 
 .roll-result-error .roll-result-content {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-danger),
+    #4a1c1c
+  );
 }
 
 .roll-result-warning .roll-result-content {
-    background: linear-gradient(135deg, #ffa751 0%, #ffe259 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-warning),
+    var(--color-accent)
+  );
 }
 
 .roll-result-info .roll-result-content {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-info),
+    var(--color-primary-dark)
+  );
 }
 
-/* ===========================
-   🎲 LANCEUR DE DÉS
-=========================== */
-
-.dice-roller-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
+/* ===============================
+   DICE BUTTONS
+   =============================== */
 
 .dice-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 1.5rem 1rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    font-weight: 600;
-    font-size: 1rem;
-    color: white;
-    box-shadow: 
-        0 4px 6px -1px rgba(102, 126, 234, 0.4),
-        0 2px 4px -1px rgba(102, 126, 234, 0.1);
-    position: relative;
-    overflow: hidden;
-}
-
-.dice-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
-    transition: left 0.5s;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-light),
+    var(--color-primary-dark)
+  );
+  color: var(--color-surface);
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .dice-btn:hover {
-    transform: translateY(-4px) scale(1.05);
-    box-shadow: 
-        0 10px 15px -3px rgba(102, 126, 234, 0.5),
-        0 4px 6px -2px rgba(102, 126, 234, 0.15);
-}
-
-.dice-btn:hover::before {
-    left: 100%;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
 }
 
 .dice-btn:active {
-    transform: translateY(-2px) scale(1.02);
+  transform: translateY(0);
+  box-shadow: var(--shadow-soft);
 }
 
-.dice-icon {
-    font-size: 2rem;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-}
-
-/* Couleurs variées pour chaque dé */
-.dice-btn:nth-child(1) {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
+/* Variantes visuelles */
 .dice-btn:nth-child(2) {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: linear-gradient(135deg, var(--color-danger), #4a1c1c);
 }
 
 .dice-btn:nth-child(3) {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: linear-gradient(135deg, var(--color-info), #2b4f66);
 }
 
 .dice-btn:nth-child(4) {
-    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  background: linear-gradient(135deg, var(--color-success), #2e5f47);
 }
 
 .dice-btn:nth-child(5) {
-    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  background: linear-gradient(135deg, var(--color-accent), var(--color-warning));
 }
 
 .dice-btn:nth-child(6) {
-    background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+  background: linear-gradient(135deg, #4b3a2b, #2a1f17);
 }
 
-.dice-btn:nth-child(7) {
-    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+/* Accessibilité */
+.dice-btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
-/* ===========================
-   🃏 CARTES DE CARACTÉRISTIQUES
-=========================== */
+/* ===============================
+   CARDS (ABILITIES / SKILLS / WEAPONS)
+   =============================== */
 
-.ability-card.card-clickable {
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    border: 2px solid #e5e7eb;
-    background: white;
-    position: relative;
-    overflow: hidden;
+.ability-card,
+.skill-card,
+.weapon-card {
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  color: var(--color-text);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.ability-card.card-clickable::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
-    transition: left 0.5s;
-}
-
-.ability-card.card-clickable:hover {
-    border-color: #667eea;
-    background: linear-gradient(135deg, #f8f9ff 0%, #fff 100%);
-    transform: translateY(-4px) scale(1.05);
-    box-shadow: 
-        0 10px 15px -3px rgba(102, 126, 234, 0.25),
-        0 4px 6px -2px rgba(102, 126, 234, 0.1);
-}
-
-.ability-card.card-clickable:hover::before {
-    left: 100%;
-}
-
-.ability-card.card-clickable:active {
-    transform: translateY(-2px) scale(1.02);
-}
-
-/* ===========================
-   ⭐ COMPÉTENCES
-=========================== */
-
-.skills-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 0.75rem;
-}
-
-.skill-card {
-    background: white;
-    border: 2px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 1rem 1.25rem;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    position: relative;
-    overflow: hidden;
-}
-
-.skill-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.08), transparent);
-    transition: left 0.5s;
-}
-
+.ability-card:hover,
 .skill-card:hover {
-    border-color: #667eea;
-    background: linear-gradient(135deg, #f8f9ff 0%, #fff 100%);
-    transform: translateY(-2px);
-    box-shadow: 
-        0 6px 8px -1px rgba(102, 126, 234, 0.25),
-        0 2px 4px -1px rgba(102, 126, 234, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-soft);
 }
 
-.skill-card:hover::before {
-    left: 100%;
-}
+/* ===============================
+   SKILLS
+   =============================== */
 
-.skill-card:active {
-    transform: translateY(0);
-}
-
-/* Compétence maîtrisée */
 .skill-proficient {
-    border-color: #10b981;
-    background: linear-gradient(135deg, #ecfdf5 0%, #fff 100%);
-}
-
-.skill-proficient::before {
-    background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.12), transparent);
-}
-
-.skill-proficient:hover {
-    border-color: #059669;
-    background: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%);
-    box-shadow: 
-        0 6px 8px -1px rgba(16, 185, 129, 0.3),
-        0 2px 4px -1px rgba(16, 185, 129, 0.1);
-}
-
-.skill-card-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: relative;
-    z-index: 1;
-}
-
-.skill-card-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.skill-name {
-    font-weight: 600;
-    color: #111827;
-    font-size: 0.95rem;
-}
-
-.skill-card-bonus {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #667eea;
+  border-color: var(--color-success);
+  background: linear-gradient(
+    135deg,
+    rgba(63, 127, 95, 0.15),
+    var(--color-surface)
+  );
 }
 
 .skill-proficient .skill-card-bonus {
-    color: #10b981;
+  color: var(--color-success);
+  font-weight: bold;
 }
 
-.skill-proficiency-badge {
-    color: #f59e0b;
-    font-size: 1rem;
-    margin-left: 0.25rem;
-    filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.4));
-    animation: sparkle 2s ease-in-out infinite;
-}
-
-@keyframes sparkle {
-    0%, 100% {
-        transform: scale(1);
-        filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.3));
-    }
-    50% {
-        transform: scale(1.15);
-        filter: drop-shadow(0 2px 8px rgba(245, 158, 11, 0.6));
-    }
-}
-
-/* ===========================
-   📦 LANCEUR PERSONNALISÉ
-=========================== */
-
-.custom-dice-roller {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
-    padding: 1.5rem;
-    border-radius: 16px;
-    border: 2px solid rgba(102, 126, 234, 0.2);
-}
-
-.custom-dice-roller h3 {
-    color: #111827;
-    font-weight: 600;
-    margin-bottom: 1rem;
-}
-
-.custom-dice-roller .input {
-    border: 2px solid #e5e7eb;
-    border-radius: 8px;
-    transition: all 0.3s;
-    background: white;
-}
-
-.custom-dice-roller .input:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-    outline: none;
-}
-
-.custom-dice-roller .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-    box-shadow: 0 4px 6px -1px rgba(102, 126, 234, 0.4);
-    transition: all 0.3s;
-}
-
-.custom-dice-roller .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(102, 126, 234, 0.5);
-}
-
-/* ===========================
-   📱 RESPONSIVE
-=========================== */
-
-@media (max-width: 768px) {
-    .roll-result-banner {
-        top: 1rem;
-        right: 1rem;
-        left: 1rem;
-        max-width: none;
-        min-width: 0;
-    }
-
-    .dice-roller-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-
-    .skills-grid {
-        grid-template-columns: repeat(1, 1fr);
-    }
-
-    .custom-dice-roller .flex {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .custom-dice-roller .btn {
-        width: 100%;
-    }
-}
-
-@media (max-width: 480px) {
-    .dice-roller-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .dice-btn {
-        padding: 1rem 0.5rem;
-    }
-
-    .dice-icon {
-        font-size: 1.5rem;
-    }
-
-    .roll-result-content {
-        font-size: 0.9rem;
-        padding: 1rem 2.5rem 1rem 1rem;
-    }
-}
-
-/* ===========================
-   🎬 ANIMATIONS (RÉDUITES SI DEMANDÉ)
-=========================== */
-
-@media (prefers-reduced-motion: reduce) {
-    .roll-result-banner,
-    .dice-btn,
-    .ability-card,
-    .skill-card {
-        transition: none;
-        animation: none;
-    }
-
-    .skill-proficiency-badge {
-        animation: none;
-    }
-
-    .roll-result-content::before,
-    .roll-result-content::after {
-        animation: none;
-    }
-}
-
-/* ===========================
-   🎯 UTILITAIRES
-=========================== */
-
-.badge-sm {
-    padding: 0.125rem 0.5rem;
-    font-size: 0.75rem;
-}
-
-.ml-2 {
-    margin-left: 0.5rem;
-}
-
-.weapons-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-}
-
-.weapon-card {
-    background: #f9fafb;
-    border: 2px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 1rem;
-    transition: all 0.3s;
-}
+/* ===============================
+   WEAPONS
+   =============================== */
 
 .weapon-card:hover {
-    border-color: #667eea;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px -1px rgba(102, 126, 234, 0.25);
-}
-
-.weapon-card strong {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: #111827;
-    font-size: 1rem;
-}
-
-.weapon-card p {
-    margin-bottom: 0.25rem;
-    font-size: 0.9rem;
-    color: #4b5563;
-}
-
-.abilities-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 1rem;
-}
-
-/* ===========================
-   💡 FOCUS VISIBLE (ACCESSIBILITÉ)
-=========================== */
-
-.dice-btn:focus-visible,
-.skill-card:focus-visible,
-.ability-card:focus-visible {
-    outline: 2px solid #667eea;
-    outline-offset: 2px;
-}
-
-.roll-result-close:focus-visible {
-    outline: 2px solid white;
-    outline-offset: 2px;
-}
-
-/* ===========================
-   ⚔️ ARMES
-=========================== */
-
-.weapons-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1rem;
-}
-
-.weapon-card {
-    background: white;
-    border: 2px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 1.25rem;
-    transition: all 0.3s;
-}
-
-.weapon-card:hover {
-    border-color: #f59e0b;
-    box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.2);
-    transform: translateY(-2px);
-}
-
-.weapon-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-}
-
-.weapon-name {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #111827;
-    margin: 0;
-}
-
-.weapon-stats {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    margin-bottom: 1rem;
-    padding: 1rem;
-    background: #f9fafb;
-    border-radius: 8px;
-}
-
-.weapon-stat {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.weapon-stat-label {
-    font-size: 0.75rem;
-    color: #6b7280;
-    margin-bottom: 0.25rem;
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-hover);
 }
 
 .weapon-stat-value {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #f59e0b;
+  color: var(--color-accent);
+  font-weight: bold;
 }
 
-.weapon-actions {
-    display: flex;
-    gap: 0.5rem;
+/* ===============================
+   ACCESSIBILITÉ GLOBALE
+   =============================== */
+
+.ability-card:focus-visible,
+.skill-card:focus-visible,
+.weapon-card:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
 }
 
-.weapon-actions .btn {
-    flex: 1;
+/* ===============================
+   ANIMATIONS
+   =============================== */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===============================
+   SKILLS – COMPACT GRID
+   =============================== */
+
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.5rem;
+}
+
+.skill-card {
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.skill-card-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.skill-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.skill-name {
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.skill-card-bonus {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.skill-proficient {
+  border-color: var(--color-success);
+  background: linear-gradient(
+    135deg,
+    rgba(63, 127, 95, 0.12),
+    var(--color-surface)
+  );
+}
+
+.skill-proficiency-badge {
+  color: var(--color-success);
+  margin-left: 0.25rem;
+}
+
+/* ===============================
+   DICE JOURNAL
+   =============================== */
+
+.dice-journal-section {
+  background: var(--color-surface);
+}
+
+.journal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-light),
+    var(--color-primary-dark)
+  );
+  color: white;
+}
+
+.journal-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.journal-title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.journal-count {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+}
+
+.journal-clear-btn {
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.journal-body {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.journal-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.journal-entry {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.85rem;
+}
+
+.journal-die-badge {
+  background: var(--color-bg);
+  border-radius: 6px;
+  font-weight: bold;
+  text-align: center;
+  padding: 0.25rem;
+}
+
+.journal-entry-label {
+  font-weight: 600;
+}
+
+.journal-entry-result {
+  font-family: monospace;
+}
+
+.journal-entry-time {
+  font-size: 0.7rem;
+  opacity: 0.6;
+  align-self: center;
+}
+
+.journal-entry-detail {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+/* Totaux */
+.roll-total.high {
+  color: var(--color-success);
+  font-weight: bold;
+}
+
+.roll-total.low {
+  color: var(--color-danger);
+}
+
+.roll-total.critical {
+  color: var(--color-accent);
+  font-weight: bold;
+}
+
+.journal-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  opacity: 0.6;
+  text-align: center;
+}
+
+.journal-empty-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+/* ===============================
+   LAYOUT : SHEET + JOURNAL
+   =============================== */
+
+main.max-w-6xl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 1rem;
+  align-items: start;
+}
+
+html, body {
+  height: auto;
+  overflow-y: auto;
+}
+
+/* ===============================
+   STICKY JOURNAL
+   =============================== */
+
+.dice-journal-section {
+  position: sticky;
+  top: 1rem;
+  max-height: calc(100vh - 2rem);
+  display: flex;
+  flex-direction: column;
+}
+
+.journal-body {
+  overflow-y: auto;
+  max-height: 100%;
+}
+
+main.max-w-6xl > section:not(.dice-journal-section),
+main.max-w-6xl > div:not(.dice-journal-section) {
+  grid-column: 1;
+}
+
+.dice-journal-section {
+  grid-column: 2;
+}
+
+@media (max-width: 1024px) {
+  main.max-w-6xl {
+    grid-template-columns: 1fr;
+  }
+
+  .dice-journal-section {
+    position: relative;
+    max-height: none;
+    grid-column: 1;
+  }
+
+  .journal-body {
+    max-height: none;
+  }
 }
