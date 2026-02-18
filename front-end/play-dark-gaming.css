@@ -4,27 +4,55 @@
  */
 
 /* ===========================
-   📐 LAYOUT 2 COLONNES
+   📐 LAYOUT 2 COLONNES - FIX DÉFINITIF
+   Nécessite le script fix-layout-auto.js
 =========================== */
 main.max-w-6xl {
-    display: grid;
-    grid-template-columns: 1fr 380px;
+    display: flex;
     gap: var(--space-lg);
-    align-items: start;
+    align-items: flex-start;
 }
 
-/* Toutes les sections SAUF le journal → colonne 1 */
-main.max-w-6xl > section:not(.dice-journal-section) {
+/* Wrapper auto-généré pour les sections (sauf journal) */
+.main-content-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+    min-width: 0;
+}
+
+.main-content-wrapper > section {
+    width: 100%;
+}
+
+/* Journal → colonne fixe sticky */
+.dice-journal-section {
+    flex-shrink: 0;
+    width: 380px;
+    position: sticky;
+    top: var(--space-lg);
+    align-self: flex-start;
+    height: fit-content;
+    max-height: calc(100vh - 2rem);
+}
+
+/* ===========================
+   FALLBACK : Si JS désactivé
+   =========================== */
+main.max-w-6xl:not(:has(.main-content-wrapper)) {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    grid-auto-rows: min-content;
+}
+
+main.max-w-6xl:not(:has(.main-content-wrapper)) > section:not(.dice-journal-section) {
     grid-column: 1;
 }
 
-/* Journal → colonne 2 sticky */
-.dice-journal-section {
+main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
     grid-column: 2;
-    grid-row: 1 / -1;
-    position: sticky;
-    top: var(--space-lg);
-    align-self: start;
+    grid-row: 1;
 }
 
 /* Mobile : 1 colonne */

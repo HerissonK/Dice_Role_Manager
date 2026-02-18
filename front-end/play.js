@@ -951,3 +951,40 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearBtn = document.getElementById('journal-clear');
     if (clearBtn) clearBtn.addEventListener('click', clearJournal);
 });
+
+// Attendre que le DOM soit chargé
+document.addEventListener('DOMContentLoaded', () => {
+    fixPlayLayout();
+});
+
+function fixPlayLayout() {
+    const main = document.querySelector('main.max-w-6xl');
+    if (!main) return;
+    
+    const journal = document.querySelector('.dice-journal-section');
+    if (!journal) return;
+    
+    // Créer un wrapper pour toutes les sections sauf le journal
+    const wrapper = document.createElement('div');
+    wrapper.className = 'main-content-wrapper';
+    
+    // Récupérer toutes les sections sauf le journal
+    const sections = Array.from(main.children).filter(
+        child => !child.classList.contains('dice-journal-section')
+    );
+    
+    // Si déjà wrappé, ne rien faire
+    if (main.querySelector('.main-content-wrapper')) {
+        return;
+    }
+    
+    // Déplacer toutes les sections dans le wrapper
+    sections.forEach(section => {
+        wrapper.appendChild(section);
+    });
+    
+    // Insérer le wrapper avant le journal
+    main.insertBefore(wrapper, journal);
+    
+    console.log('✅ Layout fixé : sections wrappées');
+}
