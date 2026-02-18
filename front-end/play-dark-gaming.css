@@ -1,0 +1,776 @@
+/**
+ * 🎮 PLAY.CSS - DARK GAMING THEME
+ * Style pour la page de jeu du personnage
+ */
+
+/* ===========================
+   📐 LAYOUT 2 COLONNES
+=========================== */
+main.max-w-6xl {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: var(--space-lg);
+    align-items: start;
+}
+
+/* Toutes les sections SAUF le journal → colonne 1 */
+main.max-w-6xl > section:not(.dice-journal-section) {
+    grid-column: 1;
+}
+
+/* Journal → colonne 2 sticky */
+.dice-journal-section {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    position: sticky;
+    top: var(--space-lg);
+    align-self: start;
+}
+
+/* Mobile : 1 colonne */
+@media (max-width: 1024px) {
+    main.max-w-6xl {
+        grid-template-columns: 1fr;
+    }
+    
+    .dice-journal-section {
+        grid-column: 1;
+        grid-row: auto;
+        position: relative;
+        top: auto;
+    }
+}
+
+/* ===========================
+   📜 JOURNAL DES LANCERS
+=========================== */
+.dice-journal-section {
+    background: var(--bg-card);
+    border: 2px solid var(--border-subtle);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    max-height: calc(100vh - 2rem);
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-lg);
+}
+
+/* En-tête */
+.journal-header {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md) var(--space-lg);
+    background: linear-gradient(135deg, var(--dark-purple), var(--electric-blue));
+    border-bottom: 2px solid rgba(74, 144, 226, 0.2);
+}
+
+.journal-title-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.journal-icon {
+    font-size: 1.25rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.journal-title {
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.journal-count {
+    background: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.9);
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    min-width: 1.5rem;
+    text-align: center;
+}
+
+.journal-clear-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.9);
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-family: var(--font-heading);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.journal-clear-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #fca5a5;
+}
+
+/* Corps scrollable */
+.journal-body {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: var(--bg-secondary);
+    min-height: 0;
+}
+
+/* Scrollbar personnalisée */
+.journal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.journal-body::-webkit-scrollbar-track {
+    background: var(--bg-tertiary);
+}
+
+.journal-body::-webkit-scrollbar-thumb {
+    background: var(--electric-blue);
+    border-radius: 3px;
+}
+
+.journal-body::-webkit-scrollbar-thumb:hover {
+    background: var(--electric-blue-light);
+}
+
+/* État vide */
+.journal-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-xl) var(--space-md);
+    color: var(--text-muted);
+    text-align: center;
+    gap: var(--space-sm);
+    min-height: 200px;
+}
+
+.journal-empty-icon {
+    font-size: 2.5rem;
+    opacity: 0.3;
+    animation: gentle-float 3s ease-in-out infinite;
+}
+
+@keyframes gentle-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+
+.journal-empty p {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Liste */
+.journal-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column-reverse;
+}
+
+/* Entrée individuelle */
+.journal-entry {
+    display: grid;
+    grid-template-columns: 2.5rem 1fr auto;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    border-bottom: 1px solid var(--border-subtle);
+    animation: slideIn 0.3s ease-out;
+    transition: background 0.2s;
+}
+
+.journal-entry:hover {
+    background: var(--bg-elevated);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.journal-entry:last-child {
+    border-bottom: none;
+}
+
+/* Badge dé */
+.journal-die-badge {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 900;
+    font-family: var(--font-mono);
+    color: var(--text-primary);
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Couleurs par type */
+.journal-entry[data-type="ability"] .journal-die-badge {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+}
+
+.journal-entry[data-type="skill"] .journal-die-badge {
+    background: linear-gradient(135deg, #10b981, #047857);
+}
+
+.journal-entry[data-type="attack"] .journal-die-badge {
+    background: linear-gradient(135deg, #f59e0b, #b45309);
+}
+
+.journal-entry[data-type="damage"] .journal-die-badge {
+    background: linear-gradient(135deg, #ef4444, #991b1b);
+}
+
+.journal-entry[data-type="free"] .journal-die-badge {
+    background: linear-gradient(135deg, #8b5cf6, #5b21b6);
+}
+
+.journal-entry[data-type="critical"] .journal-die-badge {
+    background: linear-gradient(135deg, var(--electric-blue), var(--accent-primary));
+    animation: critical-pulse 0.6s ease-out;
+}
+
+@keyframes critical-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+
+/* Contenu */
+.journal-entry-content {
+    min-width: 0;
+}
+
+.journal-entry-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-bottom: 0.1rem;
+}
+
+.journal-entry-result {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.journal-entry-detail {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.1rem;
+    font-family: var(--font-mono);
+}
+
+/* Timestamp */
+.journal-entry-time {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    align-self: center;
+    flex-shrink: 0;
+}
+
+/* Totaux colorés */
+.roll-total {
+    color: var(--text-primary);
+}
+
+.roll-total.high {
+    color: #10b981;
+    font-weight: 700;
+}
+
+.roll-total.low {
+    color: #ef4444;
+    font-weight: 700;
+}
+
+.roll-total.critical {
+    color: var(--electric-blue);
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+/* Séparateur de date */
+.journal-date-sep {
+    text-align: center;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    padding: var(--space-xs) 0;
+    background: var(--bg-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border-subtle);
+    font-family: var(--font-mono);
+}
+
+/* ===========================
+   🎲 BANNIÈRE DE RÉSULTAT
+=========================== */
+.roll-result-banner {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    z-index: 9999;
+    max-width: 420px;
+    opacity: 0;
+    transform: translateX(500px);
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    pointer-events: none;
+}
+
+.roll-result-banner.show {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+}
+
+.roll-result-content {
+    background: linear-gradient(135deg, var(--electric-blue), var(--accent-primary));
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    box-shadow: var(--shadow-lg);
+    color: var(--text-primary);
+    font-weight: 600;
+    border: 1px solid rgba(74, 144, 226, 0.3);
+}
+
+.roll-result-success .roll-result-content {
+    background: linear-gradient(135deg, #10b981, #047857);
+}
+
+.roll-result-error .roll-result-content {
+    background: linear-gradient(135deg, #ef4444, #991b1b);
+}
+
+.roll-result-warning .roll-result-content {
+    background: linear-gradient(135deg, #f59e0b, #b45309);
+}
+
+.roll-result-info .roll-result-content {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+}
+
+/* ===========================
+   🎲 LANCEUR DE DÉS
+=========================== */
+.dice-roller-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: var(--space-md);
+}
+
+.dice-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    padding: var(--space-lg) var(--space-md);
+    background: linear-gradient(135deg, var(--electric-blue), var(--accent-primary));
+    border: none;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-primary);
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    position: relative;
+    overflow: hidden;
+}
+
+.dice-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.dice-btn:hover::before {
+    width: 200px;
+    height: 200px;
+}
+
+.dice-btn:hover {
+    transform: translateY(-6px) scale(1.05);
+    box-shadow: var(--shadow-lg);
+}
+
+.dice-btn:active {
+    transform: translateY(-2px) scale(1.02);
+}
+
+.dice-icon {
+    font-size: 2.5rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Variations de couleur */
+.dice-btn:nth-child(1) { background: linear-gradient(135deg, var(--electric-blue), #1d4ed8); }
+.dice-btn:nth-child(2) { background: linear-gradient(135deg, #10b981, #047857); }
+.dice-btn:nth-child(3) { background: linear-gradient(135deg, #f59e0b, #b45309); }
+.dice-btn:nth-child(4) { background: linear-gradient(135deg, #ef4444, #991b1b); }
+.dice-btn:nth-child(5) { background: linear-gradient(135deg, #8b5cf6, #5b21b6); }
+.dice-btn:nth-child(6) { background: linear-gradient(135deg, #ec4899, #be185d); }
+.dice-btn:nth-child(7) { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+
+/* ===========================
+   🃏 COMPÉTENCES
+=========================== */
+.skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: var(--space-sm);
+}
+
+.skill-card {
+    background: var(--bg-card);
+    border: 2px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm) var(--space-md);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.skill-card:hover {
+    border-color: var(--electric-blue);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.skill-proficient {
+    border-color: #10b981;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), var(--bg-card));
+}
+
+.skill-proficient:hover {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), var(--bg-card));
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+}
+
+.skill-card-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+}
+
+.skill-card-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.skill-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.skill-card-bonus {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--electric-blue);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-family: var(--font-mono);
+}
+
+.skill-proficient .skill-card-bonus {
+    color: #10b981;
+}
+
+.skill-proficiency-badge {
+    color: #f59e0b;
+    font-size: 1rem;
+    filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.4));
+}
+
+/* ===========================
+   ⚔️ ARMES
+=========================== */
+.weapons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-md);
+}
+
+.weapon-card {
+    background: var(--bg-card);
+    border: 2px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    transition: all 0.3s;
+}
+
+.weapon-card:hover {
+    border-color: var(--electric-blue);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.weapon-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.weapon-name {
+    font-family: var(--font-heading);
+    font-size: 1.125rem;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.weapon-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
+    padding: var(--space-md);
+    background: var(--bg-elevated);
+    border-radius: var(--radius-md);
+}
+
+.weapon-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.weapon-stat-label {
+    font-family: var(--font-heading);
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--space-xs);
+}
+
+.weapon-stat-value {
+    font-family: var(--font-mono);
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--electric-blue);
+}
+
+.weapon-actions {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.weapon-actions .btn {
+    flex: 1;
+}
+
+/* ===========================
+   🎯 CARACTÉRISTIQUES
+=========================== */
+.ability-card {
+    background: var(--bg-card);
+    border: 2px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md);
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.ability-card.card-clickable:hover {
+    border-color: var(--electric-blue);
+    background: linear-gradient(135deg, rgba(74, 144, 226, 0.1), var(--bg-card));
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: var(--shadow-glow);
+}
+
+.ability-card-abbr {
+    font-family: var(--font-heading);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-xs);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+.ability-card-score {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+    margin-bottom: var(--space-sm);
+}
+
+.ability-card-bonus {
+    font-size: 0.8rem;
+    color: #10b981;
+    font-weight: 600;
+}
+
+/* ===========================
+   📊 STATISTIQUES
+=========================== */
+.stat-box {
+    text-align: center;
+    padding: var(--space-lg);
+    background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-card) 100%);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s;
+}
+
+.stat-box:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--border-medium);
+}
+
+.stat-box .stat-label {
+    display: block;
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--space-sm);
+}
+
+.stat-box .stat-value {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--electric-blue);
+    line-height: 1;
+    text-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+}
+
+/* ===========================
+   🎨 LANCEUR PERSONNALISÉ
+=========================== */
+.custom-dice-roller {
+    margin-top: var(--space-xl);
+    padding-top: var(--space-xl);
+    border-top: 1px solid var(--border-subtle);
+}
+
+.custom-dice-roller h3 {
+    font-size: 1.125rem;
+    margin-bottom: var(--space-md);
+    color: var(--text-primary);
+}
+
+.items-end {
+    align-items: flex-end;
+}
+
+/* ===========================
+   📱 RESPONSIVE
+=========================== */
+@media (max-width: 768px) {
+    .dice-roller-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .skills-grid {
+        grid-template-columns: repeat(1, 1fr);
+    }
+    
+    .weapons-grid {
+        grid-template-columns: repeat(1, 1fr);
+    }
+    
+    .roll-result-banner {
+        top: 1rem;
+        right: 1rem;
+        left: 1rem;
+        max-width: none;
+    }
+    
+    .custom-dice-roller .flex {
+        flex-direction: column;
+    }
+    
+    .custom-dice-roller .flex-1 {
+        width: 100%;
+    }
+}
+
+/* ===========================
+   ♿ ACCESSIBILITÉ
+=========================== */
+.dice-btn:focus-visible,
+.skill-card:focus-visible,
+.weapon-card:focus-visible,
+.ability-card:focus-visible {
+    outline: 3px solid var(--electric-blue);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ===========================
+   🎭 UTILITAIRES SPÉCIFIQUES
+=========================== */
+.hidden {
+    display: none;
+}
+
+.text-red-600 {
+    color: #ef4444;
+}
+
+.mt-6 {
+    margin-top: var(--space-lg);
+}
+
+.flex-1 {
+    flex: 1;
+}

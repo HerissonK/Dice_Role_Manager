@@ -1,451 +1,670 @@
+/**
+ * 🎲 PLAY.CSS - OPTIMISÉ & CORRIGÉ
+ * Thème Taverne Mystique
+ */
+
 /* ===============================
-   DESIGN SYSTEM (fallback sûr)
+   🎨 VARIABLES
    =============================== */
-
 :root {
-  --color-primary: #7c5c2e;
-  --color-primary-light: #a0783a;
-  --color-primary-dark: #5a421f;
-
-  --color-accent: #c9a24d;
-  --color-success: #3f7f5f;
-  --color-warning: #c97a2b;
-  --color-danger: #8b2e2e;
-  --color-info: #3a6f8f;
-
-  --color-bg: #f4efe6;
-  --color-surface: #ffffff;
-  --color-border: #d6cbb8;
-  --color-text: #2b2115;
-
+  /* Palette principale */
+  --saffron: #F8C662;
+  --ultra-violet: #595082;
+  --dark-purple: #2C263F;
+  --hunter-green: #41644A;
+  --dark-green: #213722;
+  
+  /* Neutres */
+  --white: #ffffff;
+  --paper: #f8f5f0;
+  --border: rgba(89, 80, 130, 0.2);
+  --shadow: rgba(33, 55, 34, 0.15);
+  
+  /* Espacements */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  
+  /* Rayons */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
-
-  --shadow-soft: 0 4px 6px rgba(0, 0, 0, 0.25);
-  --shadow-hover: 0 6px 10px rgba(0, 0, 0, 0.35);
+  
+  /* Ombres */
+  --shadow-sm: 0 2px 4px var(--shadow);
+  --shadow-md: 0 4px 8px var(--shadow);
+  --shadow-lg: 0 10px 20px var(--shadow);
 }
 
 /* ===============================
-   ROLL RESULT
+   📐 LAYOUT 2-COLONNES
    =============================== */
-
-.roll-result-content {
-  padding: 1rem;
-  border-radius: var(--radius-md);
-  background: linear-gradient(
-    135deg,
-    var(--color-primary-light),
-    var(--color-primary-dark)
-  );
-  color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-soft);
-  animation: fadeInUp 0.3s ease-out;
-}
-
-.roll-result-success .roll-result-content {
-  background: linear-gradient(
-    135deg,
-    var(--color-success),
-    var(--color-primary-dark)
-  );
-}
-
-.roll-result-error .roll-result-content {
-  background: linear-gradient(
-    135deg,
-    var(--color-danger),
-    #4a1c1c
-  );
-}
-
-.roll-result-warning .roll-result-content {
-  background: linear-gradient(
-    135deg,
-    var(--color-warning),
-    var(--color-accent)
-  );
-}
-
-.roll-result-info .roll-result-content {
-  background: linear-gradient(
-    135deg,
-    var(--color-info),
-    var(--color-primary-dark)
-  );
-}
-
-/* ===============================
-   DICE BUTTONS
-   =============================== */
-
-.dice-btn {
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius-md);
-  border: none;
-  cursor: pointer;
-  font-weight: bold;
-  background: linear-gradient(
-    135deg,
-    var(--color-primary-light),
-    var(--color-primary-dark)
-  );
-  color: var(--color-surface);
-  box-shadow: var(--shadow-soft);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.dice-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-hover);
-}
-
-.dice-btn:active {
-  transform: translateY(0);
-  box-shadow: var(--shadow-soft);
-}
-
-/* Variantes visuelles */
-.dice-btn:nth-child(2) {
-  background: linear-gradient(135deg, var(--color-danger), #4a1c1c);
-}
-
-.dice-btn:nth-child(3) {
-  background: linear-gradient(135deg, var(--color-info), #2b4f66);
-}
-
-.dice-btn:nth-child(4) {
-  background: linear-gradient(135deg, var(--color-success), #2e5f47);
-}
-
-.dice-btn:nth-child(5) {
-  background: linear-gradient(135deg, var(--color-accent), var(--color-warning));
-}
-
-.dice-btn:nth-child(6) {
-  background: linear-gradient(135deg, #4b3a2b, #2a1f17);
-}
-
-/* Accessibilité */
-.dice-btn:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-}
-
-/* ===============================
-   CARDS (ABILITIES / SKILLS / WEAPONS)
-   =============================== */
-
-.ability-card,
-.skill-card,
-.weapon-card {
-  background: var(--color-surface);
-  border: 2px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 1rem;
-  color: var(--color-text);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.ability-card:hover,
-.skill-card:hover {
-  border-color: var(--color-primary);
-  box-shadow: var(--shadow-soft);
-}
-
-/* ===============================
-   SKILLS
-   =============================== */
-
-.skill-proficient {
-  border-color: var(--color-success);
-  background: linear-gradient(
-    135deg,
-    rgba(63, 127, 95, 0.15),
-    var(--color-surface)
-  );
-}
-
-.skill-proficient .skill-card-bonus {
-  color: var(--color-success);
-  font-weight: bold;
-}
-
-/* ===============================
-   WEAPONS
-   =============================== */
-
-.weapon-card:hover {
-  border-color: var(--color-accent);
-  box-shadow: var(--shadow-hover);
-}
-
-.weapon-stat-value {
-  color: var(--color-accent);
-  font-weight: bold;
-}
-
-/* ===============================
-   ACCESSIBILITÉ GLOBALE
-   =============================== */
-
-.ability-card:focus-visible,
-.skill-card:focus-visible,
-.weapon-card:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 3px;
-}
-
-/* ===============================
-   ANIMATIONS
-   =============================== */
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ===============================
-   SKILLS – COMPACT GRID
-   =============================== */
-
-.skills-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 0.5rem;
-}
-
-.skill-card {
-  padding: 0.5rem 0.6rem;
-  border-radius: 8px;
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  cursor: pointer;
-  font-size: 0.85rem;
-}
-
-.skill-card-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.skill-card-header {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.skill-name {
-  font-weight: 600;
-  line-height: 1.1;
-}
-
-.skill-card-bonus {
-  font-weight: 700;
-  font-size: 0.95rem;
-}
-
-.skill-proficient {
-  border-color: var(--color-success);
-  background: linear-gradient(
-    135deg,
-    rgba(63, 127, 95, 0.12),
-    var(--color-surface)
-  );
-}
-
-.skill-proficiency-badge {
-  color: var(--color-success);
-  margin-left: 0.25rem;
-}
-
-/* ===============================
-   DICE JOURNAL
-   =============================== */
-
-.dice-journal-section {
-  background: var(--color-surface);
-}
-
-.journal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--color-border);
-  background: linear-gradient(
-    135deg,
-    var(--color-primary-light),
-    var(--color-primary-dark)
-  );
-  color: white;
-}
-
-.journal-title-group {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.journal-title {
-  margin: 0;
-  font-size: 1.1rem;
-}
-
-.journal-count {
-  background: rgba(255, 255, 255, 0.2);
-  padding: 0.15rem 0.45rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-}
-
-.journal-clear-btn {
-  background: transparent;
-  border: none;
-  color: white;
-  cursor: pointer;
-  font-size: 0.85rem;
-}
-
-.journal-body {
-  max-height: 320px;
-  overflow-y: auto;
-}
-
-.journal-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.journal-entry {
-  display: grid;
-  grid-template-columns: 40px 1fr auto;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid var(--color-border);
-  font-size: 0.85rem;
-}
-
-.journal-die-badge {
-  background: var(--color-bg);
-  border-radius: 6px;
-  font-weight: bold;
-  text-align: center;
-  padding: 0.25rem;
-}
-
-.journal-entry-label {
-  font-weight: 600;
-}
-
-.journal-entry-result {
-  font-family: monospace;
-}
-
-.journal-entry-time {
-  font-size: 0.7rem;
-  opacity: 0.6;
-  align-self: center;
-}
-
-.journal-entry-detail {
-  font-size: 0.75rem;
-  opacity: 0.8;
-}
-
-/* Totaux */
-.roll-total.high {
-  color: var(--color-success);
-  font-weight: bold;
-}
-
-.roll-total.low {
-  color: var(--color-danger);
-}
-
-.roll-total.critical {
-  color: var(--color-accent);
-  font-weight: bold;
-}
-
-.journal-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  opacity: 0.6;
-  text-align: center;
-}
-
-.journal-empty-icon {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
-}
-
-/* ===============================
-   LAYOUT : SHEET + JOURNAL
-   =============================== */
-
 main.max-w-6xl {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
-  gap: 1rem;
+  grid-template-columns: 1fr 380px;
+  gap: var(--space-lg);
   align-items: start;
 }
 
-html, body {
-  height: auto;
-  overflow-y: auto;
+/* Toutes les sections SAUF le journal → colonne 1 */
+main.max-w-6xl > section:not(.dice-journal-section) {
+  grid-column: 1;
+}
+
+/* Journal → colonne 2 sticky */
+.dice-journal-section {
+  grid-column: 2;
+  grid-row: 1 / -1; /* S'étend sur toutes les rangées */
+  position: sticky;
+  top: var(--space-lg);
+  align-self: start;
+}
+
+/* Mobile : 1 colonne */
+@media (max-width: 1024px) {
+  main.max-w-6xl {
+    grid-template-columns: 1fr;
+  }
+  
+  .dice-journal-section {
+    grid-column: 1;
+    grid-row: auto;
+    position: relative;
+    top: auto;
+  }
 }
 
 /* ===============================
-   STICKY JOURNAL
+   📜 JOURNAL DES LANCERS
    =============================== */
-
 .dice-journal-section {
-  position: sticky;
-  top: 1rem;
+  background: var(--white);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  /* ✅ HAUTEUR FIXE pour permettre le scroll */
   max-height: calc(100vh - 2rem);
   display: flex;
   flex-direction: column;
 }
 
+/* En-tête */
+.journal-header {
+  flex-shrink: 0; /* Ne pas rétrécir */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-md) var(--space-lg);
+  background: linear-gradient(135deg, var(--dark-purple), var(--ultra-violet));
+  border-bottom: 2px solid var(--border);
+}
+
+.journal-title-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.journal-icon {
+  font-size: 1.25rem;
+}
+
+.journal-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--white);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.journal-count {
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+.journal-clear-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.9);
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.journal-clear-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+}
+
+/* Corps scrollable */
 .journal-body {
-  overflow-y: auto;
-  max-height: 100%;
+  flex: 1; /* Prend tout l'espace restant */
+  overflow-y: auto; /* ✅ SCROLL ICI */
+  overflow-x: hidden;
+  background: var(--paper);
+  /* ✅ HAUTEUR MINIMALE pour forcer le scroll */
+  min-height: 0;
 }
 
-main.max-w-6xl > section:not(.dice-journal-section),
-main.max-w-6xl > div:not(.dice-journal-section) {
-  grid-column: 1;
+/* Scrollbar personnalisée */
+.journal-body::-webkit-scrollbar {
+  width: 6px;
 }
 
-.dice-journal-section {
-  grid-column: 2;
+.journal-body::-webkit-scrollbar-track {
+  background: rgba(89, 80, 130, 0.05);
 }
 
-@media (max-width: 1024px) {
-  main.max-w-6xl {
-    grid-template-columns: 1fr;
+.journal-body::-webkit-scrollbar-thumb {
+  background: var(--ultra-violet);
+  border-radius: 3px;
+}
+
+.journal-body::-webkit-scrollbar-thumb:hover {
+  background: var(--dark-purple);
+}
+
+/* État vide */
+.journal-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg) var(--space-md);
+  color: rgba(89, 80, 130, 0.5);
+  text-align: center;
+  gap: var(--space-sm);
+  min-height: 200px;
+}
+
+.journal-empty-icon {
+  font-size: 2.5rem;
+  opacity: 0.4;
+}
+
+.journal-empty p {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Liste */
+.journal-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column-reverse; /* Derniers en haut */
+}
+
+/* Entrée individuelle */
+.journal-entry {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr auto;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid rgba(89, 80, 130, 0.1);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
   }
-
-  .dice-journal-section {
-    position: relative;
-    max-height: none;
-    grid-column: 1;
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
+}
 
-  .journal-body {
-    max-height: none;
+.journal-entry:last-child {
+  border-bottom: none;
+}
+
+/* Badge dé */
+.journal-die-badge {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 900;
+  font-family: monospace;
+  color: var(--white);
+  flex-shrink: 0;
+}
+
+/* Couleurs par type */
+.journal-entry[data-type="ability"] .journal-die-badge {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+}
+
+.journal-entry[data-type="skill"] .journal-die-badge {
+  background: linear-gradient(135deg, var(--hunter-green), var(--dark-green));
+}
+
+.journal-entry[data-type="attack"] .journal-die-badge {
+  background: linear-gradient(135deg, #f59e0b, #b45309);
+}
+
+.journal-entry[data-type="damage"] .journal-die-badge {
+  background: linear-gradient(135deg, #ef4444, #991b1b);
+}
+
+.journal-entry[data-type="free"] .journal-die-badge {
+  background: linear-gradient(135deg, var(--ultra-violet), var(--dark-purple));
+}
+
+.journal-entry[data-type="critical"] .journal-die-badge {
+  background: linear-gradient(135deg, var(--saffron), #e5b44d);
+  animation: critical-pulse 0.6s ease-out;
+}
+
+@keyframes critical-pulse {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* Contenu */
+.journal-entry-content {
+  min-width: 0; /* Permet l'ellipsis */
+}
+
+.journal-entry-label {
+  font-size: 0.8rem;
+  color: rgba(44, 38, 63, 0.7);
+  font-style: italic;
+  margin-bottom: 0.1rem;
+}
+
+.journal-entry-result {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--dark-purple);
+  font-family: monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.journal-entry-detail {
+  font-size: 0.75rem;
+  color: rgba(89, 80, 130, 0.7);
+  margin-top: 0.1rem;
+}
+
+/* Timestamp */
+.journal-entry-time {
+  font-size: 0.7rem;
+  color: rgba(89, 80, 130, 0.5);
+  font-family: monospace;
+  align-self: center;
+  flex-shrink: 0;
+}
+
+/* Totaux colorés */
+.roll-total {
+  color: var(--dark-purple);
+}
+
+.roll-total.high {
+  color: var(--hunter-green);
+  font-weight: 700;
+}
+
+.roll-total.low {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.roll-total.critical {
+  color: var(--saffron);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+/* Séparateur de date */
+.journal-date-sep {
+  text-align: center;
+  font-size: 0.65rem;
+  color: rgba(89, 80, 130, 0.5);
+  padding: var(--space-xs) 0;
+  background: rgba(89, 80, 130, 0.03);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid rgba(89, 80, 130, 0.1);
+}
+
+/* ===============================
+   🎲 BANNIÈRE DE RÉSULTAT
+   =============================== */
+.roll-result-banner {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  z-index: 9999;
+  max-width: 420px;
+  opacity: 0;
+  transform: translateX(500px);
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  pointer-events: none;
+}
+
+.roll-result-banner.show {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.roll-result-content {
+  background: linear-gradient(135deg, var(--ultra-violet), var(--dark-purple));
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-lg);
+  color: var(--white);
+  font-weight: 600;
+  border: 1px solid rgba(248, 198, 98, 0.2);
+}
+
+.roll-result-success .roll-result-content {
+  background: linear-gradient(135deg, var(--hunter-green), var(--dark-green));
+}
+
+.roll-result-error .roll-result-content {
+  background: linear-gradient(135deg, #dc2626, #991b1b);
+}
+
+.roll-result-warning .roll-result-content {
+  background: linear-gradient(135deg, var(--saffron), #e5b44d);
+}
+
+.roll-result-info .roll-result-content {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+}
+
+/* ===============================
+   🎲 LANCEUR DE DÉS
+   =============================== */
+.dice-roller-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: var(--space-md);
+}
+
+.dice-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--space-lg) var(--space-md);
+  background: linear-gradient(135deg, var(--saffron), var(--ultra-violet));
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--white);
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.dice-btn:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: var(--shadow-lg);
+}
+
+.dice-btn:active {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.dice-icon {
+  font-size: 2rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+/* Variations de couleur */
+.dice-btn:nth-child(1) { background: linear-gradient(135deg, var(--saffron), #e5b44d); }
+.dice-btn:nth-child(2) { background: linear-gradient(135deg, var(--ultra-violet), var(--dark-purple)); }
+.dice-btn:nth-child(3) { background: linear-gradient(135deg, var(--hunter-green), var(--dark-green)); }
+.dice-btn:nth-child(4) { background: linear-gradient(135deg, var(--dark-purple), #1a1625); }
+.dice-btn:nth-child(5) { background: linear-gradient(135deg, #f59e0b, #b45309); }
+.dice-btn:nth-child(6) { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+.dice-btn:nth-child(7) { background: linear-gradient(135deg, #ec4899, #be185d); }
+
+/* ===============================
+   🃏 COMPÉTENCES
+   =============================== */
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-sm);
+}
+
+.skill-card {
+  background: var(--white);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.skill-card:hover {
+  border-color: var(--saffron);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.skill-proficient {
+  border-color: var(--hunter-green);
+  background: linear-gradient(135deg, rgba(65, 100, 74, 0.05), var(--white));
+}
+
+.skill-proficient:hover {
+  background: linear-gradient(135deg, rgba(65, 100, 74, 0.1), var(--white));
+}
+
+.skill-card-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.skill-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.skill-name {
+  font-weight: 600;
+  color: var(--dark-purple);
+  font-size: 0.9rem;
+}
+
+.skill-card-bonus {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--ultra-violet);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.skill-proficient .skill-card-bonus {
+  color: var(--hunter-green);
+}
+
+.skill-proficiency-badge {
+  color: var(--saffron);
+  font-size: 1rem;
+  filter: drop-shadow(0 2px 4px rgba(248, 198, 98, 0.4));
+}
+
+/* ===============================
+   ⚔️ ARMES
+   =============================== */
+.weapons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-md);
+}
+
+.weapon-card {
+  background: var(--white);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  transition: all 0.3s;
+}
+
+.weapon-card:hover {
+  border-color: var(--saffron);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.weapon-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-md);
+}
+
+.weapon-name {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--dark-purple);
+  margin: 0;
+}
+
+.weapon-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+  padding: var(--space-md);
+  background: linear-gradient(135deg, var(--ultra-violet), var(--dark-purple));
+  border-radius: var(--radius-md);
+}
+
+.weapon-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.weapon-stat-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.8);
+  text-transform: uppercase;
+  margin-bottom: var(--space-xs);
+}
+
+.weapon-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.weapon-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.weapon-actions .btn {
+  flex: 1;
+}
+
+/* ===============================
+   🎯 CARACTÉRISTIQUES
+   =============================== */
+.ability-card {
+  background: var(--white);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.ability-card.card-clickable:hover {
+  border-color: var(--saffron);
+  background: linear-gradient(135deg, rgba(248, 198, 98, 0.1), var(--white));
+  transform: translateY(-4px) scale(1.05);
+}
+
+.ability-card-abbr {
+  font-size: 0.9rem;
+  color: var(--ultra-violet);
+  font-weight: 700;
+  margin-bottom: var(--space-xs);
+}
+
+.ability-card-score {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--dark-purple);
+  line-height: 1;
+  margin-bottom: var(--space-xs);
+}
+
+/* ===============================
+   📱 RESPONSIVE
+   =============================== */
+@media (max-width: 768px) {
+  .dice-roller-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .skills-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+  
+  .weapons-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+  
+  .roll-result-banner {
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
+    max-width: none;
+  }
+}
+
+/* ===============================
+   ♿ ACCESSIBILITÉ
+   =============================== */
+.dice-btn:focus-visible,
+.skill-card:focus-visible,
+.weapon-card:focus-visible,
+.ability-card:focus-visible {
+  outline: 3px solid var(--saffron);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }
