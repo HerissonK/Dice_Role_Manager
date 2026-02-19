@@ -184,7 +184,28 @@
             </main>
         </div>
     </div>
-
+    <div id="critical-modal" class="critical-modal" style="display: none;">
+        <div class="critical-modal-overlay"></div>
+        <div class="critical-modal-content">
+            <div class="critical-modal-header">
+                <span class="critical-icon">⚔️</span>
+                <h2>COUP CRITIQUE !</h2>
+                <span class="critical-icon">⚔️</span>
+            </div>
+            <div class="critical-modal-body">
+                <p id="critical-weapon-name"></p>
+                <p class="critical-damage-text">Dégâts doublés ! 🔥</p>
+            </div>
+            <div class="critical-modal-actions">
+                <button class="btn btn-lg btn-primary" id="btn-roll-critical-damage">
+                    🎲 Lancer les dégâts
+                </button>
+                <button class="btn btn-outline" id="btn-close-critical">
+                    Plus tard
+                </button>
+            </div>
+        </div>
+    </div>
     <!-- Scripts -->
     <script src="auth.js"></script>
     <script src="play.js"></script>

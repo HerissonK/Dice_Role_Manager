@@ -1469,3 +1469,574 @@ select.input {
     color: var(--text-secondary);
     margin-top: var(--space-xs);
 }
+
+/* ===========================
+   🎯 SKILL SELECTION (BUILDER) - FIX BOUTONS BLANCS
+=========================== */
+.skill-button {
+    padding: 1rem;
+    border: 2px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    width: 100%;
+    font-family: var(--font-body);
+    color: var(--text-primary);
+}
+
+.skill-button:hover:not(:disabled) {
+    border-color: var(--electric-blue);
+    background: var(--bg-elevated);
+    transform: translateY(-2px);
+}
+
+.skill-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.skill-button.selected {
+    border-color: var(--electric-blue);
+    background: linear-gradient(135deg, rgba(74, 144, 226, 0.15), var(--bg-card));
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+}
+
+.skill-button.from-background {
+    border-color: var(--accent-success);
+    background: linear-gradient(135deg, rgba(81, 207, 102, 0.15), var(--bg-card));
+    cursor: default;
+}
+
+.skill-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+}
+
+/* ===========================
+   📊 FIX ALIGNEMENT STATS
+=========================== */
+.stat-box .stat-value {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 3rem;
+}
+
+/* ===========================
+   💥 MODAL CRITIQUE
+=========================== */
+.critical-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.critical-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    animation: fadeIn 0.3s;
+}
+
+.critical-modal-content {
+    position: relative;
+    background: linear-gradient(135deg, var(--bg-card), var(--bg-secondary));
+    border: 3px solid var(--accent-warning);
+    border-radius: var(--radius-xl);
+    padding: 2rem;
+    max-width: 480px;
+    width: 90%;
+    box-shadow: 
+        var(--shadow-lg),
+        0 0 60px rgba(255, 212, 59, 0.5);
+    animation: criticalPop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    z-index: 10000;
+}
+
+@keyframes criticalPop {
+    0% { 
+        transform: scale(0.5) rotate(-5deg); 
+        opacity: 0; 
+    }
+    50% { 
+        transform: scale(1.1) rotate(2deg); 
+    }
+    100% { 
+        transform: scale(1) rotate(0deg); 
+        opacity: 1; 
+    }
+}
+
+.critical-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+}
+
+.critical-icon {
+    font-size: 2.5rem;
+    animation: wobble 0.5s ease-in-out infinite;
+}
+
+@keyframes wobble {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-10deg); }
+    75% { transform: rotate(10deg); }
+}
+
+.critical-modal-header h2 {
+    font-size: 2rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent-warning), var(--accent-danger));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    animation: glow 1.5s ease-in-out infinite;
+}
+
+@keyframes glow {
+    0%, 100% { 
+        filter: drop-shadow(0 0 5px var(--accent-warning)); 
+    }
+    50% { 
+        filter: drop-shadow(0 0 20px var(--accent-warning)); 
+    }
+}
+
+.critical-modal-body {
+    text-align: center;
+    margin-bottom: var(--space-xl);
+}
+
+.critical-modal-body p {
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+}
+
+.critical-damage-text {
+    font-weight: 700;
+    color: var(--accent-warning);
+    font-size: 1.5rem !important;
+}
+
+.critical-modal-actions {
+    display: flex;
+    gap: var(--space-md);
+}
+
+.critical-modal-actions .btn {
+    flex: 1;
+}
+
+/**
+ * 🔧 PATCH FINAL - À ajouter à la fin de styles-dark-gaming.css
+ * 
+ * 1. Fix alignement stats
+ * 2. Custom alert/confirm dialogs
+ */
+
+/* ===========================
+   📊 FIX ALIGNEMENT STATS - CORRECTION DÉFINITIVE
+=========================== */
+.stat-box {
+    text-align: center;
+    padding: var(--space-lg);
+    background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-card) 100%);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s;
+    /* ✅ AJOUT : Forcer la hauteur uniforme */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 140px;
+}
+
+.stat-box .stat-label {
+    display: block;
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--space-sm);
+}
+
+.stat-box .stat-value {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--electric-blue);
+    line-height: 1;
+    text-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+    /* ✅ AJOUT : Centrage vertical parfait */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 3rem;
+    margin: 0;
+}
+
+/* ===========================
+   🎨 CUSTOM ALERT/CONFIRM DIALOGS
+=========================== */
+
+/* Modal overlay personnalisé */
+.custom-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Dialog box */
+.custom-modal-dialog {
+    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-card));
+    border: 2px solid var(--electric-blue);
+    border-radius: var(--radius-xl);
+    padding: 2.5rem;
+    max-width: 480px;
+    width: 90%;
+    box-shadow: 
+        var(--shadow-lg),
+        0 0 60px rgba(74, 144, 226, 0.4);
+    animation: modalPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    position: relative;
+}
+
+@keyframes modalPop {
+    0% { 
+        transform: scale(0.8) translateY(-20px); 
+        opacity: 0; 
+    }
+    100% { 
+        transform: scale(1) translateY(0); 
+        opacity: 1; 
+    }
+}
+
+/* Icon au top */
+.custom-modal-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    background: linear-gradient(135deg, var(--electric-blue), var(--accent-primary));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    box-shadow: 0 8px 24px rgba(74, 144, 226, 0.4);
+    animation: iconBounce 0.6s ease-out;
+}
+
+@keyframes iconBounce {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+
+.custom-modal-icon.success {
+    background: linear-gradient(135deg, var(--accent-success), #37b24d);
+}
+
+.custom-modal-icon.warning {
+    background: linear-gradient(135deg, var(--accent-warning), #fab005);
+}
+
+.custom-modal-icon.danger {
+    background: linear-gradient(135deg, var(--accent-danger), #c92a2a);
+}
+
+.custom-modal-icon.question {
+    background: linear-gradient(135deg, var(--accent-primary), #4263eb);
+}
+
+/* Titre */
+.custom-modal-title {
+    font-family: var(--font-heading);
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    text-align: center;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+}
+
+/* Message */
+.custom-modal-message {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+    text-align: center;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    white-space: pre-line;
+}
+
+/* Boutons */
+.custom-modal-actions {
+    display: flex;
+    gap: var(--space-md);
+    justify-content: center;
+}
+
+.custom-modal-btn {
+    flex: 1;
+    max-width: 180px;
+    padding: 0.875rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    box-shadow: var(--shadow-sm);
+}
+
+.custom-modal-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.custom-modal-btn:active {
+    transform: translateY(0);
+}
+
+.custom-modal-btn-primary {
+    background: linear-gradient(135deg, var(--electric-blue), var(--accent-primary));
+    color: var(--text-primary);
+}
+
+.custom-modal-btn-secondary {
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+    border: 2px solid var(--border-medium);
+}
+
+.custom-modal-btn-secondary:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--electric-blue);
+    color: var(--text-primary);
+}
+
+.custom-modal-btn-success {
+    background: linear-gradient(135deg, var(--accent-success), #37b24d);
+    color: white;
+}
+
+.custom-modal-btn-danger {
+    background: linear-gradient(135deg, var(--accent-danger), #c92a2a);
+    color: white;
+}
+
+/* Animation de fermeture */
+.custom-modal-overlay.closing {
+    animation: fadeOut 0.2s ease-out forwards;
+}
+
+.custom-modal-overlay.closing .custom-modal-dialog {
+    animation: modalClose 0.2s ease-out forwards;
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes modalClose {
+    from { transform: scale(1); opacity: 1; }
+    to { transform: scale(0.9); opacity: 0; }
+}
+
+/* ===========================
+   🎯 SKILL SELECTION (BUILDER) - SI PAS DÉJÀ AJOUTÉ
+=========================== */
+.skill-button {
+    padding: 1rem;
+    border: 2px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    width: 100%;
+    font-family: var(--font-body);
+    color: var(--text-primary);
+}
+
+.skill-button:hover:not(:disabled) {
+    border-color: var(--electric-blue);
+    background: var(--bg-elevated);
+    transform: translateY(-2px);
+}
+
+.skill-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.skill-button.selected {
+    border-color: var(--electric-blue);
+    background: linear-gradient(135deg, rgba(74, 144, 226, 0.15), var(--bg-card));
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+}
+
+.skill-button.from-background {
+    border-color: var(--accent-success);
+    background: linear-gradient(135deg, rgba(81, 207, 102, 0.15), var(--bg-card));
+    cursor: default;
+}
+
+.skill-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+}
+
+/* ===========================
+   💥 MODAL CRITIQUE - SI PAS DÉJÀ AJOUTÉ
+=========================== */
+.critical-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.critical-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    animation: fadeIn 0.3s;
+}
+
+.critical-modal-content {
+    position: relative;
+    background: linear-gradient(135deg, var(--bg-card), var(--bg-secondary));
+    border: 3px solid var(--accent-warning);
+    border-radius: var(--radius-xl);
+    padding: 2rem;
+    max-width: 480px;
+    width: 90%;
+    box-shadow: 
+        var(--shadow-lg),
+        0 0 60px rgba(255, 212, 59, 0.5);
+    animation: criticalPop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    z-index: 10000;
+}
+
+@keyframes criticalPop {
+    0% { transform: scale(0.5) rotate(-5deg); opacity: 0; }
+    50% { transform: scale(1.1) rotate(2deg); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.critical-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+}
+
+.critical-icon {
+    font-size: 2.5rem;
+    animation: wobble 0.5s ease-in-out infinite;
+}
+
+@keyframes wobble {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-10deg); }
+    75% { transform: rotate(10deg); }
+}
+
+.critical-modal-header h2 {
+    font-size: 2rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent-warning), var(--accent-danger));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    animation: glow 1.5s ease-in-out infinite;
+}
+
+@keyframes glow {
+    0%, 100% { filter: drop-shadow(0 0 5px var(--accent-warning)); }
+    50% { filter: drop-shadow(0 0 20px var(--accent-warning)); }
+}
+
+.critical-modal-body {
+    text-align: center;
+    margin-bottom: var(--space-xl);
+}
+
+.critical-modal-body p {
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+}
+
+.critical-damage-text {
+    font-weight: 700;
+    color: var(--accent-warning);
+    font-size: 1.5rem !important;
+}
+
+.critical-modal-actions {
+    display: flex;
+    gap: var(--space-md);
+}
+
+.critical-modal-actions .btn {
+    flex: 1;
+}

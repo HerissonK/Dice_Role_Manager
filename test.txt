@@ -1,87 +1,16 @@
+chose a faire
+
+pop up CC page play
+pop up suppression de personnage
+
+
+
 question Axel
 
-est ce que c'est important de recuperer avec un get mes tables 
-classes
-species
-background
-
-
-psql -U herissonk -d dnd -f init.sql
-
-psql -U herissonk -d dnd
-Reception123+
-
-curl -X POST http://localhost:3000/api/auth/login \
--H "Content-Type: application/json" \
--d '{
-  "email": "admin2@local",
-  "password": "admin123"
-}'
-
-
-curl -X POST http://localhost:3000/api/characters \
--H "Content-Type: application/json" \
--H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Mywicm9sZSI6InBsYXllciIsImlhdCI6MTc2OTExNDczOSwiZXhwIjoxNzY5MjAxMTM5fQ.9teYXWxFv0iqGNp8lTlTPeydqSNdDp85bvjBPm5qRzM" \
--d '{
-  "name": "Thorgar Martefer",
-  "level": 1,
-  "classId": 1,
-  "speciesId": 2,
-  "backgroundId": 3,
-  "abilities": {
-    "str": 16,
-    "dex": 12,
-    "con": 14,
-    "int": 10,
-    "wis": 11,
-    "cha": 8
-  }
-}'
-
-SELECT
-    p.id,
-    p.name,
-    p.level,
-    c.name AS classe_name,
-    e.name AS espece_name,
-    b.name AS background_name
-FROM personnage p
-JOIN classe c ON p.class_id = c.id
-JOIN espece e ON p.espece_id = e.id
-JOIN background b ON p.background_id = b.id;
-
-
-
--- Armure de cuir
-INSERT INTO personnage_item (personnage_id, item_id, equipped)
-VALUES (45, 1, true);
-
--- Bouclier
-INSERT INTO personnage_item (personnage_id, item_id, equipped)
-VALUES (45, 8, true);
-
--- Arme (facultatif pour l’AC)
-INSERT INTO personnage_item (personnage_id, item_id, equipped)
-VALUES (45, 9, true);
-
-SELECT
-  i.id,
-  i.name,
-  i.category,
-  i.armor_class,
-  i.dex_modifier_rule,
-  i.damage_dice,
-  i.damage_type
-FROM personnage_item pi
-JOIN item i ON i.id = pi.item_id
-WHERE pi.personnage_id = 45
-  AND pi.equipped = true;
-
-
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Miwicm9sZSI6InBsYXllciIsImlhdCI6MTc2OTYxODI5MywiZXhwIjoxNzY5NzA0NjkzfQ.bSg0BRvDOOvn-7BobkUTISDUWW63h3PiHaxsyMbyiuU
 
 DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
 DB_PASSWORD=Reception123+
 DB_NAME=postgres
+

@@ -1,4 +1,166 @@
 /**
+ * Alert personnalisé
+ * @param {string} message - Le message à afficher
+ * @param {string} type - 'success', 'warning', 'danger', 'info'
+ * @param {string} title - Titre du modal (optionnel)
+ */
+function customAlert(message, type = 'info', title = null) {
+    return new Promise((resolve) => {
+        const icons = {
+            success: '✅',
+            warning: '⚠️',
+            danger: '❌',
+            info: 'ℹ️'
+        };
+
+        const titles = {
+            success: 'Succès',
+            warning: 'Attention',
+            danger: 'Erreur',
+            info: 'Information'
+        };
+
+        const overlay = document.createElement('div');
+        overlay.className = 'custom-modal-overlay';
+        
+        overlay.innerHTML = `
+            <div class="custom-modal-dialog">
+                <div class="custom-modal-icon ${type}">
+                    ${icons[type] || icons.info}
+                </div>
+                <h2 class="custom-modal-title">${title || titles[type]}</h2>
+                <p class="custom-modal-message">${message}</p>
+                <div class="custom-modal-actions">
+                    <button class="custom-modal-btn custom-modal-btn-primary" id="custom-alert-ok">
+                        OK
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        const btnOk = overlay.querySelector('#custom-alert-ok');
+        
+        const close = () => {
+            overlay.classList.add('closing');
+            setTimeout(() => {
+                document.body.removeChild(overlay);
+                resolve();
+            }, 200);
+        };
+
+        btnOk.addEventListener('click', close);
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) close();
+        });
+
+        // ESC pour fermer
+        const handleEsc = (e) => {
+            if (e.key === 'Escape') {
+                close();
+                document.removeEventListener('keydown', handleEsc);
+            }
+        };
+        document.addEventListener('keydown', handleEsc);
+    });
+}
+
+/**
+ * Confirm personnalisé
+ * @param {string} message - Le message à afficher
+ * @param {Object} options - Options { title, confirmText, cancelText, type }
+ */
+function customConfirm(message, options = {}) {
+    return new Promise((resolve) => {
+        const {
+            title = 'Confirmation',
+            confirmText = 'Confirmer',
+            cancelText = 'Annuler',
+            type = 'question'
+        } = options;
+
+        const icons = {
+            success: '✅',
+            warning: '⚠️',
+            danger: '❌',
+            question: '❓',
+            info: 'ℹ️'
+        };
+
+        const overlay = document.createElement('div');
+        overlay.className = 'custom-modal-overlay';
+        
+        overlay.innerHTML = `
+            <div class="custom-modal-dialog">
+                <div class="custom-modal-icon ${type}">
+                    ${icons[type] || icons.question}
+                </div>
+                <h2 class="custom-modal-title">${title}</h2>
+                <p class="custom-modal-message">${message}</p>
+                <div class="custom-modal-actions">
+                    <button class="custom-modal-btn custom-modal-btn-secondary" id="custom-confirm-cancel">
+                        ${cancelText}
+                    </button>
+                    <button class="custom-modal-btn custom-modal-btn-primary" id="custom-confirm-ok">
+                        ${confirmText}
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        const btnOk = overlay.querySelector('#custom-confirm-ok');
+        const btnCancel = overlay.querySelector('#custom-confirm-cancel');
+        
+        const close = (result) => {
+            overlay.classList.add('closing');
+            setTimeout(() => {
+                document.body.removeChild(overlay);
+                resolve(result);
+            }, 200);
+        };
+
+        btnOk.addEventListener('click', () => close(true));
+        btnCancel.addEventListener('click', () => close(false));
+        
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) close(false);
+        });
+
+        // ESC pour annuler
+        const handleEsc = (e) => {
+            if (e.key === 'Escape') {
+                close(false);
+                document.removeEventListener('keydown', handleEsc);
+            }
+        };
+        document.addEventListener('keydown', handleEsc);
+    });
+}
+
+/**
+ * Confirm de succès (icône verte)
+ */
+function customSuccessConfirm(message, options = {}) {
+    return customConfirm(message, {
+        ...options,
+        type: 'success'
+    });
+}
+
+/**
+ * Confirm de danger (icône rouge)
+ */
+function customDangerConfirm(message, options = {}) {
+    return customConfirm(message, {
+        ...options,
+        type: 'danger'
+    });
+}
+
+/**
  * Script pour la page de jeu du personnage
  * Version complète avec compétences
  */
@@ -141,6 +303,9 @@ function showError(message) {
     errorText.textContent = message;
     errorDiv.style.display = 'block';
 }
+async function showErrorModal(message, title = 'Erreur') {
+    await customAlert(message, 'danger', title);
+}
 
 function hideError() {
     const errorDiv = document.getElementById('error-message');
@@ -177,7 +342,11 @@ async function loadCharacter() {
 
     } catch (err) {
         console.error('Erreur chargement personnage:', err);
-        showError(err.message || 'Erreur lors du chargement du personnage');
+        await customAlert(
+            err.message || 'Erreur lors du chargement du personnage',
+            'danger',
+            'Chargement impossible'
+        );
     }
 }
 
@@ -407,10 +576,8 @@ async function rollWeaponAttack(weaponId) {
         // Si critique, proposer les dégâts
         if (data.isCritical) {
             setTimeout(() => {
-                if (confirm('Coup critique ! Lancer les dégâts ?')) {
-                    rollWeaponDamage(weaponId, true);
-                }
-            }, 1000);
+                showCriticalModal(weaponId, data.weaponName);
+            }, 800);
         }
 
     } catch (err) {
@@ -641,10 +808,27 @@ function addJournalEntry(entry) {
 /**
  * Vider le journal
  */
-function clearJournal() {
-    if (!confirm('Effacer tout l\'historique des lancers ?')) return;
+async function clearJournal() {
+    const confirmed = await customConfirm(
+        'Effacer tout l\'historique des lancers ?',
+        {
+            title: '🗑️ Vider le journal',
+            confirmText: 'Effacer',
+            cancelText: 'Annuler',
+            type: 'danger'
+        }
+    );
+    
+    if (!confirmed) return;
+    
     localStorage.removeItem(JOURNAL_KEY);
     renderJournal();
+    
+    await customAlert(
+        'Historique effacé avec succès.',
+        'success',
+        'Journal vidé'
+    );
 }
 
 /**
@@ -935,6 +1119,40 @@ async function rollFree(count, sides) {
     } catch (err) {
         showRollResult(`❌ ${err.message}`, 'error');
     }
+}
+
+/**
+ * 💥 Afficher le modal de coup critique
+ */
+function showCriticalModal(weaponId, weaponName) {
+    const modal = document.getElementById('critical-modal');
+    const weaponNameEl = document.getElementById('critical-weapon-name');
+    const btnRoll = document.getElementById('btn-roll-critical-damage');
+    const btnClose = document.getElementById('btn-close-critical');
+    
+    if (!modal) {
+        console.error('❌ Modal critique introuvable');
+        return;
+    }
+    
+    weaponNameEl.textContent = `${weaponName}`;
+    modal.style.display = 'flex';
+    
+    // Lancer les dégâts critiques
+    btnRoll.onclick = () => {
+        modal.style.display = 'none';
+        rollWeaponDamage(weaponId, true);
+    };
+    
+    // Fermer le modal
+    btnClose.onclick = () => {
+        modal.style.display = 'none';
+    };
+    
+    // Fermer en cliquant sur l'overlay
+    modal.querySelector('.critical-modal-overlay').onclick = () => {
+        modal.style.display = 'none';
+    };
 }
 
 // ─────────────────────────────────────────────────────

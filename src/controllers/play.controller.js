@@ -27,7 +27,7 @@ exports.rollAttack = async (req, res) => {
     }
 
     const abilities = character.abilities;
-    const attackMod = getAttackModifier(weapon, abilities);
+    const attackMod = getWeaponAttackMod(weapon, abilities);
     const proficiencyBonus = 2;
 
     const d20Roll = Math.floor(Math.random() * 20) + 1;
@@ -89,7 +89,9 @@ exports.rollDamage = async (req, res) => {
 
     const diceTotal = rolls.reduce((sum, r) => sum + r, 0);
     const abilities = character.abilities;
-    const damageMod = getAttackModifier(weapon, abilities);
+    
+    // ✅ CORRECTION : Utiliser le même modificateur que l'attaque (DEX pour armes à distance)
+    const damageMod = getWeaponAttackMod(weapon, abilities);
     const totalDamage = diceTotal + damageMod;
 
     res.json({
@@ -109,25 +111,51 @@ exports.rollDamage = async (req, res) => {
   }
 };
 
-// Fonction helper : Calculer le modificateur d'attaque
-function getAttackModifier(weapon, abilities) {
+/**
+ * ✅ FONCTION CORRIGÉE : Calculer le modificateur d'attaque/dégâts
+ * Cette fonction gère correctement :
+ * - Armes à distance (category ranged) → DEX
+ * - Armes finesse → MAX(STR, DEX)
+ * - Armes de mêlée → STR
+ */
+function getWeaponAttackMod(weapon, abilities) {
   const strMod = Math.floor((abilities.str - 10) / 2);
   const dexMod = Math.floor((abilities.dex - 10) / 2);
 
+  // Vérifier si l'arme est à distance via la catégorie
   const category = weapon.category || '';
   const isRanged = category.includes('ranged');
 
-  // ✅ Accepte properties en JSON string ou array
+  // ✅ Parser les properties (peut être un string JSON ou un array)
   let properties = weapon.properties || [];
   if (typeof properties === 'string') {
-    try { properties = JSON.parse(properties); } catch { properties = []; }
+    try { 
+      properties = JSON.parse(properties); 
+    } catch { 
+      properties = []; 
+    }
   }
+  
+  // Vérifier les propriétés spéciales
+  const hasRange   = properties.includes('range');
+  const isThrown   = properties.includes('thrown');
   const hasFinesse = properties.includes('finesse');
 
-  if (isRanged) return dexMod;
-  if (hasFinesse) return Math.max(strMod, dexMod);
+  // 🎯 Arme à distance (sauf thrown) → DEX
+  if (isRanged || (hasRange && !isThrown && !hasFinesse)) {
+    return dexMod;
+  }
+
+  // 🗡️ Arme finesse → MAX(STR, DEX)
+  if (hasFinesse) {
+    return Math.max(strMod, dexMod);
+  }
+
+  // 🪓 Mêlée classique → STR
   return strMod;
 }
+
+// ❌ SUPPRIMER l'ancienne fonction getAttackModifier (remplacée par getWeaponAttackMod)
 
 // Garder les fonctions existantes
 exports.getPlayCharacter = async (req, res) => {

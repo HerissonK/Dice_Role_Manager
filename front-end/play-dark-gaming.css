@@ -679,6 +679,11 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
    📊 STATISTIQUES
 =========================== */
 .stat-box {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* label en haut, chiffre en bas */
+    align-items: center;
+
     text-align: center;
     padding: var(--space-lg);
     background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-card) 100%);
@@ -688,6 +693,7 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
     transition: all 0.3s;
 }
 
+
 .stat-box:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
@@ -696,6 +702,7 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
 
 .stat-box .stat-label {
     display: block;
+
     font-family: var(--font-heading);
     font-size: 0.75rem;
     color: var(--text-secondary);
@@ -712,6 +719,7 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
     line-height: 1;
     text-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
 }
+
 
 /* ===========================
    🎨 LANCEUR PERSONNALISÉ

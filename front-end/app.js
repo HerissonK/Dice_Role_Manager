@@ -1,3 +1,165 @@
+/**
+ * Alert personnalisé
+ * @param {string} message - Le message à afficher
+ * @param {string} type - 'success', 'warning', 'danger', 'info'
+ * @param {string} title - Titre du modal (optionnel)
+ */
+function customAlert(message, type = 'info', title = null) {
+    return new Promise((resolve) => {
+        const icons = {
+            success: '✅',
+            warning: '⚠️',
+            danger: '❌',
+            info: 'ℹ️'
+        };
+
+        const titles = {
+            success: 'Succès',
+            warning: 'Attention',
+            danger: 'Erreur',
+            info: 'Information'
+        };
+
+        const overlay = document.createElement('div');
+        overlay.className = 'custom-modal-overlay';
+        
+        overlay.innerHTML = `
+            <div class="custom-modal-dialog">
+                <div class="custom-modal-icon ${type}">
+                    ${icons[type] || icons.info}
+                </div>
+                <h2 class="custom-modal-title">${title || titles[type]}</h2>
+                <p class="custom-modal-message">${message}</p>
+                <div class="custom-modal-actions">
+                    <button class="custom-modal-btn custom-modal-btn-primary" id="custom-alert-ok">
+                        OK
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        const btnOk = overlay.querySelector('#custom-alert-ok');
+        
+        const close = () => {
+            overlay.classList.add('closing');
+            setTimeout(() => {
+                document.body.removeChild(overlay);
+                resolve();
+            }, 200);
+        };
+
+        btnOk.addEventListener('click', close);
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) close();
+        });
+
+        // ESC pour fermer
+        const handleEsc = (e) => {
+            if (e.key === 'Escape') {
+                close();
+                document.removeEventListener('keydown', handleEsc);
+            }
+        };
+        document.addEventListener('keydown', handleEsc);
+    });
+}
+
+/**
+ * Confirm personnalisé
+ * @param {string} message - Le message à afficher
+ * @param {Object} options - Options { title, confirmText, cancelText, type }
+ */
+function customConfirm(message, options = {}) {
+    return new Promise((resolve) => {
+        const {
+            title = 'Confirmation',
+            confirmText = 'Confirmer',
+            cancelText = 'Annuler',
+            type = 'question'
+        } = options;
+
+        const icons = {
+            success: '✅',
+            warning: '⚠️',
+            danger: '❌',
+            question: '❓',
+            info: 'ℹ️'
+        };
+
+        const overlay = document.createElement('div');
+        overlay.className = 'custom-modal-overlay';
+        
+        overlay.innerHTML = `
+            <div class="custom-modal-dialog">
+                <div class="custom-modal-icon ${type}">
+                    ${icons[type] || icons.question}
+                </div>
+                <h2 class="custom-modal-title">${title}</h2>
+                <p class="custom-modal-message">${message}</p>
+                <div class="custom-modal-actions">
+                    <button class="custom-modal-btn custom-modal-btn-secondary" id="custom-confirm-cancel">
+                        ${cancelText}
+                    </button>
+                    <button class="custom-modal-btn custom-modal-btn-primary" id="custom-confirm-ok">
+                        ${confirmText}
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        const btnOk = overlay.querySelector('#custom-confirm-ok');
+        const btnCancel = overlay.querySelector('#custom-confirm-cancel');
+        
+        const close = (result) => {
+            overlay.classList.add('closing');
+            setTimeout(() => {
+                document.body.removeChild(overlay);
+                resolve(result);
+            }, 200);
+        };
+
+        btnOk.addEventListener('click', () => close(true));
+        btnCancel.addEventListener('click', () => close(false));
+        
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) close(false);
+        });
+
+        // ESC pour annuler
+        const handleEsc = (e) => {
+            if (e.key === 'Escape') {
+                close(false);
+                document.removeEventListener('keydown', handleEsc);
+            }
+        };
+        document.addEventListener('keydown', handleEsc);
+    });
+}
+
+/**
+ * Confirm de succès (icône verte)
+ */
+function customSuccessConfirm(message, options = {}) {
+    return customConfirm(message, {
+        ...options,
+        type: 'success'
+    });
+}
+
+/**
+ * Confirm de danger (icône rouge)
+ */
+function customDangerConfirm(message, options = {}) {
+    return customConfirm(message, {
+        ...options,
+        type: 'danger'
+    });
+}
+
 // Application Character Builder D&D 5e
 
 // État de l'application
@@ -1202,7 +1364,36 @@ async function handleSave() {
         }
 
         const result = await response.json();
-        alert(`Personnage enregistré avec succès ! ID: ${result.id}`);
+        
+        // ✅ Dialog de succès stylisé
+        const goToCharacters = await customConfirm(
+            `Personnage "${appState.characterName}" créé avec succès !\n\nVoulez-vous aller voir vos personnages ?`,
+            {
+                title: '✨ Création réussie !',
+                confirmText: '📚 Voir mes personnages',
+                cancelText: '✏️ Créer un autre',
+                type: 'success'
+            }
+        );
+        
+        if (goToCharacters) {
+            window.location.href = 'my-characters.html';
+        } else {
+            // Proposer de recommencer
+            const restart = await customConfirm(
+                'Voulez-vous créer un nouveau personnage ?',
+                {
+                    title: 'Nouveau personnage',
+                    confirmText: 'Oui',
+                    cancelText: 'Non',
+                    type: 'question'
+                }
+            );
+            
+            if (restart) {
+                window.location.reload();
+            }
+        }
 
     } catch (error) {
         console.error('Erreur handleSave:', error);
