@@ -805,6 +805,16 @@ function addJournalEntry(entry) {
     renderJournal();
 }
 
+// ✅ AJOUT : Event listener pour le bouton "Effacer"
+    const clearBtn = document.getElementById('journal-clear');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', clearJournal);
+        console.log('✅ Event listener "Effacer journal" attaché');
+    }
+    
+    // ✅ AJOUT : Charger le journal au démarrage
+    renderJournal();
+
 /**
  * Vider le journal
  */
@@ -1158,17 +1168,6 @@ function showCriticalModal(weaponId, weaponName) {
 // ─────────────────────────────────────────────────────
 // INIT
 // ─────────────────────────────────────────────────────
-
-// Charger le journal au démarrage
-document.addEventListener('DOMContentLoaded', () => {
-    // ... votre code d'init existant ...
-
-    // Journal
-    renderJournal();
-
-    const clearBtn = document.getElementById('journal-clear');
-    if (clearBtn) clearBtn.addEventListener('click', clearJournal);
-});
 
 // Attendre que le DOM soit chargé
 document.addEventListener('DOMContentLoaded', () => {
