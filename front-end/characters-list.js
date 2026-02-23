@@ -234,7 +234,7 @@ function playCharacter(id) {
     window.location.href = url;
 }
 
-// Afficher les personnages
+// Afficher les personnages avec le nouveau design
 function displayCharacters(characters) {
     const grid = document.getElementById('characters-grid');
     
@@ -242,69 +242,89 @@ function displayCharacters(characters) {
     const html = characters.map(character => {
         console.log('🎭 Affichage personnage:', character.id, character.name);
         
+        // Calculer des stats supplémentaires
+        const createdDate = character.created_at 
+            ? new Date(character.created_at).toLocaleDateString('fr-FR', { 
+                day: '2-digit', 
+                month: 'short', 
+                year: 'numeric' 
+              })
+            : 'N/A';
+        
         return `
-        <div class="card character-card p-6">
-            <div class="character-card-header">
-                <div>
-                    <h3 class="mb-2">${character.name}</h3>
-                    <p class="text-gray-600 text-sm">
-                        ${character.species} ${character.class} - Niveau ${character.level}
-                    </p>
-                </div>
-            </div>
-            
-            <div class="character-card-body mt-4">
-                <div class="character-stats">
-                    <div class="stat-item">
-                        <span class="stat-label">PV</span>
-                        <span class="stat-value">${character.pv !== undefined ? character.pv : '?'}</span>
+        <div class="card character-card" data-class="${character.class}">
+            <div class="character-card-content">
+                <div class="character-card-main">
+                    <!-- NOM EN HERO -->
+                    <h3 class="character-name-hero">${character.name}</h3>
+                    
+                    <!-- CLASSE + NIVEAU BADGE -->
+                    <div class="character-class-badge">
+                        ⚔️ ${character.class} • Niveau ${character.level}
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-label">CA</span>
-                        <span class="stat-value">${character.armorClass !== undefined ? character.armorClass : '?'}</span>
+                    
+                    <!-- META : Espèce + Background -->
+                    <div class="character-meta">
+                        <div class="character-meta-item">
+                            <span class="character-meta-label">Espèce:</span>
+                            ${character.species}
+                        </div>
+                        <div class="character-meta-item">
+                            <span class="character-meta-label">Historique:</span>
+                            ${character.background}
+                        </div>
+                    </div>
+                    
+                    <!-- STATS CLÉS -->
+                    <div class="character-key-stats">
+                        <div class="key-stat">
+                            <div class="key-stat-label">Niveau</div>
+                            <div class="key-stat-value level">${character.level}</div>
+                        </div>
+                        <div class="key-stat">
+                            <div class="key-stat-label">PV</div>
+                            <div class="key-stat-value hp">${character.pv ?? '?'}</div>
+                        </div>
+                        <div class="key-stat">
+                            <div class="key-stat-label">XP</div>
+                            <div class="key-stat-value">0</div>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="separator mt-4 mb-4"></div>
-                
-                <p class="text-sm text-gray-600 mb-2">
-                    <strong>Historique:</strong> ${character.background}
-                </p>
-                
-                ${character.created_at ? `
-                    <p class="text-xs text-gray-500">
-                        Créé le ${new Date(character.created_at).toLocaleDateString('fr-FR')}
-                    </p>
-                ` : ''}
-            </div>
-            
-            <div class="character-card-actions">
-                <button 
-                    class="btn btn-primary btn-sm btn-play"
-                    data-character-id="${character.id}"
-                    title="Jouer avec ce personnage"
-                >
-                    🎲 Jouer
-                </button>
-                <button 
-                    class="btn btn-outline btn-sm" 
-                    onclick="viewCharacter(${character.id})"
-                    title="Voir les détails"
-                >
-                    <svg class="icon"><use href="#icon-eye"/></svg>
-                    Voir
-                </button>
-                <button 
-                    class="btn btn-outline btn-sm" 
-                    onclick="deleteCharacter(${character.id}, '${character.name.replace(/'/g, "\\'")}')"
-                    title="Supprimer ce personnage"
-                >
-                    <svg class="icon"><use href="#icon-trash"/></svg>
-                    Supprimer
-                </button>
+                <!-- FOOTER : Date + Actions -->
+                <div class="character-card-footer">
+                    <div class="character-created-date">
+                        ${createdDate}
+                    </div>
+                    
+                    <div class="character-card-actions">
+                        <button 
+                            class="btn btn-primary btn-sm btn-play"
+                            data-character-id="${character.id}"
+                            title="Jouer avec ce personnage"
+                        >
+                            🎲 Jouer
+                        </button>
+                        <button 
+                            class="btn btn-outline btn-sm" 
+                            onclick="viewCharacter(${character.id})"
+                            title="Voir les détails"
+                        >
+                            <svg class="icon"><use href="#icon-eye"/></svg>
+                        </button>
+                        <button 
+                            class="btn btn-outline btn-sm" 
+                            onclick="deleteCharacter(${character.id}, '${character.name.replace(/'/g, "\\'")}')"
+                            title="Supprimer"
+                        >
+                            <svg class="icon"><use href="#icon-trash"/></svg>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
-    `;
+        `;
     }).join('');
     
     grid.innerHTML = html;
@@ -317,7 +337,6 @@ function displayCharacters(characters) {
         const characterId = btn.getAttribute('data-character-id');
         console.log(`  → Bouton ${index + 1}: ID = ${characterId}`);
         
-        // Ajouter l'event listener
         btn.addEventListener('click', (event) => {
             console.log('🖱️ Clic sur bouton Play');
             playCharacter(characterId);

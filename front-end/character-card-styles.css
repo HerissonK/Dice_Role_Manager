@@ -1,0 +1,275 @@
+/* ===========================
+   🎴 CHARACTER CARD REDESIGN
+   Version moderne avec logo de classe
+=========================== */
+
+.character-card {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    min-height: 280px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Logo de classe en arrière-plan */
+.character-card::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -20px;
+    width: 200px;
+    height: 200px;
+    background-image: var(--class-icon);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.08;
+    transform: translateY(-50%) rotate(15deg);
+    transition: all 0.4s;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.character-card:hover::before {
+    opacity: 0.15;
+    transform: translateY(-50%) rotate(10deg) scale(1.1);
+}
+
+/* Container pour le contenu */
+.character-card-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+/* ===========================
+   📍 HEADER REPENSÉ
+=========================== */
+.character-card-main {
+    padding: var(--space-lg);
+    flex: 1;
+}
+
+/* Nom du personnage - HERO */
+.character-name-hero {
+    font-family: var(--font-heading);
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+}
+
+/* Classe et niveau - MISE EN AVANT */
+.character-class-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    background: linear-gradient(135deg, var(--electric-blue), var(--accent-primary));
+    color: var(--text-primary);
+    padding: 0.4rem 1rem;
+    border-radius: 999px;
+    font-family: var(--font-heading);
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+    margin-bottom: var(--space-md);
+}
+
+/* Espèce + Background */
+.character-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-lg);
+}
+
+.character-meta-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.character-meta-label {
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+/* ===========================
+   📊 STATS IMPORTANTES
+=========================== */
+.character-key-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    background: var(--bg-elevated);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-md);
+}
+
+.key-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-sm);
+}
+
+.key-stat-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--space-xs);
+    font-weight: 600;
+}
+
+.key-stat-value {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--electric-blue);
+}
+
+.key-stat-value.hp {
+    color: var(--accent-danger);
+}
+
+.key-stat-value.level {
+    color: var(--accent-warning);
+}
+
+/* ===========================
+   📅 FOOTER - Date de création
+=========================== */
+.character-card-footer {
+    padding: var(--space-md) var(--space-lg);
+    border-top: 1px solid var(--border-subtle);
+    background: var(--bg-secondary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.character-created-date {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.character-created-date::before {
+    content: '📅';
+    font-size: 0.9rem;
+}
+
+/* ===========================
+   🎮 ACTIONS
+=========================== */
+.character-card-actions {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.character-card-actions .btn {
+    flex: 1;
+}
+
+/* Bouton "Jouer" - Mise en avant */
+.btn-play {
+    background: linear-gradient(135deg, var(--accent-success), #37b24d);
+    color: white;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(81, 207, 102, 0.3);
+}
+
+.btn-play:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(81, 207, 102, 0.4);
+}
+
+/* ===========================
+   🎨 VARIANTES PAR CLASSE
+=========================== */
+
+/* Guerrier */
+.character-card[data-class="Guerrier"] {
+    --class-icon: url('../assets/class-icons/fighter.svg');
+}
+
+.character-card[data-class="Guerrier"] .character-class-badge {
+    background: linear-gradient(135deg, #dc2626, #991b1b);
+}
+
+/* Magicien */
+.character-card[data-class="Magicien"] {
+    --class-icon: url('../assets/class-icons/wizard.svg');
+}
+
+.character-card[data-class="Magicien"] .character-class-badge {
+    background: linear-gradient(135deg, #8b5cf6, #5b21b6);
+}
+
+/* Roublard */
+.character-card[data-class="Roublard"] {
+    --class-icon: url('../assets/class-icons/rogue.svg');
+}
+
+.character-card[data-class="Roublard"] .character-class-badge {
+    background: linear-gradient(135deg, #0891b2, #0e7490);
+}
+
+/* Clerc */
+.character-card[data-class="Clerc"] {
+    --class-icon: url('../assets/class-icons/cleric.svg');
+}
+
+.character-card[data-class="Clerc"] .character-class-badge {
+    background: linear-gradient(135deg, #f59e0b, #b45309);
+}
+
+/* Rôdeur */
+.character-card[data-class="Rôdeur"] {
+    --class-icon: url('../assets/class-icons/ranger.svg');
+}
+
+.character-card[data-class="Rôdeur"] .character-class-badge {
+    background: linear-gradient(135deg, #10b981, #047857);
+}
+
+/* Paladin */
+.character-card[data-class="Paladin"] {
+    --class-icon: url('../assets/class-icons/paladin.svg');
+}
+
+.character-card[data-class="Paladin"] .character-class-badge {
+    background: linear-gradient(135deg, #ec4899, #be185d);
+}
+
+/* ===========================
+   📱 RESPONSIVE
+=========================== */
+@media (max-width: 768px) {
+    .character-name-hero {
+        font-size: 1.5rem;
+    }
+    
+    .character-key-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .character-card::before {
+        width: 150px;
+        height: 150px;
+        right: -30px;
+    }
+}
