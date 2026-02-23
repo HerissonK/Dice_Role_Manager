@@ -1056,9 +1056,7 @@ async function rollWeaponAttack(weaponId) {
 
         if (data.isCritical) {
             setTimeout(() => {
-                if (confirm('Coup critique ! Lancer les dégâts ?')) {
-                    rollWeaponDamage(weaponId, true);
-                }
+                showCriticalModal(weaponId, data.weaponName);
             }, 800);
         }
 
@@ -1134,35 +1132,20 @@ async function rollFree(count, sides) {
 /**
  * 💥 Afficher le modal de coup critique
  */
-function showCriticalModal(weaponId, weaponName) {
-    const modal = document.getElementById('critical-modal');
-    const weaponNameEl = document.getElementById('critical-weapon-name');
-    const btnRoll = document.getElementById('btn-roll-critical-damage');
-    const btnClose = document.getElementById('btn-close-critical');
+async function showCriticalModal(weaponId, weaponName) {
+    const confirmed = await customConfirm(
+        `Coup critique avec ${weaponName} !\n\nVoulez-vous lancer les dégâts critiques maintenant ?`,
+        {
+            title: '⚔️ COUP CRITIQUE !',
+            confirmText: '🎲 Lancer les dégâts',
+            cancelText: 'Plus tard',
+            type: 'warning'
+        }
+    );
     
-    if (!modal) {
-        console.error('❌ Modal critique introuvable');
-        return;
-    }
-    
-    weaponNameEl.textContent = `${weaponName}`;
-    modal.style.display = 'flex';
-    
-    // Lancer les dégâts critiques
-    btnRoll.onclick = () => {
-        modal.style.display = 'none';
+    if (confirmed) {
         rollWeaponDamage(weaponId, true);
-    };
-    
-    // Fermer le modal
-    btnClose.onclick = () => {
-        modal.style.display = 'none';
-    };
-    
-    // Fermer en cliquant sur l'overlay
-    modal.querySelector('.critical-modal-overlay').onclick = () => {
-        modal.style.display = 'none';
-    };
+    }
 }
 
 // ─────────────────────────────────────────────────────

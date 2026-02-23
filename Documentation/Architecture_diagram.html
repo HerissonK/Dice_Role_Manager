@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>D&D Character Builder — Application Architecture</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0e1a;
+    font-family: 'Courier New', monospace;
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 2rem;
+  }
+  h1 {
+    text-align: center;
+    font-size: 1.6rem;
+    color: #60a5fa;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+  .subtitle {
+    text-align: center;
+    color: #64748b;
+    font-size: 0.8rem;
+    margin-bottom: 2rem;
+    letter-spacing: 0.05em;
+  }
+  svg { display: block; margin: 0 auto; }
+</style>
+</head>
+<body>
+<h1>🏗️ Application Architecture</h1>
+<p class="subtitle">D&D 5e Character Builder · Full-Stack · Node.js + PostgreSQL + Vanilla JS</p>
+
+<svg width="1300" height="860" viewBox="0 0 1300 860" xmlns="http://www.w3.org/2000/svg" font-family="'Courier New', monospace">
+
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bgFront" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1f3a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f1424;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="bgBack" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d0d1a;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="bgDb" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a2e1a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d1a0d;stop-opacity:1" />
+    </linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#60a5fa" />
+    </marker>
+    <marker id="arrowGray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#475569" />
+    </marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#34d399" />
+    </marker>
+  </defs>
+
+  <!-- ===================== LAYER 1: CLIENT ===================== -->
+  <rect x="20" y="20" width="370" height="810" rx="14" fill="url(#bgFront)" stroke="#3b82f6" stroke-width="2"/>
+  <text x="205" y="50" text-anchor="middle" fill="#60a5fa" font-size="13" font-weight="bold" letter-spacing="0.1em">🖥️ CLIENT LAYER</text>
+  <text x="205" y="68" text-anchor="middle" fill="#475569" font-size="10">Vanilla JS · HTML · CSS</text>
+  <line x1="30" y1="76" x2="380" y2="76" stroke="#1e3a5f" stroke-width="1"/>
+
+  <!-- Pages -->
+  <g transform="translate(40, 90)">
+    <!-- index.html -->
+    <rect width="330" height="80" rx="8" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="14" y="22" fill="#93c5fd" font-size="11" font-weight="bold">📄 index.html + home.js</text>
+    <text x="14" y="40" fill="#64748b" font-size="10">· Login / Register form</text>
+    <text x="14" y="56" fill="#64748b" font-size="10">· JWT session check</text>
+    <text x="14" y="72" fill="#64748b" font-size="10">· Redirect to builder / characters</text>
+  </g>
+
+  <g transform="translate(40, 188)">
+    <!-- builder.html -->
+    <rect width="330" height="150" rx="8" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/>
+    <text x="14" y="22" fill="#c4b5fd" font-size="11" font-weight="bold">📄 builder.html + app.js</text>
+    <text x="14" y="40" fill="#64748b" font-size="10">· 8-step character creation wizard</text>
+    <text x="14" y="56" fill="#64748b" font-size="10">· Point Buy system (27 pts)</text>
+    <text x="14" y="72" fill="#64748b" font-size="10">· Race / Class / Background selection</text>
+    <text x="14" y="88" fill="#64748b" font-size="10">· Skill & equipment choice</text>
+    <text x="14" y="104" fill="#64748b" font-size="10">· Character sheet generation</text>
+    <text x="14" y="120" fill="#64748b" font-size="10">· POST /api/characters to save</text>
+    <text x="14" y="136" fill="#64748b" font-size="10">· dndData.js: all D&D reference data</text>
+  </g>
+
+  <g transform="translate(40, 356)">
+    <!-- my-characters.html -->
+    <rect width="330" height="100" rx="8" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="14" y="22" fill="#fcd34d" font-size="11" font-weight="bold">📄 my-characters.html + characters-list.js</text>
+    <text x="14" y="40" fill="#64748b" font-size="10">· GET /api/characters (list)</text>
+    <text x="14" y="56" fill="#64748b" font-size="10">· View detail modal</text>
+    <text x="14" y="72" fill="#64748b" font-size="10">· DELETE /api/characters/:id</text>
+    <text x="14" y="88" fill="#64748b" font-size="10">· Navigate to play mode</text>
+  </g>
+
+  <g transform="translate(40, 474)">
+    <!-- play.html -->
+    <rect width="330" height="160" rx="8" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/>
+    <text x="14" y="22" fill="#fca5a5" font-size="11" font-weight="bold">📄 play.html + play.js</text>
+    <text x="14" y="40" fill="#64748b" font-size="10">· GET /api/play/:id (load character)</text>
+    <text x="14" y="56" fill="#64748b" font-size="10">· Ability check cards (clickable)</text>
+    <text x="14" y="72" fill="#64748b" font-size="10">· Skill proficiency grid</text>
+    <text x="14" y="88" fill="#64748b" font-size="10">· Weapon attack + damage rolls</text>
+    <text x="14" y="104" fill="#64748b" font-size="10">· Critical hit modal</text>
+    <text x="14" y="120" fill="#64748b" font-size="10">· Free dice roller (d4→d100)</text>
+    <text x="14" y="136" fill="#64748b" font-size="10">· Roll journal (localStorage)</text>
+    <text x="14" y="152" fill="#64748b" font-size="10">· Result banner animation</text>
+  </g>
+
+  <!-- Shared modules -->
+  <g transform="translate(40, 652)">
+    <rect width="330" height="160" rx="8" fill="#0f172a" stroke="#475569" stroke-width="1" stroke-dasharray="4,3"/>
+    <text x="14" y="22" fill="#94a3b8" font-size="11" font-weight="bold">📦 Shared Modules</text>
+    <line x1="8" y1="30" x2="322" y2="30" stroke="#1e293b" stroke-width="1"/>
+    <text x="14" y="50" fill="#64748b" font-size="10">auth.js · JWT management (localStorage)</text>
+    <text x="14" y="68" fill="#64748b" font-size="10">            · isAuthenticated()</text>
+    <text x="14" y="86" fill="#64748b" font-size="10">            · requireAuth() guard</text>
+    <text x="14" y="104" fill="#64748b" font-size="10">            · authenticatedFetch()</text>
+    <text x="14" y="122" fill="#64748b" font-size="10">styles-dark-gaming.css · global UI theme</text>
+    <text x="14" y="140" fill="#64748b" font-size="10">customAlert() / customConfirm() · modals</text>
+  </g>
+
+  <!-- ===================== LAYER 2: API / BACK-END ===================== -->
+  <rect x="430" y="20" width="420" height="810" rx="14" fill="url(#bgBack)" stroke="#7c3aed" stroke-width="2"/>
+  <text x="640" y="50" text-anchor="middle" fill="#a78bfa" font-size="13" font-weight="bold" letter-spacing="0.1em">⚙️ API LAYER</text>
+  <text x="640" y="68" text-anchor="middle" fill="#475569" font-size="10">Node.js · Express · JWT · bcrypt</text>
+  <line x1="440" y1="76" x2="840" y2="76" stroke="#2d1b69" stroke-width="1"/>
+
+  <!-- app.js entry -->
+  <g transform="translate(450, 90)">
+    <rect width="380" height="70" rx="8" fill="#1e1b3a" stroke="#7c3aed" stroke-width="1.5"/>
+    <text x="14" y="22" fill="#c4b5fd" font-size="11" font-weight="bold">🚀 app.js + server.js</text>
+    <text x="14" y="40" fill="#64748b" font-size="10">· Express setup · CORS · JSON parsing</text>
+    <text x="14" y="56" fill="#64748b" font-size="10">· Rate limiting: 15 logins/15min · 20 creates/hr</text>
+  </g>
+
+  <!-- Middleware -->
+  <g transform="translate(450, 178)">
+    <rect width="380" height="60" rx="8" fill="#1e1b3a" stroke="#6d28d9" stroke-width="1.5"/>
+    <text x="14" y="22" fill="#c4b5fd" font-size="11" font-weight="bold">🛡️ auth.middleware.js</text>
+    <text x="14" y="40" fill="#64748b" font-size="10">· Bearer token extraction</text>
+    <text x="14" y="56" fill="#64748b" font-size="10">· jwt.verify() → req.user injection</text>
+  </g>
+
+  <!-- Routes -->
+  <g transform="translate(450, 256)">
+    <rect width="380" height="200" rx="8" fill="#1e1b3a" stroke="#4c1d95" stroke-width="1.5"/>
+    <text x="14" y="22" fill="#c4b5fd" font-size="11" font-weight="bold">📡 Routes</text>
+    <line x1="8" y1="30" x2="372" y2="30" stroke="#2d1b69" stroke-width="1"/>
+    <text x="14" y="50" fill="#a78bfa" font-size="10" font-weight="bold">auth.routes.js</text>
+    <text x="14" y="66" fill="#64748b" font-size="10">  POST /api/auth/register</text>
+    <text x="14" y="82" fill="#64748b" font-size="10">  POST /api/auth/login</text>
+    <text x="14" y="102" fill="#a78bfa" font-size="10" font-weight="bold">character.routes.js  [auth required]</text>
+    <text x="14" y="118" fill="#64748b" font-size="10">  GET|POST /api/characters</text>
+    <text x="14" y="134" fill="#64748b" font-size="10">  GET|PUT|DELETE /api/characters/:id</text>
+    <text x="14" y="154" fill="#a78bfa" font-size="10" font-weight="bold">play.routes.js  [auth required]</text>
+    <text x="14" y="170" fill="#64748b" font-size="10">  GET /api/play/:id</text>
+    <text x="14" y="186" fill="#64748b" font-size="10">  POST /api/play/:id/roll/ability|attack|damage</text>
+  </g>
+
+  <!-- Controllers -->
+  <g transform="translate(450, 474)">
+    <rect width="380" height="200" rx="8" fill="#1e1b3a" stroke="#5b21b6" stroke-width="1.5"/>
+    <text x="14" y="22" fill="#c4b5fd" font-size="11" font-weight="bold">🎮 Controllers</text>
+    <line x1="8" y1="30" x2="372" y2="30" stroke="#2d1b69" stroke-width="1"/>
+    <text x="14" y="50" fill="#a78bfa" font-size="10" font-weight="bold">auth.controller.js</text>
+    <text x="14" y="66" fill="#64748b" font-size="10">  validateRegistration() · login()</text>
+    <text x="14" y="82" fill="#64748b" font-size="10">  bcrypt.compare() · jwt.sign()</text>
+    <text x="14" y="102" fill="#a78bfa" font-size="10" font-weight="bold">character.controller.js</text>
+    <text x="14" y="118" fill="#64748b" font-size="10">  createCharacter() · getCharacters()</text>
+    <text x="14" y="134" fill="#64748b" font-size="10">  getCharacterById() · deleteCharacter()</text>
+    <text x="14" y="154" fill="#a78bfa" font-size="10" font-weight="bold">play.controller.js</text>
+    <text x="14" y="170" fill="#64748b" font-size="10">  getPlayCharacter() · rollAbility()</text>
+    <text x="14" y="186" fill="#64748b" font-size="10">  rollAttack() · rollDamage() · rollFreeDice()</text>
+  </g>
+
+  <!-- Services & Validators -->
+  <g transform="translate(450, 692)">
+    <rect width="380" height="120" rx="8" fill="#0f0f1a" stroke="#475569" stroke-width="1" stroke-dasharray="4,3"/>
+    <text x="14" y="22" fill="#94a3b8" font-size="11" font-weight="bold">🔧 Services &amp; Validators</text>
+    <line x1="8" y1="30" x2="372" y2="30" stroke="#1e293b" stroke-width="1"/>
+    <text x="14" y="52" fill="#64748b" font-size="10">armor.service.js · calculateArmorClass()</text>
+    <text x="14" y="70" fill="#64748b" font-size="10">ruleValidator.js · validateLevel() / validateAbilities()</text>
+    <text x="14" y="88" fill="#64748b" font-size="10">dice.js · rollDice() / abilityModifier()</text>
+    <text x="14" y="106" fill="#64748b" font-size="10">modifiers.util.js · calculateModifier()</text>
+  </g>
+
+  <!-- ===================== LAYER 3: DATA ===================== -->
+  <rect x="890" y="20" width="380" height="810" rx="14" fill="url(#bgDb)" stroke="#10b981" stroke-width="2"/>
+  <text x="1080" y="50" text-anchor="middle" fill="#34d399" font-size="13" font-weight="bold" letter-spacing="0.1em">🗄️ DATA LAYER</text>
+  <text x="1080" y="68" text-anchor="middle" fill="#475569" font-size="10">PostgreSQL · node-postgres (pg)</text>
+  <line x1="900" y1="76" x2="1260" y2="76" stroke="#064e3b" stroke-width="1"/>
+
+  <!-- Models -->
+  <g transform="translate(910, 90)">
+    <rect width="340" height="200" rx="8" fill="#0a1a12" stroke="#10b981" stroke-width="1.5"/>
+    <text x="14" y="22" fill="#34d399" font-size="11" font-weight="bold">📋 Models (ORM-like)</text>
+    <line x1="8" y1="30" x2="332" y2="30" stroke="#064e3b" stroke-width="1"/>
+    <text x="14" y="50" fill="#6ee7b7" font-size="10" font-weight="bold">character.model.js</text>
+    <text x="14" y="66" fill="#64748b" font-size="10">  Character.create() · findById()</text>
+    <text x="14" y="82" fill="#64748b" font-size="10">  findAllByUser() · updateById()</text>
+    <text x="14" y="98" fill="#64748b" font-size="10">  deleteById() · getEquippedItems()</text>
+    <text x="14" y="114" fill="#64748b" font-size="10">  calculateArmorClass() [static]</text>
+    <text x="14" y="134" fill="#6ee7b7" font-size="10" font-weight="bold">user.model.js</text>
+    <text x="14" y="150" fill="#64748b" font-size="10">  User.create() · findByEmail()</text>
+    <text x="14" y="166" fill="#64748b" font-size="10">  findById()</text>
+    <text x="14" y="186" fill="#475569" font-size="9">  Transactions with client.query / BEGIN / COMMIT</text>
+  </g>
+
+  <!-- Database pool -->
+  <g transform="translate(910, 308)">
+    <rect width="340" height="60" rx="8" fill="#0a1a12" stroke="#059669" stroke-width="1.5"/>
+    <text x="14" y="22" fill="#34d399" font-size="11" font-weight="bold">🔌 database.js (Pool)</text>
+    <text x="14" y="40" fill="#64748b" font-size="10">  pg.Pool · env-driven config</text>
+    <text x="14" y="56" fill="#64748b" font-size="10">  Connection reuse · error handling</text>
+  </g>
+
+  <!-- PostgreSQL tables group -->
+  <g transform="translate(910, 386)">
+    <rect width="340" height="390" rx="8" fill="#0a1a12" stroke="#047857" stroke-width="1.5"/>
+    <text x="14" y="22" fill="#34d399" font-size="11" font-weight="bold">🐘 PostgreSQL Tables</text>
+    <line x1="8" y1="30" x2="332" y2="30" stroke="#064e3b" stroke-width="1"/>
+
+    <text x="14" y="52" fill="#6ee7b7" font-size="10" font-weight="bold">Reference tables (static D&D data)</text>
+    <text x="14" y="70" fill="#64748b" font-size="10">  dnd_class · dnd_species · dnd_background</text>
+    <text x="14" y="86" fill="#64748b" font-size="10">  dnd_skill · dnd_weapon · dnd_armor</text>
+
+    <text x="14" y="110" fill="#6ee7b7" font-size="10" font-weight="bold">User tables</text>
+    <text x="14" y="128" fill="#64748b" font-size="10">  users</text>
+
+    <text x="14" y="152" fill="#6ee7b7" font-size="10" font-weight="bold">Character tables (dynamic)</text>
+    <text x="14" y="170" fill="#64748b" font-size="10">  personnage</text>
+    <text x="14" y="188" fill="#64748b" font-size="10">  personnage_caracteristique</text>
+    <text x="14" y="206" fill="#64748b" font-size="10">  personnage_skill</text>
+    <text x="14" y="224" fill="#64748b" font-size="10">  personnage_item</text>
+    <text x="14" y="242" fill="#64748b" font-size="10">  item</text>
+
+    <line x1="8" y1="258" x2="332" y2="258" stroke="#064e3b" stroke-width="1"/>
+    <text x="14" y="278" fill="#475569" font-size="9">JSONB used for: ability_bonuses, traits,</text>
+    <text x="14" y="294" fill="#475569" font-size="9">saving_throws, skill lists, weapon properties</text>
+    <text x="14" y="314" fill="#475569" font-size="9">SQL transactions (BEGIN/COMMIT/ROLLBACK)</text>
+    <text x="14" y="330" fill="#475569" font-size="9">for atomic character creation</text>
+    <text x="14" y="350" fill="#475569" font-size="9">CHECK constraints on abilities (1–30),</text>
+    <text x="14" y="366" fill="#475569" font-size="9">level (1–20), role enum validation</text>
+  </g>
+
+  <!-- ===================== FLOW ARROWS ===================== -->
+  <!-- Client → API -->
+  <line x1="395" y1="280" x2="428" y2="280" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="408" y="270" fill="#60a5fa" font-size="9">HTTP</text>
+  <text x="405" y="292" fill="#60a5fa" font-size="9">REST</text>
+
+  <!-- API → DB -->
+  <line x1="865" y1="450" x2="888" y2="450" stroke="#34d399" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <text x="870" y="440" fill="#34d399" font-size="9">SQL</text>
+  <text x="870" y="462" fill="#34d399" font-size="9">pg</text>
+
+  <!-- Return arrows -->
+  <line x1="428" y1="310" x2="395" y2="310" stroke="#475569" stroke-width="1.5" marker-end="url(#arrowGray)" stroke-dasharray="4,3"/>
+  <text x="400" y="304" fill="#475569" font-size="8">JSON</text>
+
+  <line x1="888" y1="480" x2="865" y2="480" stroke="#475569" stroke-width="1.5" marker-end="url(#arrowGray)" stroke-dasharray="4,3"/>
+  <text x="867" y="474" fill="#475569" font-size="8">rows</text>
+
+  <!-- ===================== SECURITY BANNER ===================== -->
+  <g transform="translate(430, 800)">
+    <rect width="840" height="30" rx="6" fill="#1c1917" stroke="#78716c" stroke-width="1"/>
+    <text x="420" y="19" text-anchor="middle" fill="#a8a29e" font-size="10">
+      🔒 bcrypt (10 rounds) · JWT 24h · express-rate-limit · server-side validation (ruleValidator.js) · SQL parameterized queries (injection prevention)
+    </text>
+  </g>
+
+</svg>
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>D&D Character Builder — Database Diagram</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0f1117;
+    font-family: 'Courier New', monospace;
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 2rem;
+  }
+  h1 {
+    text-align: center;
+    font-size: 1.6rem;
+    color: #60a5fa;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+  .subtitle {
+    text-align: center;
+    color: #64748b;
+    font-size: 0.8rem;
+    margin-bottom: 2.5rem;
+    letter-spacing: 0.05em;
+  }
+  .canvas {
+    position: relative;
+    width: 100%;
+    overflow-x: auto;
+  }
+  svg {
+    display: block;
+    margin: 0 auto;
+    width: 1400px;
+    height: 980px;
+  }
+  /* Tables */
+  .table-header { fill: #1e3a5f; stroke: #3b82f6; stroke-width: 2; rx: 6; }
+  .table-header-accent { fill: #2563eb; }
+  .table-body { fill: #1a1f2e; stroke: #334155; stroke-width: 1.5; }
+  .pk { fill: #fbbf24; font-weight: bold; }
+  .fk { fill: #34d399; }
+  .col { fill: #cbd5e1; }
+  .type { fill: #7c3aed; font-size: 10px; }
+  .table-title { fill: #60a5fa; font-weight: bold; font-size: 13px; letter-spacing: 0.05em; }
+  /* Relations */
+  .rel-line { stroke: #3b82f6; stroke-width: 1.5; fill: none; stroke-dasharray: 5,3; opacity: 0.7; }
+  .rel-label { fill: #94a3b8; font-size: 9px; }
+  .legend-box { fill: #1a1f2e; stroke: #334155; stroke-width: 1; }
+</style>
+</head>
+<body>
+<h1>🎲 D&D Character Builder — Database Schema</h1>
+<p class="subtitle">PostgreSQL · 13 tables · Relational diagram</p>
+<div class="canvas">
+<svg viewBox="0 0 1400 980" xmlns="http://www.w3.org/2000/svg" font-family="'Courier New', monospace">
+
+  <!-- ========== RELATION LINES ========== -->
+  <!-- users → personnage -->
+  <line class="rel-line" x1="200" y1="195" x2="200" y2="460" />
+  <text class="rel-label" x="205" y="330">1..N</text>
+
+  <!-- dnd_class → personnage -->
+  <line class="rel-line" x1="600" y1="310" x2="380" y2="460" />
+  <text class="rel-label" x="490" y="375">1..N</text>
+
+  <!-- dnd_species → personnage -->
+  <line class="rel-line" x1="800" y1="110" x2="430" y2="460" />
+  <text class="rel-label" x="600" y="280">1..N</text>
+
+  <!-- dnd_background → personnage -->
+  <line class="rel-line" x1="1050" y1="220" x2="450" y2="460" />
+  <text class="rel-label" x="780" y="320">1..N</text>
+
+  <!-- personnage → personnage_caracteristique -->
+  <line class="rel-line" x1="280" y1="620" x2="200" y2="720" />
+  <text class="rel-label" x="205" y="680">1..N</text>
+
+  <!-- personnage → personnage_skill -->
+  <line class="rel-line" x1="380" y1="620" x2="570" y2="720" />
+  <text class="rel-label" x="490" y="670">1..N</text>
+
+  <!-- personnage → personnage_item -->
+  <line class="rel-line" x1="440" y1="620" x2="870" y2="720" />
+  <text class="rel-label" x="680" y="650">1..N</text>
+
+  <!-- item → personnage_item -->
+  <line class="rel-line" x1="1100" y1="310" x2="990" y2="720" />
+  <text class="rel-label" x="1060" y="510">1..N</text>
+
+  <!-- dnd_skill → dnd_background (conceptual) -->
+  <line class="rel-line" x1="820" y1="310" x2="1050" y2="165" stroke-dasharray="3,5" opacity="0.4"/>
+
+  <!-- ========== TABLE: users ========== -->
+  <g transform="translate(80, 40)">
+    <rect width="240" height="165" rx="8" fill="#1a1f2e" stroke="#3b82f6" stroke-width="2"/>
+    <rect width="240" height="34" rx="8" fill="#1e3a5f"/>
+    <rect width="240" height="6" y="28" fill="#1e3a5f"/>
+    <text x="12" y="22" class="table-title">👤 users</text>
+    <!-- cols -->
+    <line x1="0" y1="34" x2="240" y2="34" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="10" y="52" class="pk" font-size="11">🔑 id</text><text x="130" y="52" class="type">SERIAL PK</text>
+    <text x="10" y="70" class="col" font-size="11">   username</text><text x="130" y="70" class="type">VARCHAR(50)</text>
+    <text x="10" y="88" class="col" font-size="11">   email</text><text x="130" y="88" class="type">VARCHAR(255)</text>
+    <text x="10" y="106" class="col" font-size="11">   password_hash</text><text x="130" y="106" class="type">TEXT</text>
+    <text x="10" y="124" class="col" font-size="11">   role</text><text x="130" y="124" class="type">VARCHAR(50)</text>
+    <text x="10" y="142" class="col" font-size="11">   created_at</text><text x="130" y="142" class="type">TIMESTAMP</text>
+    <text x="10" y="160" class="col" font-size="11">   updated_at</text><text x="130" y="160" class="type">TIMESTAMP</text>
+  </g>
+
+  <!-- ========== TABLE: dnd_class ========== -->
+  <g transform="translate(440, 40)">
+    <rect width="260" height="285" rx="8" fill="#1a1f2e" stroke="#8b5cf6" stroke-width="2"/>
+    <rect width="260" height="34" rx="8" fill="#2d1b69"/>
+    <rect width="260" height="6" y="28" fill="#2d1b69"/>
+    <text x="12" y="22" class="table-title" fill="#a78bfa">⚔️ dnd_class</text>
+    <line x1="0" y1="34" x2="260" y2="34" stroke="#8b5cf6" stroke-width="1.5"/>
+    <text x="10" y="52" class="pk" font-size="11">🔑 id</text><text x="140" y="52" class="type">INTEGER PK</text>
+    <text x="10" y="70" class="col" font-size="11">   name</text><text x="140" y="70" class="type">VARCHAR(50)</text>
+    <text x="10" y="88" class="col" font-size="11">   description</text><text x="140" y="88" class="type">TEXT</text>
+    <text x="10" y="106" class="col" font-size="11">   hit_die</text><text x="140" y="106" class="type">INTEGER</text>
+    <text x="10" y="124" class="col" font-size="11">   primary_ability</text><text x="140" y="124" class="type">VARCHAR(20)</text>
+    <text x="10" y="142" class="col" font-size="11">   saving_throws</text><text x="140" y="142" class="type">JSONB</text>
+    <text x="10" y="160" class="col" font-size="11">   armor_proficiencies</text><text x="140" y="160" class="type">JSONB</text>
+    <text x="10" y="178" class="col" font-size="11">   weapon_proficiencies</text><text x="140" y="178" class="type">JSONB</text>
+    <text x="10" y="196" class="col" font-size="11">   skills</text><text x="140" y="196" class="type">JSONB</text>
+    <text x="10" y="214" class="col" font-size="11">   skill_choices</text><text x="140" y="214" class="type">INTEGER</text>
+    <text x="10" y="232" class="col" font-size="11">   equipment_choices</text><text x="140" y="232" class="type">JSONB</text>
+  </g>
+
+  <!-- ========== TABLE: dnd_species ========== -->
+  <g transform="translate(730, 40)">
+    <rect width="240" height="195" rx="8" fill="#1a1f2e" stroke="#10b981" stroke-width="2"/>
+    <rect width="240" height="34" rx="8" fill="#064e3b"/>
+    <rect width="240" height="6" y="28" fill="#064e3b"/>
+    <text x="12" y="22" class="table-title" fill="#34d399">🧝 dnd_species</text>
+    <line x1="0" y1="34" x2="240" y2="34" stroke="#10b981" stroke-width="1.5"/>
+    <text x="10" y="52" class="pk" font-size="11">🔑 id</text><text x="130" y="52" class="type">INTEGER PK</text>
+    <text x="10" y="70" class="col" font-size="11">   name</text><text x="130" y="70" class="type">VARCHAR(50)</text>
+    <text x="10" y="88" class="col" font-size="11">   description</text><text x="130" y="88" class="type">TEXT</text>
+    <text x="10" y="106" class="col" font-size="11">   ability_bonuses</text><text x="130" y="106" class="type">JSONB</text>
+    <text x="10" y="124" class="col" font-size="11">   traits</text><text x="130" y="124" class="type">JSONB</text>
+    <text x="10" y="142" class="col" font-size="11">   speed</text><text x="130" y="142" class="type">INTEGER</text>
+    <text x="10" y="160" class="col" font-size="11">   languages</text><text x="130" y="160" class="type">JSONB</text>
+  </g>
+
+  <!-- ========== TABLE: dnd_background ========== -->
+  <g transform="translate(1000, 40)">
+    <rect width="250" height="195" rx="8" fill="#1a1f2e" stroke="#f59e0b" stroke-width="2"/>
+    <rect width="250" height="34" rx="8" fill="#451a03"/>
+    <rect width="250" height="6" y="28" fill="#451a03"/>
+    <text x="12" y="22" class="table-title" fill="#fbbf24">📜 dnd_background</text>
+    <line x1="0" y1="34" x2="250" y2="34" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="10" y="52" class="pk" font-size="11">🔑 id</text><text x="140" y="52" class="type">INTEGER PK</text>
+    <text x="10" y="70" class="col" font-size="11">   name</text><text x="140" y="70" class="type">VARCHAR(50)</text>
+    <text x="10" y="88" class="col" font-size="11">   skill_proficiencies</text><text x="140" y="88" class="type">JSONB</text>
+    <text x="10" y="106" class="col" font-size="11">   tool_proficiencies</text><text x="140" y="106" class="type">JSONB</text>
+    <text x="10" y="124" class="col" font-size="11">   languages</text><text x="140" y="124" class="type">INTEGER</text>
+    <text x="10" y="142" class="col" font-size="11">   feature</text><text x="140" y="142" class="type">TEXT</text>
+    <text x="10" y="160" class="col" font-size="11">   equipment</text><text x="140" y="160" class="type">JSONB</text>
+  </g>
+
+  <!-- ========== TABLE: dnd_skill ========== -->
+  <g transform="translate(730, 270)">
+    <rect width="220" height="120" rx="8" fill="#1a1f2e" stroke="#06b6d4" stroke-width="2"/>
+    <rect width="220" height="34" rx="8" fill="#0c4a6e"/>
+    <rect width="220" height="6" y="28" fill="#0c4a6e"/>
+    <text x="12" y="22" class="table-title" fill="#22d3ee">🎯 dnd_skill</text>
+    <line x1="0" y1="34" x2="220" y2="34" stroke="#06b6d4" stroke-width="1.5"/>
+    <text x="10" y="52" class="pk" font-size="11">🔑 id</text><text x="120" y="52" class="type">INTEGER PK</text>
+    <text x="10" y="70" class="col" font-size="11">   name</text><text x="120" y="70" class="type">VARCHAR(50)</text>
+    <text x="10" y="88" class="col" font-size="11">   ability</text><text x="120" y="88" class="type">VARCHAR(20)</text>
+  </g>
+
+  <!-- ========== TABLE: item ========== -->
+  <g transform="translate(980, 270)">
+    <rect width="260" height="195" rx="8" fill="#1a1f2e" stroke="#ef4444" stroke-width="2"/>
+    <rect width="260" height="34" rx="8" fill="#450a0a"/>
+    <rect width="260" height="6" y="28" fill="#450a0a"/>
+    <text x="12" y="22" class="table-title" fill="#f87171">🗡️ item</text>
+    <line x1="0" y1="34" x2="260" y2="34" stroke="#ef4444" stroke-width="1.5"/>
+    <text x="10" y="52" class="pk" font-size="11">🔑 id</text><text x="150" y="52" class="type">SERIAL PK</text>
+    <text x="10" y="70" class="col" font-size="11">   name</text><text x="150" y="70" class="type">VARCHAR(100)</text>
+    <text x="10" y="88" class="col" font-size="11">   category</text><text x="150" y="88" class="type">VARCHAR(50)</text>
+    <text x="10" y="106" class="col" font-size="11">   armor_class</text><text x="150" y="106" class="type">INTEGER</text>
+    <text x="10" y="124" class="col" font-size="11">   dex_modifier_rule</text><text x="150" y="124" class="type">VARCHAR(10)</text>
+    <text x="10" y="142" class="col" font-size="11">   damage_dice</text><text x="150" y="142" class="type">VARCHAR(10)</text>
+    <text x="10" y="160" class="col" font-size="11">   damage_type</text><text x="150" y="160" class="type">VARCHAR(20)</text>
+    <text x="10" y="178" class="col" font-size="11">   properties</text><text x="150" y="178" class="type">JSONB</text>
+  </g>
+
+  <!-- ========== TABLE: personnage ========== -->
+  <g transform="translate(200, 460)">
+    <rect width="280" height="175" rx="8" fill="#1a1f2e" stroke="#3b82f6" stroke-width="2.5"/>
+    <rect width="280" height="34" rx="8" fill="#1e3a5f"/>
+    <rect width="280" height="6" y="28" fill="#1e3a5f"/>
+    <text x="12" y="22" class="table-title">🧙 personnage</text>
+    <line x1="0" y1="34" x2="280" y2="34" stroke="#3b82f6" stroke-width="2"/>
+    <text x="10" y="52" class="pk" font-size="11">🔑 id</text><text x="160" y="52" class="type">SERIAL PK</text>
+    <text x="10" y="70" class="col" font-size="11">   name</text><text x="160" y="70" class="type">VARCHAR(100)</text>
+    <text x="10" y="88" class="col" font-size="11">   level</text><text x="160" y="88" class="type">INTEGER</text>
+    <text x="10" y="106" class="fk" font-size="11">🔗 class_id</text><text x="160" y="106" class="type">FK → dnd_class</text>
+    <text x="10" y="124" class="fk" font-size="11">🔗 species_id</text><text x="160" y="124" class="type">FK → dnd_species</text>
+    <text x="10" y="142" class="fk" font-size="11">🔗 background_id</text><text x="160" y="142" class="type">FK → dnd_background</text>
+    <text x="10" y="160" class="fk" font-size="11">🔗 user_id</text><text x="160" y="160" class="type">FK → users</text>
+  </g>
+
+  <!-- ========== TABLE: personnage_caracteristique ========== -->
+  <g transform="translate(40, 720)">
+    <rect width="280" height="140" rx="8" fill="#1a1f2e" stroke="#7c3aed" stroke-width="2"/>
+    <rect width="280" height="34" rx="8" fill="#2d1b69"/>
+    <rect width="280" height="6" y="28" fill="#2d1b69"/>
+    <text x="12" y="22" class="table-title" fill="#a78bfa">📊 personnage_caracteristique</text>
+    <line x1="0" y1="34" x2="280" y2="34" stroke="#7c3aed" stroke-width="1.5"/>
+    <text x="10" y="52" class="fk" font-size="11">🔗 personnage_id</text><text x="155" y="52" class="type">FK PK</text>
+    <text x="10" y="70" class="pk" font-size="11">🔑 caracteristique</text><text x="155" y="70" class="type">VARCHAR(10) PK</text>
+    <text x="10" y="88" class="col" font-size="11">   valeur</text><text x="155" y="88" class="type">INTEGER</text>
+    <text x="8" y="110" fill="#64748b" font-size="9">CHECK: str|dex|con|int|wis|cha</text>
+    <text x="8" y="124" fill="#64748b" font-size="9">CHECK: 1 ≤ valeur ≤ 30</text>
+  </g>
+
+  <!-- ========== TABLE: personnage_skill ========== -->
+  <g transform="translate(390, 720)">
+    <rect width="270" height="130" rx="8" fill="#1a1f2e" stroke="#10b981" stroke-width="2"/>
+    <rect width="270" height="34" rx="8" fill="#064e3b"/>
+    <rect width="270" height="6" y="28" fill="#064e3b"/>
+    <text x="12" y="22" class="table-title" fill="#34d399">⭐ personnage_skill</text>
+    <line x1="0" y1="34" x2="270" y2="34" stroke="#10b981" stroke-width="1.5"/>
+    <text x="10" y="52" class="fk" font-size="11">🔗 personnage_id</text><text x="155" y="52" class="type">FK PK</text>
+    <text x="10" y="70" class="pk" font-size="11">🔑 skill_name</text><text x="155" y="70" class="type">VARCHAR(50) PK</text>
+    <text x="10" y="88" class="col" font-size="11">   source</text><text x="155" y="88" class="type">VARCHAR(20)</text>
+    <text x="8" y="110" fill="#64748b" font-size="9">source: class | background | feat</text>
+  </g>
+
+  <!-- ========== TABLE: personnage_item ========== -->
+  <g transform="translate(740, 720)">
+    <rect width="270" height="140" rx="8" fill="#1a1f2e" stroke="#ef4444" stroke-width="2"/>
+    <rect width="270" height="34" rx="8" fill="#450a0a"/>
+    <rect width="270" height="6" y="28" fill="#450a0a"/>
+    <text x="12" y="22" class="table-title" fill="#f87171">🎒 personnage_item</text>
+    <line x1="0" y1="34" x2="270" y2="34" stroke="#ef4444" stroke-width="1.5"/>
+    <text x="10" y="52" class="fk" font-size="11">🔗 personnage_id</text><text x="155" y="52" class="type">FK PK</text>
+    <text x="10" y="70" class="fk" font-size="11">🔗 item_id</text><text x="155" y="70" class="type">FK PK</text>
+    <text x="10" y="88" class="col" font-size="11">   equipped</text><text x="155" y="88" class="type">BOOLEAN</text>
+    <text x="10" y="106" class="col" font-size="11">   quantity</text><text x="155" y="106" class="type">INTEGER</text>
+  </g>
+
+  <!-- ========== LEGEND ========== -->
+  <g transform="translate(1080, 750)">
+    <rect width="280" height="120" rx="8" fill="#0f1117" stroke="#334155" stroke-width="1.5"/>
+    <text x="12" y="22" fill="#94a3b8" font-size="11" font-weight="bold">LEGEND</text>
+    <line x1="12" y1="30" x2="268" y2="30" stroke="#334155" stroke-width="1"/>
+    <text x="12" y="48" fill="#fbbf24" font-size="11">🔑  PRIMARY KEY</text>
+    <text x="12" y="66" fill="#34d399" font-size="11">🔗  FOREIGN KEY</text>
+    <line x1="12" y1="82" x2="60" y2="82" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5,3"/>
+    <text x="68" y="86" fill="#94a3b8" font-size="11">relation 1..N</text>
+    <text x="12" y="104" fill="#7c3aed" font-size="11">JSONB  stored as JSON array/object</text>
+  </g>
+
+  <!-- ========== TITLE WATERMARK ========== -->
+  <text x="700" y="960" text-anchor="middle" fill="#1e293b" font-size="11" letter-spacing="0.1em">D&D 5e Character Builder · PostgreSQL Schema · 13 tables</text>
+
+</svg>
+</div>
+</body>
+</html>
