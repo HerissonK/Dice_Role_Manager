@@ -203,7 +203,7 @@
 
 /* Guerrier */
 .character-card[data-class="Guerrier"] {
-    --class-icon: url('../assets/class-icons/fighter.svg');
+    --class-icon: url('assets/class-icons/fighter.svg');
 }
 
 .character-card[data-class="Guerrier"] .character-class-badge {
@@ -212,7 +212,7 @@
 
 /* Magicien */
 .character-card[data-class="Magicien"] {
-    --class-icon: url('../assets/class-icons/wizard.svg');
+    --class-icon: url('assets/class-icons/wizard.svg');
 }
 
 .character-card[data-class="Magicien"] .character-class-badge {
@@ -221,7 +221,7 @@
 
 /* Roublard */
 .character-card[data-class="Roublard"] {
-    --class-icon: url('../assets/class-icons/rogue.svg');
+    --class-icon: url('assets/class-icons/rogue.svg');
 }
 
 .character-card[data-class="Roublard"] .character-class-badge {
@@ -230,7 +230,7 @@
 
 /* Clerc */
 .character-card[data-class="Clerc"] {
-    --class-icon: url('../assets/class-icons/cleric.svg');
+    --class-icon: url('assets/class-icons/cleric.svg');
 }
 
 .character-card[data-class="Clerc"] .character-class-badge {
@@ -239,7 +239,7 @@
 
 /* Rôdeur */
 .character-card[data-class="Rôdeur"] {
-    --class-icon: url('../assets/class-icons/ranger.svg');
+    --class-icon: url('assets/class-icons/ranger.svg');
 }
 
 .character-card[data-class="Rôdeur"] .character-class-badge {
@@ -248,7 +248,7 @@
 
 /* Paladin */
 .character-card[data-class="Paladin"] {
-    --class-icon: url('../assets/class-icons/paladin.svg');
+    --class-icon: url('assets/class-icons/paladin.svg');
 }
 
 .character-card[data-class="Paladin"] .character-class-badge {
