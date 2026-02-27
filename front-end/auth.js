@@ -121,3 +121,19 @@ async function authenticatedFetch(url, options = {}) {
 
     return response;
 }
+// cacher le error message quand n'est pas connecté
+function hideErrorMessage() {
+    const errorMessage = document.getElementById('login-error');
+    if (errorMessage) {
+        errorMessage.classList.remove('active');
+        errorMessage.textContent = "";
+    }
+}
+
+function showErrorMessage(message) {
+    const errorMessage = document.getElementById('login-error');
+    if (errorMessage) {
+        errorMessage.textContent = message;
+        errorMessage.classList.add('active');
+    }
+}

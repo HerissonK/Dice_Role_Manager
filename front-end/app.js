@@ -202,6 +202,7 @@ function render() {
 }
 
 // Rendu de l'indicateur d'étapes
+
 function renderStepIndicator() {
     const container = document.getElementById('step-indicator');
 
@@ -210,24 +211,21 @@ function renderStepIndicator() {
         const isActive = index === appState.currentStep;
         const circleClass = isCompleted ? 'completed' : isActive ? 'active' : '';
         const labelClass = isCompleted || isActive ? 'active' : '';
-        const connectorClass = isCompleted ? 'completed' : '';
 
         return `
             <div class="step-item">
                 <div class="step-content">
                     <div class="step-circle ${circleClass}">
-                        ${isCompleted ? '<svg class="icon"><use href="#icon-check"/></svg>' : index + 1}
+                        ${isCompleted ? '✓' : index + 1}
                     </div>
                     <span class="step-label ${labelClass}">${step}</span>
                 </div>
-                ${index < steps.length - 1 ? `<div class="step-connector ${connectorClass}"></div>` : ''}
             </div>
         `;
     }).join('');
 
     container.innerHTML = `<div class="steps-container">${stepsHTML}</div>`;
 }
-
 // Rendu du contenu principal
 function renderMainContent() {
     const container = document.getElementById('main-content');
