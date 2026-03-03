@@ -260,7 +260,7 @@ function displayCharacters(characters) {
                     
                     <!-- CLASSE + NIVEAU BADGE -->
                     <div class="character-class-badge">
-                        ⚔️ ${character.class} • Niveau ${character.level}
+                            ${character.class} • Niveau ${character.level}
                     </div>
                     
                     <!-- META : Espèce + Background -->
