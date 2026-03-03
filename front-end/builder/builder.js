@@ -1375,7 +1375,7 @@ async function handleSave() {
         );
         
         if (goToCharacters) {
-            window.location.href = 'my-characters.html';
+            window.location.href = '/front-end/player/my-characters.html';
         } else {
             // Proposer de recommencer
             const restart = await customConfirm(
