@@ -1,42 +1,73 @@
 /* ===========================
-   🎴 CHARACTER CARD REDESIGN
-   Version moderne avec logo de classe
+   🎴 CHARACTER CARDS - SAUGE & OR
+   Design propre et élégant
 =========================== */
 
 .character-card {
     position: relative;
     overflow: hidden;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    min-height: 280px;
+    transition: all 0.3s ease;
+    min-height: 320px;
     display: flex;
     flex-direction: column;
+    background: var(--sage-dark);
+    border: 2px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
 }
 
-/* Logo de classe en arrière-plan */
+/* ✅ Barre or en haut - visible au hover uniquement */
 .character-card::before {
     content: '';
     position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        var(--gold-base) 50%, 
+        transparent 100%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 10;
+}
+
+.character-card:hover::before {
+    opacity: 1;
+}
+
+/* ✅ Effet hover - bordure or subtile */
+.character-card:hover {
+    border-color: var(--gold-base);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 
+                0 0 20px rgba(201, 168, 76, 0.15);
+}
+
+/* ✅ Icône de classe - propre et subtile */
+.character-card::after {
+    content: '';
+    position: absolute;
     top: 50%;
-    right: -20px;
-    width: 200px;
-    height: 200px;
-    background-image: var(--class-icon);
+    right: -70px;
+    width: 300px;
+    height: 300px;
+    background-image: var(--class-icon, none);
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-    opacity: 0.08;
-    transform: translateY(-50%) rotate(15deg);
-    transition: all 0.4s;
+    opacity: 0.25;
+    transform: translateY(-50%);
     pointer-events: none;
     z-index: 0;
 }
 
-.character-card:hover::before {
-    opacity: 0.15;
-    transform: translateY(-50%) rotate(10deg) scale(1.1);
+.character-card:hover::after {
+    opacity: 0.08;
 }
 
-/* Container pour le contenu */
+/* Container */
 .character-card-content {
     position: relative;
     z-index: 1;
@@ -46,130 +77,139 @@
 }
 
 /* ===========================
-   📍 HEADER REPENSÉ
+   📍 CONTENU PRINCIPAL
 =========================== */
 .character-card-main {
     padding: var(--space-lg);
     flex: 1;
 }
 
-/* Nom du personnage - HERO */
+/* Nom du personnage */
 .character-name-hero {
-    font-family: var(--font-heading);
-    font-size: 1.75rem;
-    font-weight: 900;
-    color: var(--text-primary);
-    margin-bottom: var(--space-xs);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--gold-bright);
+    margin-bottom: var(--space-sm);
     line-height: 1.2;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
 }
 
-/* Classe et niveau - MISE EN AVANT */
+/* Badge classe - plus discret */
 .character-class-badge {
     display: inline-flex;
     align-items: center;
     gap: var(--space-xs);
-    background: linear-gradient(135deg, var(--electric-blue), var(--accent-primary));
-    color: var(--text-primary);
-    padding: 0.4rem 1rem;
+    background: linear-gradient(135deg, 
+        rgba(201, 168, 76, 0.25) 0%, 
+        rgba(201, 168, 76, 0.15) 100%
+    );
+    color: var(--gold-bright);
+    padding: 0.35rem 0.9rem;
     border-radius: 999px;
-    font-family: var(--font-heading);
-    font-size: 0.9rem;
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.8rem;
     font-weight: 700;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
-    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
     margin-bottom: var(--space-md);
 }
 
-/* Espèce + Background */
+/* Meta info */
 .character-meta {
     display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-sm);
+    flex-direction: column;
+    gap: var(--space-xs);
     margin-bottom: var(--space-lg);
+    font-size: 0.85rem;
 }
 
 .character-meta-item {
     display: flex;
     align-items: center;
     gap: var(--space-xs);
-    font-size: 0.85rem;
     color: var(--text-secondary);
 }
 
 .character-meta-label {
     font-weight: 600;
     color: var(--text-muted);
+    min-width: 75px;
 }
 
 /* ===========================
-   📊 STATS IMPORTANTES
+   📊 STATS - Design propre
 =========================== */
 .character-key-stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: var(--space-sm);
     padding: var(--space-md);
-    background: var(--bg-elevated);
+    background: rgba(0, 0, 0, 0.15);
     border-radius: var(--radius-md);
-    margin-bottom: var(--space-md);
+    border: 1px solid var(--border-subtle);
 }
 
 .key-stat {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     padding: var(--space-sm);
 }
 
 .key-stat-label {
-    font-size: 0.7rem;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.65rem;
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
     margin-bottom: var(--space-xs);
     font-weight: 600;
 }
 
 .key-stat-value {
-    font-family: var(--font-heading);
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--electric-blue);
-}
-
-.key-stat-value.hp {
-    color: var(--accent-danger);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--gold-bright);
+    line-height: 1;
 }
 
 .key-stat-value.level {
-    color: var(--accent-warning);
+    color: var(--gold-base);
+}
+
+.key-stat-value.hp {
+    color: #d4a574;
 }
 
 /* ===========================
-   📅 FOOTER - Date de création
+   📅 FOOTER - Plus discret
 =========================== */
 .character-card-footer {
     padding: var(--space-md) var(--space-lg);
     border-top: 1px solid var(--border-subtle);
-    background: var(--bg-secondary);
+    background: rgba(0, 0, 0, 0.15);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: var(--space-md);
 }
 
 .character-created-date {
     display: flex;
     align-items: center;
     gap: var(--space-xs);
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--text-muted);
+    font-family: 'Montserrat', sans-serif;
 }
 
 .character-created-date::before {
-    content: '📅';
-    font-size: 0.9rem;
+    content: '';
+    font-size: 0.85rem;
 }
 
 /* ===========================
@@ -177,46 +217,66 @@
 =========================== */
 .character-card-actions {
     display: flex;
-    gap: var(--space-sm);
+    gap: var(--space-xs);
 }
 
-.character-card-actions .btn {
-    flex: 1;
-}
-
-/* Bouton "Jouer" - Mise en avant */
+/* Bouton JOUER - mise en avant */
 .btn-play {
-    background: linear-gradient(135deg, var(--accent-success), #37b24d);
-    color: white;
-    font-weight: 700;
-    box-shadow: 0 4px 12px rgba(81, 207, 102, 0.3);
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold-base));
+    color: var(--sage-deepest);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    border: none;
+    box-shadow: 0 3px 10px rgba(201, 168, 76, 0.25);
+    transition: all 0.2s ease;
 }
 
 .btn-play:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(81, 207, 102, 0.4);
+    box-shadow: 0 5px 15px rgba(201, 168, 76, 0.35);
+    background: linear-gradient(135deg, var(--gold-base), var(--gold-bright));
+}
+
+/* Boutons secondaires - icônes */
+.character-card-actions .btn-outline {
+    background: transparent;
+    border: 1.5px solid var(--border-medium);
+    color: var(--text-secondary);
+    padding: 0.5rem;
+    min-width: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.character-card-actions .btn-outline:hover {
+    border-color: var(--gold-base);
+    background: rgba(201, 168, 76, 0.08);
+    color: var(--gold-base);
+}
+
+/* Icônes SVG */
+.character-card-actions .icon {
+    width: 16px;
+    height: 16px;
 }
 
 /* ===========================
-   🎨 VARIANTES PAR CLASSE
+   🎨 ICÔNES DE CLASSE
+   Tu peux les personnaliser ici !
 =========================== */
 
 /* Guerrier */
 .character-card[data-class="Guerrier"] {
-    --class-icon: url('assets/class-icons/fighter.svg');
-}
-
-.character-card[data-class="Guerrier"] .character-class-badge {
-    background: linear-gradient(135deg, #dc2626, #991b1b);
-}
+    --class-icon: url('/front-end/assets/class-icons/fighter.svg');
+    }
 
 /* Magicien */
 .character-card[data-class="Magicien"] {
     --class-icon: url('assets/class-icons/wizard.svg');
-}
-
-.character-card[data-class="Magicien"] .character-class-badge {
-    background: linear-gradient(135deg, #8b5cf6, #5b21b6);
 }
 
 /* Roublard */
@@ -224,26 +284,14 @@
     --class-icon: url('assets/class-icons/rogue.svg');
 }
 
-.character-card[data-class="Roublard"] .character-class-badge {
-    background: linear-gradient(135deg, #0891b2, #0e7490);
-}
-
 /* Clerc */
 .character-card[data-class="Clerc"] {
     --class-icon: url('assets/class-icons/cleric.svg');
 }
 
-.character-card[data-class="Clerc"] .character-class-badge {
-    background: linear-gradient(135deg, #f59e0b, #b45309);
-}
-
 /* Rôdeur */
 .character-card[data-class="Rôdeur"] {
-    --class-icon: url('assets/class-icons/ranger.svg');
-}
-
-.character-card[data-class="Rôdeur"] .character-class-badge {
-    background: linear-gradient(135deg, #10b981, #047857);
+    --class-icon: url('/front-end/assets/class-icons/ranger.svg');
 }
 
 /* Paladin */
@@ -251,25 +299,41 @@
     --class-icon: url('assets/class-icons/paladin.svg');
 }
 
-.character-card[data-class="Paladin"] .character-class-badge {
-    background: linear-gradient(135deg, #ec4899, #be185d);
-}
-
 /* ===========================
    📱 RESPONSIVE
 =========================== */
 @media (max-width: 768px) {
     .character-name-hero {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
     }
     
     .character-key-stats {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--space-xs);
+        padding: var(--space-sm);
     }
     
-    .character-card::before {
-        width: 150px;
-        height: 150px;
-        right: -30px;
+    .key-stat-value {
+        font-size: 1.4rem;
+    }
+    
+    .character-card::after {
+        width: 100px;
+        height: 100px;
+        right: 5px;
+    }
+    
+    .character-card-footer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--space-sm);
+    }
+    
+    .character-card-actions {
+        width: 100%;
+    }
+    
+    .btn-play {
+        flex: 1;
     }
 }

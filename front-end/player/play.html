@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jouer - D&D Character</title>
-    <link rel="stylesheet" href="/front-end/styles/play-sauge-or.css">
     <link rel="stylesheet" href="/front-end/styles/styles-sauge-or.css">
+    <link rel="stylesheet" href="/front-end/styles/play-sauge-or.css">
 </head>
 <body>
     <div class="app-container">
@@ -87,7 +87,7 @@
                 <section class="card p-0 overflow-hidden dice-journal-section">
                     <div class="journal-header">
                         <div class="journal-title-group">
-                            <span class="journal-icon">📜</span>
+                            <span class="journal-icon"><img src="/front-end/assets/nav/book.svg" alt="d20"></span>
                             <h2 class="journal-title">Journal des lancers</h2>
                             <span class="journal-count" id="journal-count">0</span>
                         </div>
@@ -98,7 +98,7 @@
 
                     <div class="journal-body" id="journal-body">
                         <div class="journal-empty" id="journal-empty">
-                            <div class="journal-empty-icon">🎲</div>
+                            <div class="journal-empty-icon"><img src="/front-end/assets/dice/d20.svg" alt="d20"></div>
                             <p>Aucun lancer pour l'instant.<br>Lancez un dé pour commencer !</p>
                         </div>
                         <!-- Les entrées apparaissent ici -->
@@ -110,32 +110,28 @@
                     <h2 class="mb-4">Lancer de dés</h2>
                     <div class="dice-roller-grid">
                         <button class="dice-btn" onclick="rollFree(1, 4)">
-                            <span class="dice-icon">🎲</span>
+                            <span class="dice-icon"><img src="/front-end/assets/dice/d4.svg" alt="d4"></span>
                             <span>d4</span>
                         </button>
                         <button class="dice-btn" onclick="rollFree(1, 6)">
-                            <span class="dice-icon">🎲</span>
+                            <span class="dice-icon"><img src="/front-end/assets/dice/d6.svg" alt="d6"></span>
                             <span>d6</span>
                         </button>
                         <button class="dice-btn" onclick="rollFree(1, 8)">
-                            <span class="dice-icon">🎲</span>
+                            <span class="dice-icon"> <img src="/front-end/assets/dice/d8.svg" alt="d8"></span>
                             <span>d8</span>
                         </button>
                         <button class="dice-btn" onclick="rollFree(1, 10)">
-                            <span class="dice-icon">🎲</span>
+                            <span class="dice-icon"><img src="/front-end/assets/dice/d10.svg" alt="d10"></span>
                             <span>d10</span>
                         </button>
                         <button class="dice-btn" onclick="rollFree(1, 12)">
-                            <span class="dice-icon">🎲</span>
+                            <span class="dice-icon"><img src="/front-end/assets/dice/d12.svg" alt="d12"></span>
                             <span>d12</span>
                         </button>
                         <button class="dice-btn" onclick="rollFree(1, 20)">
-                            <span class="dice-icon">🎲</span>
+                            <span class="dice-icon"><img src="/front-end/assets/dice/d20.svg" alt="d20"></span>
                             <span>d20</span>
-                        </button>
-                        <button class="dice-btn" onclick="rollFree(1, 100)">
-                            <span class="dice-icon">🎲</span>
-                            <span>d100</span>
                         </button>
                     </div>
 

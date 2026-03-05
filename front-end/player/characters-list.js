@@ -304,7 +304,7 @@ function displayCharacters(characters) {
                             data-character-id="${character.id}"
                             title="Jouer avec ce personnage"
                         >
-                            🎲 Jouer
+                            Jouer
                         </button>
                         <button 
                             class="btn btn-outline btn-sm" 

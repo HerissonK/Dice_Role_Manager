@@ -471,14 +471,13 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
 }
 
 /* Variations de couleur */
-.dice-btn:nth-child(1) { background: linear-gradient(135deg, var(--electric-blue), #1d4ed8); }
-.dice-btn:nth-child(2) { background: linear-gradient(135deg, #10b981, #047857); }
-.dice-btn:nth-child(3) { background: linear-gradient(135deg, #f59e0b, #b45309); }
-.dice-btn:nth-child(4) { background: linear-gradient(135deg, #ef4444, #991b1b); }
-.dice-btn:nth-child(5) { background: linear-gradient(135deg, #8b5cf6, #5b21b6); }
-.dice-btn:nth-child(6) { background: linear-gradient(135deg, #ec4899, #be185d); }
-.dice-btn:nth-child(7) { background: linear-gradient(135deg, #06b6d4, #0891b2); }
-
+.dice-btn:nth-child(1) { background: linear-gradient(135deg, var(--gold-dark), var(--gold-base)); color: var(--sage-deepest); }
+.dice-btn:nth-child(2) { background: linear-gradient(135deg, var(--gold-dark), var(--gold-base)); color: var(--sage-deepest); }
+.dice-btn:nth-child(3) { background: linear-gradient(135deg, var(--gold-dark), var(--gold-base)); color: var(--sage-deepest); }
+.dice-btn:nth-child(4) { background: linear-gradient(135deg, var(--gold-dark), var(--gold-base)); color: var(--sage-deepest); }
+.dice-btn:nth-child(5) { background: linear-gradient(135deg, var(--gold-dark), var(--gold-base)); color: var(--sage-deepest); }
+.dice-btn:nth-child(6) { background: linear-gradient(135deg, var(--gold-dark), var(--gold-base)); color: var(--sage-deepest); }
+.dice-btn:nth-child(7) { background: linear-gradient(135deg, var(--gold-dark), var(--gold-base)); color: var(--sage-deepest); }
 /* ===========================
    🃏 COMPÉTENCES
 =========================== */
@@ -630,6 +629,12 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
 
 .weapon-actions .btn {
     flex: 1;
+}
+
+.weapon-dice-icon {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
 }
 
 /* ===========================

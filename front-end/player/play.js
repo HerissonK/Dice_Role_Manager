@@ -487,7 +487,7 @@ function renderWeapons(character) {
 
         weaponCard.innerHTML = `
             <div class="weapon-card-header">
-                <h4 class="weapon-name">⚔️ ${weapon.name}</h4>
+                <h4 class="weapon-name"><img src="/front-end/assets/nav/melee.svg" alt="d20" class="weapon-dice-icon"> ${weapon.name}</h4>
                 <span class="badge badge-outline">${damageType}</span>
             </div>
             <div class="weapon-stats">
@@ -505,13 +505,13 @@ function renderWeapons(character) {
                     class="btn btn-primary btn-sm"
                     onclick="rollWeaponAttack(${weapon.id})"
                 >
-                    🎲 Attaque
+                    <img src="/front-end/assets/dice/d20.svg" alt="d20" class="weapon-dice-icon"> Attaque
                 </button>
                 <button 
                     class="btn btn-outline btn-sm"
                     onclick="rollWeaponDamage(${weapon.id}, false)"
                 >
-                    💥 Dégâts
+                    <img src="/front-end/assets/nav/reach.svg" alt="d6" class="weapon-dice-icon"> Dégâts
                 </button>
             </div>
         `;

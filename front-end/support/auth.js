@@ -1,11 +1,15 @@
-// Gestion de l'authentification
+// Gestion de l'authentification - VERSION CORRIGÉE
 
 const API_BASE_URL = 'http://localhost:3000/api';
+
+console.log('🔐 auth.js chargé, API_BASE_URL:', API_BASE_URL);
 
 // Vérifier si l'utilisateur est connecté
 function isAuthenticated() {
     const token = localStorage.getItem('authToken');
-    return token !== null;
+    const isAuth = token !== null;
+    console.log('🔍 isAuthenticated:', isAuth);
+    return isAuth;
 }
 
 // Récupérer le token
@@ -21,87 +25,140 @@ function getCurrentUser() {
 
 // Sauvegarder la session
 function saveSession(token, user) {
+    console.log('💾 Sauvegarde session:', { token: token ? 'present' : 'absent', user });
     localStorage.setItem('authToken', token);
     localStorage.setItem('currentUser', JSON.stringify(user));
 }
 
 // Supprimer la session
 function clearSession() {
+    console.log('🗑️ Suppression session');
     localStorage.removeItem('authToken');
     localStorage.removeItem('currentUser');
 }
 
-// Connexion
+// ✅ CONNEXION
 async function login(email, password) {
+    console.log('🔑 login() appelé avec:', { email });
+    
     try {
-        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        const url = `${API_BASE_URL}/auth/login`;
+        console.log('📡 POST', url);
+        
+        const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
         });
 
+        console.log('📥 Réponse reçue, status:', response.status);
+
         if (!response.ok) {
             const errorData = await response.json();
+            console.error('❌ Erreur API:', errorData);
             throw new Error(errorData.error || 'Erreur lors de la connexion');
         }
 
         const data = await response.json();
+        console.log('✅ Données reçues:', { ...data, token: data.token ? 'present' : 'absent' });
 
         // Sauvegarder le token et les infos utilisateur
         saveSession(data.token, data.user);
 
         return data;
     } catch (error) {
+        console.error('💥 Erreur login:', error);
         throw error;
     }
 }
 
-// Inscription
+// ✅ INSCRIPTION - URL CORRIGÉE
 async function register(username, email, password) {
+    console.log('📝 register() appelé avec:', { username, email });
+    
     try {
-        const response = await fetch(`${API_BASE_URL}/auth/validateRegistration`, {
+        // ✅ CORRECTION : Utilise /register au lieu de /validateRegistration
+        const url = `${API_BASE_URL}/auth/register`;
+        console.log('📡 POST', url);
+        
+        const body = { username, email, password };
+        console.log('📦 Body:', body);
+        
+        const response = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, email, password }) // ⚡ username et non name
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(body)
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Erreur lors de l\'inscription');
+        console.log('📥 Réponse reçue, status:', response.status);
+
+        // ✅ Lire la réponse une seule fois
+        const responseText = await response.text();
+        console.log('📄 Réponse brute:', responseText);
+        
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch (e) {
+            console.error('❌ Impossible de parser le JSON:', e);
+            console.error('Contenu reçu:', responseText);
+            
+            // Si c'est un HTML (404), donner un message plus clair
+            if (responseText.includes('<!DOCTYPE')) {
+                throw new Error('Route d\'inscription introuvable sur le serveur. Vérifiez que /api/auth/register existe.');
+            }
+            
+            throw new Error('Réponse invalide du serveur');
         }
 
-        const data = await response.json();
+        if (!response.ok) {
+            console.error('❌ Erreur API:', data);
+            throw new Error(data.error || data.message || 'Erreur lors de l\'inscription');
+        }
 
-        // ⚡ Le back actuel ne renvoie pas encore de token à l'inscription
-        // Donc on ne peut pas sauvegarder token ici pour l'instant
-        // saveSession(data.token, data.user);
+        console.log('✅ Inscription réussie:', data);
+
+        // ⚠️ Si le serveur renvoie un token à l'inscription, sauvegarder la session
+        if (data.token && data.user) {
+            console.log('🎫 Token reçu à l\'inscription, sauvegarde session');
+            saveSession(data.token, data.user);
+        }
 
         return data;
+        
     } catch (error) {
+        console.error('💥 Erreur register:', error);
         throw error;
     }
 }
 
 // Déconnexion
 function logout() {
+    console.log('👋 logout()');
     clearSession();
-    window.location.href = 'index.html';
+    window.location.href = '/front-end/home/index.html';
 }
 
 // Protéger une page (rediriger si non connecté)
 function requireAuth() {
+    console.log('🔒 requireAuth()');
     if (!isAuthenticated()) {
-        window.location.href = 'index.html';
+        console.warn('⚠️ Non authentifié, redirection...');
+        window.location.href = '/front-end/home/index.html';
         return false;
     }
     return true;
 }
 
-// Fetch avec authentification
+// ✅ Fetch avec authentification
 async function authenticatedFetch(url, options = {}) {
     const token = getAuthToken();
 
     if (!token) {
+        console.error('❌ Pas de token');
         throw new Error('Non authentifié');
     }
 
@@ -111,29 +168,18 @@ async function authenticatedFetch(url, options = {}) {
         ...options.headers
     };
 
+    console.log('📡 authenticatedFetch:', url);
+
     const response = await fetch(url, { ...options, headers });
 
     if (response.status === 401) {
+        console.error('❌ Token invalide ou expiré');
         clearSession();
-        window.location.href = 'index.html';
+        window.location.href = '/front-end/home/index.html';
         throw new Error('Session expirée');
     }
 
     return response;
 }
-// cacher le error message quand n'est pas connecté
-function hideErrorMessage() {
-    const errorMessage = document.getElementById('login-error');
-    if (errorMessage) {
-        errorMessage.classList.remove('active');
-        errorMessage.textContent = "";
-    }
-}
 
-function showErrorMessage(message) {
-    const errorMessage = document.getElementById('login-error');
-    if (errorMessage) {
-        errorMessage.textContent = message;
-        errorMessage.classList.add('active');
-    }
-}
+console.log('✅ auth.js initialisé');

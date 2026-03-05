@@ -1,109 +1,199 @@
-// Script pour la page d'accueil
+// Script pour la page d'accueil - VERSION DEBUGGÉE
+
+console.log('🎮 home.js chargé !');
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('✅ DOM chargé, initialisation...');
+    
     const authSection = document.getElementById('auth-section');
     const userSection = document.getElementById('user-section');
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
     
+    console.log('📋 Éléments trouvés:', {
+        authSection: !!authSection,
+        userSection: !!userSection,
+        loginForm: !!loginForm,
+        registerForm: !!registerForm
+    });
+    
     // Vérifier si l'utilisateur est déjà connecté
     if (isAuthenticated()) {
+        console.log('👤 Utilisateur déjà connecté');
         showUserSection();
     } else {
+        console.log('🔓 Utilisateur non connecté');
         showAuthSection();
     }
     
     // Toggle entre connexion et inscription
-    document.getElementById('show-register').addEventListener('click', (e) => {
-        e.preventDefault();
-        loginForm.style.display = 'none';
-        registerForm.style.display = 'block';
-        clearErrors();
-    });
+    const showRegisterBtn = document.getElementById('show-register');
+    const showLoginBtn = document.getElementById('show-login');
     
-    document.getElementById('show-login').addEventListener('click', (e) => {
-        e.preventDefault();
-        registerForm.style.display = 'none';
-        loginForm.style.display = 'block';
-        clearErrors();
-    });
+    if (showRegisterBtn) {
+        showRegisterBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('📝 Affichage formulaire inscription');
+            loginForm.style.display = 'none';
+            registerForm.style.display = 'block';
+            clearErrors();
+        });
+    }
     
-    // Formulaire de connexion
-    document.getElementById('form-login').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-password').value;
-        const errorDiv = document.getElementById('login-error');
-        
-        errorDiv.textContent = '';
-        
-        try {
-            const submitBtn = e.target.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Connexion en cours...';
-            
-            await login(email, password);
-            
-            // Rediriger vers la section utilisateur
-            showUserSection();
-            
-        } catch (error) {
-            errorDiv.textContent = error.message;
-        } finally {
-            const submitBtn = e.target.querySelector('button[type="submit"]');
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Se connecter';
-        }
-    });
+    if (showLoginBtn) {
+        showLoginBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('🔑 Affichage formulaire connexion');
+            registerForm.style.display = 'none';
+            loginForm.style.display = 'block';
+            clearErrors();
+        });
+    }
     
-    // Formulaire d'inscription
-    document.getElementById('form-register').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const name = document.getElementById('register-name').value;
-        const email = document.getElementById('register-email').value;
-        const password = document.getElementById('register-password').value;
-        const confirm = document.getElementById('register-confirm').value;
-        const errorDiv = document.getElementById('register-error');
-        
-        errorDiv.textContent = '';
-        
-        // Vérifier que les mots de passe correspondent
-        if (password !== confirm) {
-            errorDiv.textContent = 'Les mots de passe ne correspondent pas';
-            return;
-        }
-        
-        // Vérifier la longueur du mot de passe
-        if (password.length < 6) {
-            errorDiv.textContent = 'Le mot de passe doit contenir au moins 6 caractères';
-            return;
-        }
-        
-        try {
-            const submitBtn = e.target.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Inscription en cours...';
+    // ✅ FORMULAIRE DE CONNEXION
+    const formLogin = document.getElementById('form-login');
+    if (formLogin) {
+        formLogin.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            console.log('🔑 Soumission formulaire connexion');
             
-            await register(name, email, password);
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const errorDiv = document.getElementById('login-error');
             
-            // Rediriger vers la section utilisateur
-            showUserSection();
+            console.log('📧 Email:', email);
             
-        } catch (error) {
-            errorDiv.textContent = error.message;
-        } finally {
-            const submitBtn = e.target.querySelector('button[type="submit"]');
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'S\'inscrire';
-        }
-    });
+            errorDiv.textContent = '';
+            errorDiv.classList.remove('active');
+            
+            // Validation basique
+            if (!email || !password) {
+                console.error('❌ Champs vides');
+                errorDiv.textContent = 'Veuillez remplir tous les champs';
+                errorDiv.classList.add('active');
+                return;
+            }
+            
+            try {
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Connexion en cours...';
+                
+                console.log('📡 Appel API login...');
+                await login(email, password);
+                
+                console.log('✅ Connexion réussie !');
+                showUserSection();
+                
+            } catch (error) {
+                console.error('❌ Erreur connexion:', error);
+                errorDiv.textContent = error.message;
+                errorDiv.classList.add('active');
+            } finally {
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Se connecter';
+            }
+        });
+    }
+    
+    // ✅ FORMULAIRE D'INSCRIPTION - CORRIGÉ
+    const formRegister = document.getElementById('form-register');
+    if (formRegister) {
+        console.log('📝 Event listener inscription attaché');
+        
+        formRegister.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            console.log('🆕 Soumission formulaire inscription');
+            
+            const name = document.getElementById('register-name').value.trim();
+            const email = document.getElementById('register-email').value.trim();
+            const password = document.getElementById('register-password').value;
+            const confirm = document.getElementById('register-confirm').value;
+            const errorDiv = document.getElementById('register-error');
+            
+            console.log('📋 Données inscription:', { name, email, passwordLength: password.length });
+            
+            errorDiv.textContent = '';
+            errorDiv.classList.remove('active');
+            
+            // ✅ Validation complète
+            if (!name || !email || !password || !confirm) {
+                console.error('❌ Champs vides');
+                errorDiv.textContent = 'Veuillez remplir tous les champs';
+                errorDiv.classList.add('active');
+                return;
+            }
+            
+            if (password !== confirm) {
+                console.error('❌ Mots de passe différents');
+                errorDiv.textContent = 'Les mots de passe ne correspondent pas';
+                errorDiv.classList.add('active');
+                return;
+            }
+            
+            if (password.length < 6) {
+                console.error('❌ Mot de passe trop court');
+                errorDiv.textContent = 'Le mot de passe doit contenir au moins 6 caractères';
+                errorDiv.classList.add('active');
+                return;
+            }
+            
+            // Validation email basique
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                console.error('❌ Email invalide');
+                errorDiv.textContent = 'Email invalide';
+                errorDiv.classList.add('active');
+                return;
+            }
+            
+            try {
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Inscription en cours...';
+                
+                console.log('📡 Appel API register...');
+                console.log('🔗 URL:', `${API_BASE_URL}/auth/validateRegistration`);
+                
+                const result = await register(name, email, password);
+                
+                console.log('✅ Inscription réussie !', result);
+                
+                // ✅ Afficher message de succès
+                await customAlert(
+                    'Inscription réussie ! Vous pouvez maintenant vous connecter.',
+                    'success',
+                    'Bienvenue !'
+                );
+                
+                // ✅ Rediriger vers le formulaire de connexion
+                registerForm.style.display = 'none';
+                loginForm.style.display = 'block';
+                
+                // Pré-remplir l'email
+                document.getElementById('login-email').value = email;
+                
+            } catch (error) {
+                console.error('❌ Erreur inscription:', error);
+                console.error('Stack:', error.stack);
+                errorDiv.textContent = error.message || 'Erreur lors de l\'inscription';
+                errorDiv.classList.add('active');
+            } finally {
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'S\'inscrire';
+            }
+        });
+    } else {
+        console.error('❌ Formulaire inscription introuvable !');
+    }
     
     // Bouton de déconnexion
     const logoutBtn = document.getElementById('btn-logout-home');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
+            console.log('👋 Déconnexion');
             logout();
             showAuthSection();
         });
@@ -111,21 +201,95 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function showAuthSection() {
+    console.log('📄 Affichage section auth');
     document.getElementById('auth-section').style.display = 'block';
     document.getElementById('user-section').style.display = 'none';
 }
 
 function showUserSection() {
+    console.log('👤 Affichage section utilisateur');
     document.getElementById('auth-section').style.display = 'none';
     document.getElementById('user-section').style.display = 'block';
     
     const user = getCurrentUser();
     if (user) {
-        document.getElementById('user-name').textContent = user.name || user.email;
+        const userNameElement = document.getElementById('user-name');
+        if (userNameElement) {
+            userNameElement.textContent = user.username || user.name || user.email;
+        }
     }
 }
 
 function clearErrors() {
-    document.getElementById('login-error').textContent = '';
-    document.getElementById('register-error').textContent = '';
+    console.log('🧹 Nettoyage erreurs');
+    const loginError = document.getElementById('login-error');
+    const registerError = document.getElementById('register-error');
+    
+    if (loginError) {
+        loginError.textContent = '';
+        loginError.classList.remove('active');
+    }
+    
+    if (registerError) {
+        registerError.textContent = '';
+        registerError.classList.remove('active');
+    }
 }
+
+// ✅ Fonction customAlert si pas déjà définie
+if (typeof customAlert === 'undefined') {
+    function customAlert(message, type = 'info', title = null) {
+        return new Promise((resolve) => {
+            const icons = {
+                success: '✅',
+                warning: '⚠️',
+                danger: '❌',
+                info: 'ℹ️'
+            };
+
+            const titles = {
+                success: 'Succès',
+                warning: 'Attention',
+                danger: 'Erreur',
+                info: 'Information'
+            };
+
+            const overlay = document.createElement('div');
+            overlay.className = 'custom-modal-overlay';
+            
+            overlay.innerHTML = `
+                <div class="custom-modal-dialog">
+                    <div class="custom-modal-icon ${type}">
+                        ${icons[type] || icons.info}
+                    </div>
+                    <h2 class="custom-modal-title">${title || titles[type]}</h2>
+                    <p class="custom-modal-message">${message}</p>
+                    <div class="custom-modal-actions">
+                        <button class="custom-modal-btn custom-modal-btn-primary" id="custom-alert-ok">
+                            OK
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+
+            const btnOk = overlay.querySelector('#custom-alert-ok');
+            
+            const close = () => {
+                overlay.classList.add('closing');
+                setTimeout(() => {
+                    document.body.removeChild(overlay);
+                    resolve();
+                }, 200);
+            };
+
+            btnOk.addEventListener('click', close);
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) close();
+            });
+        });
+    }
+}
+
+console.log('✅ home.js initialisé');

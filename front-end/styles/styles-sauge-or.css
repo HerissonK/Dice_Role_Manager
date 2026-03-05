@@ -602,38 +602,6 @@ a:hover { color: var(--gold-bright); }
 .weapon-actions .btn { flex: 1; }
 
 /* ===========================
-   🎲 DICE ROLLER
-=========================== */
-.dice-roller-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: var(--space-md); }
-
-.dice-btn {
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: var(--space-sm);
-    padding: var(--space-lg) var(--space-md);
-    border: none; border-radius: var(--radius-lg);
-    cursor: pointer;
-    font-family: var(--font-heading); font-weight: 700; font-size: 0.95rem;
-    color: var(--sage-deepest);
-    box-shadow: var(--shadow-md);
-    transition: all 0.3s cubic-bezier(0.68,-0.55,0.27,1.55);
-    position: relative; overflow: hidden;
-}
-
-.dice-btn:hover { transform: translateY(-5px) scale(1.04); box-shadow: var(--shadow-lg); }
-.dice-btn:active { transform: translateY(-2px) scale(1.01); }
-
-.dice-icon { font-size: 2.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25)); }
-
-.dice-btn:nth-child(1) { background: linear-gradient(135deg, var(--gold-dark), var(--gold-base)); }
-.dice-btn:nth-child(2) { background: linear-gradient(135deg, var(--gold-base), var(--gold-bright)); }
-.dice-btn:nth-child(3) { background: linear-gradient(135deg, #8a6820, var(--gold-dark)); color: var(--gold-pale); }
-.dice-btn:nth-child(4) { background: linear-gradient(135deg, var(--gold-dark), #8a6820); color: var(--gold-pale); }
-.dice-btn:nth-child(5) { background: linear-gradient(135deg, var(--gold-base), var(--gold-dark)); }
-.dice-btn:nth-child(6) { background: linear-gradient(135deg, var(--gold-bright), var(--gold-base)); }
-.dice-btn:nth-child(7) { background: linear-gradient(135deg, var(--gold-light), var(--gold-bright)); }
-
-/* ===========================
    📐 GRILLES
 =========================== */
 .grid { display: grid; gap: var(--space-lg); }
