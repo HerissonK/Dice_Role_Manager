@@ -276,17 +276,17 @@
 
 /* Magicien */
 .character-card[data-class="Magicien"] {
-    --class-icon: url('assets/class-icons/wizard.svg');
+    --class-icon: url('/front-end/assets/class-icons/wizard.svg');
 }
 
 /* Roublard */
 .character-card[data-class="Roublard"] {
-    --class-icon: url('assets/class-icons/rogue.svg');
+    --class-icon: url('/front-end/assets/class-icons/rogue.svg');
 }
 
 /* Clerc */
 .character-card[data-class="Clerc"] {
-    --class-icon: url('assets/class-icons/cleric.svg');
+    --class-icon: url('/front-end/assets/class-icons/cleric.svg');
 }
 
 /* Rôdeur */
@@ -296,7 +296,7 @@
 
 /* Paladin */
 .character-card[data-class="Paladin"] {
-    --class-icon: url('assets/class-icons/paladin.svg');
+    --class-icon: url('/front-end/assets/class-icons/paladin.svg');
 }
 
 /* ===========================
