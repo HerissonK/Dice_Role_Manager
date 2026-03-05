@@ -25,5 +25,6 @@ Thumbs.db
 # Database
 *.sql.backup
 
+tw-dnd/
 
 test.txt
