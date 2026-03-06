@@ -469,7 +469,7 @@ async function deleteCharacter(characterId, characterName) {
     const confirmed = await customConfirm(
         `Voulez-vous vraiment supprimer "${characterName}" ?\n\nCette action est irréversible.`,
         {
-            title: '🗑️ Supprimer le personnage',
+            title: 'Supprimer le personnage',
             confirmText: 'Supprimer',
             cancelText: 'Annuler',
             type: 'danger'

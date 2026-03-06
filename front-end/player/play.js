@@ -265,8 +265,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (!characterId) {
-        showError('❌ Aucun personnage spécifié dans l\'URL');
-        console.error('❌ Aucun characterId dans l\'URL');
+        showError('Aucun personnage spécifié dans l\'URL');
+        console.error('Aucun characterId dans l\'URL');
     } else {
         loadCharacter();
     }
@@ -559,12 +559,12 @@ async function rollWeaponAttack(weaponId) {
         const data = await response.json();
 
         // Afficher le résultat
-        let resultText = `⚔️ ${data.weaponName} - Attaque : 1d20 = ${data.d20}`;
+        let resultText = `${data.weaponName} - Attaque : 1d20 = ${data.d20}`;
         
         if (data.d20 === 20) {
-            resultText += ' 🌟 CRITIQUE !';
+            resultText += 'CRITIQUE !';
         } else if (data.d20 === 1) {
-            resultText += ' 💀 ÉCHEC CRITIQUE';
+            resultText += 'ÉCHEC CRITIQUE';
         }
         
         resultText += ` ${data.attackModifier + data.proficiencyBonus >= 0 ? '+' : ''}${data.attackModifier + data.proficiencyBonus} = ${data.total}`;
@@ -582,7 +582,7 @@ async function rollWeaponAttack(weaponId) {
 
     } catch (err) {
         console.error('Erreur jet d\'attaque:', err);
-        showRollResult(`❌ ${err.message}`, 'error');
+        showRollResult(`${err.message}`, 'error');
     }
 }
 
@@ -604,7 +604,7 @@ async function rollWeaponDamage(weaponId, isCritical = false) {
         const data = await response.json();
 
         // Afficher le résultat
-        let resultText = `💥 ${data.weaponName} - Dégâts${isCritical ? ' CRITIQUES' : ''} : `;
+        let resultText = `${data.weaponName} - Dégâts${isCritical ? ' CRITIQUES' : ''} : `;
         resultText += `${data.dice} = [${data.rolls.join(', ')}]`;
         resultText += ` ${data.damageModifier >= 0 ? '+' : ''}${data.damageModifier} = ${data.total} ${data.damageType}`;
 
@@ -614,7 +614,7 @@ async function rollWeaponDamage(weaponId, isCritical = false) {
 
     } catch (err) {
         console.error('Erreur jet de dégâts:', err);
-        showRollResult(`❌ ${err.message}`, 'error');
+        showRollResult(`${err.message}`, 'error');
     }
 }
 
@@ -641,7 +641,7 @@ async function rollAbility(ability, modifier, name) {
 
         const total = data.roll + modifier;
         showRollResult(
-            `🎲 ${name} (${ability.toUpperCase()}) : 1d20 = ${data.roll} ${modifier >= 0 ? '+' : ''}${modifier} = ${total}`,
+            `${name} (${ability.toUpperCase()}) : 1d20 = ${data.roll} ${modifier >= 0 ? '+' : ''}${modifier} = ${total}`,
             'success'
         );
 
@@ -649,7 +649,7 @@ async function rollAbility(ability, modifier, name) {
 
     } catch (err) {
         console.error('Erreur jet de caractéristique:', err);
-        showRollResult(`❌ ${err.message}`, 'error');
+        showRollResult(`${err.message}`, 'error');
     }
 }
 
@@ -680,7 +680,7 @@ async function rollSkill(skillName, ability, bonus, isProficient) {
 
         const profText = isProficient ? ' (Maîtrise ★)' : '';
         showRollResult(
-            `🎲 ${skillName}${profText} : 1d20 = ${data.roll} ${bonus >= 0 ? '+' : ''}${bonus} = ${data.roll + bonus}`,
+            `${skillName}${profText} : 1d20 = ${data.roll} ${bonus >= 0 ? '+' : ''}${bonus} = ${data.roll + bonus}`,
             'success'
         );
 
@@ -688,7 +688,7 @@ async function rollSkill(skillName, ability, bonus, isProficient) {
 
     } catch (err) {
         console.error('Erreur jet de compétence:', err);
-        showRollResult(`❌ ${err.message}`, 'error');
+        showRollResult(`${err.message}`, 'error');
     }
 }
 
@@ -713,7 +713,7 @@ async function rollFree(count, sides) {
         const data = await response.json();
 
         showRollResult(
-            `🎲 ${count}d${sides} = ${data.roll}`,
+            `${count}d${sides} = ${data.roll}`,
             'success'
         );
 
@@ -721,7 +721,7 @@ async function rollFree(count, sides) {
 
     } catch (err) {
         console.error('Erreur lancer de dés:', err);
-        showRollResult(`❌ ${err.message}`, 'error');
+        showRollResult(`${err.message}`, 'error');
     }
 }
 
@@ -734,12 +734,12 @@ function rollCustom() {
     const sides = parseInt(document.getElementById('dice-sides').value);
 
     if (!count || count < 1 || count > 20) {
-        showRollResult('❌ Nombre de dés invalide (1-20)', 'error');
+        showRollResult('Nombre de dés invalide (1-20)', 'error');
         return;
     }
 
     if (!sides || ![4, 6, 8, 10, 12, 20, 100].includes(sides)) {
-        showRollResult('❌ Type de dé invalide', 'error');
+        showRollResult('Type de dé invalide', 'error');
         return;
     }
 
@@ -822,7 +822,7 @@ async function clearJournal() {
     const confirmed = await customConfirm(
         'Effacer tout l\'historique des lancers ?',
         {
-            title: '🗑️ Vider le journal',
+            title: 'Vider le journal',
             confirmText: 'Effacer',
             cancelText: 'Annuler',
             type: 'danger'
@@ -880,7 +880,7 @@ function formatResult(entry) {
     const sign = (n) => n >= 0 ? `+${n}` : `${n}`;
 
     if (entry.type === 'attack') {
-        const crit = entry.d20 === 20 ? ' 🌟' : entry.d20 === 1 ? ' 💀' : '';
+        const crit = entry.d20 === 20 ? ' ' : entry.d20 === 1 ? ' ' : '';
         return `1d20(${entry.d20})${crit} ${sign(entry.mod)} = <span class="roll-total ${getTotalClass(entry)}">${entry.total}</span>`;
     }
 
@@ -968,7 +968,7 @@ async function rollAbility(ability, modifier, name) {
         const total = data.roll + modifier;
 
         showRollResult(
-            `🎲 ${name} : 1d20 = ${data.roll} ${modifier >= 0 ? '+' : ''}${modifier} = ${total}`,
+            `${name} : 1d20 = ${data.roll} ${modifier >= 0 ? '+' : ''}${modifier} = ${total}`,
             'success'
         );
 
@@ -982,7 +982,7 @@ async function rollAbility(ability, modifier, name) {
         });
 
     } catch (err) {
-        showRollResult(`❌ ${err.message}`, 'error');
+        showRollResult(`${err.message}`, 'error');
     }
 }
 
@@ -1003,7 +1003,7 @@ async function rollSkill(skillName, ability, bonus, isProficient) {
 
         const profText = isProficient ? ' (Maîtrise ★)' : '';
         showRollResult(
-            `🎲 ${skillName}${profText} : 1d20 = ${data.roll} ${bonus >= 0 ? '+' : ''}${bonus} = ${total}`,
+            `${skillName}${profText} : 1d20 = ${data.roll} ${bonus >= 0 ? '+' : ''}${bonus} = ${total}`,
             'success'
         );
 
@@ -1018,7 +1018,7 @@ async function rollSkill(skillName, ability, bonus, isProficient) {
         });
 
     } catch (err) {
-        showRollResult(`❌ ${err.message}`, 'error');
+        showRollResult(`${err.message}`, 'error');
     }
 }
 
@@ -1037,9 +1037,9 @@ async function rollWeaponAttack(weaponId) {
         const data = await response.json();
         const totalMod = data.attackModifier + data.proficiencyBonus;
 
-        let resultText = `⚔️ ${data.weaponName} — Attaque : 1d20 = ${data.d20}`;
-        if (data.d20 === 20) resultText += ' 🌟 CRITIQUE !';
-        else if (data.d20 === 1) resultText += ' 💀 ÉCHEC';
+        let resultText = `${data.weaponName} — Attaque : 1d20 = ${data.d20}`;
+        if (data.d20 === 20) resultText += 'CRITIQUE !';
+        else if (data.d20 === 1) resultText += 'ÉCHEC';
         resultText += ` ${totalMod >= 0 ? '+' : ''}${totalMod} = ${data.total}`;
 
         showRollResult(resultText, data.isCritical ? 'success' : 'info');
@@ -1051,7 +1051,7 @@ async function rollWeaponAttack(weaponId) {
             d20:    data.d20,
             mod:    totalMod,
             total:  data.total,
-            detail: data.isCritical ? '🌟 Coup critique !' : data.isFumble ? '💀 Échec critique' : null
+            detail: data.isCritical ? 'Coup critique !' : data.isFumble ? 'Échec critique' : null
         });
 
         if (data.isCritical) {
@@ -1061,7 +1061,7 @@ async function rollWeaponAttack(weaponId) {
         }
 
     } catch (err) {
-        showRollResult(`❌ ${err.message}`, 'error');
+        showRollResult(`${err.message}`, 'error');
     }
 }
 
@@ -1079,7 +1079,7 @@ async function rollWeaponDamage(weaponId, isCritical = false) {
 
         const data = await response.json();
 
-        let resultText = `💥 ${data.weaponName} — Dégâts${isCritical ? ' CRITIQUES' : ''} : `;
+        let resultText = `${data.weaponName} — Dégâts${isCritical ? ' CRITIQUES' : ''} : `;
         resultText += `${data.dice}=[${data.rolls.join(', ')}] ${data.damageModifier >= 0 ? '+' : ''}${data.damageModifier} = ${data.total} ${data.damageType}`;
 
         showRollResult(resultText, isCritical ? 'warning' : 'success');
@@ -1091,11 +1091,11 @@ async function rollWeaponDamage(weaponId, isCritical = false) {
             rolls:  data.rolls,
             mod:    data.damageModifier,
             total:  data.total,
-            detail: `${data.damageType}${isCritical ? ' · Dés doublés 🌟' : ''}`
+            detail: `${data.damageType}${isCritical ? ' · Dés doublés' : ''}`
         });
 
     } catch (err) {
-        showRollResult(`❌ ${err.message}`, 'error');
+        showRollResult(`${err.message}`, 'error');
     }
 }
 
@@ -1113,7 +1113,7 @@ async function rollFree(count, sides) {
 
         const data = await response.json();
 
-        showRollResult(`🎲 ${count}d${sides} = ${data.roll}`, 'success');
+        showRollResult(`${count}d${sides} = ${data.roll}`, 'success');
 
         addJournalEntry({
             type:  'free',
@@ -1125,7 +1125,7 @@ async function rollFree(count, sides) {
         });
 
     } catch (err) {
-        showRollResult(`❌ ${err.message}`, 'error');
+        showRollResult(`${err.message}`, 'error');
     }
 }
 
@@ -1136,8 +1136,8 @@ async function showCriticalModal(weaponId, weaponName) {
     const confirmed = await customConfirm(
         `Coup critique avec ${weaponName} !\n\nVoulez-vous lancer les dégâts critiques maintenant ?`,
         {
-            title: '⚔️ COUP CRITIQUE !',
-            confirmText: '🎲 Lancer les dégâts',
+            title: 'COUP CRITIQUE !',
+            confirmText: 'Lancer les dégâts',
             cancelText: 'Plus tard',
             type: 'warning'
         }

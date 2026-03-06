@@ -1222,7 +1222,7 @@ function canGoNext() {
             return Object.keys(appState.selectedEquipment).length ===
                    (appState.selectedClass.equipmentChoices?.length || 0);
         default:
-            return false; // 🔥 IMPORTANT
+            return false;
     }
 }
 
@@ -1367,9 +1367,9 @@ async function handleSave() {
         const goToCharacters = await customConfirm(
             `Personnage "${appState.characterName}" créé avec succès !\n\nVoulez-vous aller voir vos personnages ?`,
             {
-                title: '✨ Création réussie !',
-                confirmText: '📚 Voir mes personnages',
-                cancelText: '✏️ Créer un autre',
+                title: 'Création réussie !',
+                confirmText: 'Voir mes personnages',
+                cancelText: 'Créer un autre',
                 type: 'success'
             }
         );
