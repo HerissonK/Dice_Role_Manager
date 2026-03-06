@@ -202,6 +202,19 @@ a:hover { color: var(--gold-bright); }
     box-shadow: 0 5px 18px rgba(201,168,76,0.4);
 }
 
+.btn-lancer {
+    background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold-base) 60%, var(--gold-bright) 100%);
+    color: var(--sage-deepest);
+    border-color: var(--gold-dark);
+    box-shadow: 0 3px 10px rgba(201,168,76,0.28);
+    ;
+}
+
+.btn-lancer:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 18px rgba(201,168,76,0.4);
+}
+
 .btn-outline {
     background: transparent;
     color: var(--gold-base);

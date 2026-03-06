@@ -1,11 +1,25 @@
 /**
- * 🎮 PLAY.CSS - DARK GAMING THEME
+ * 🎮 PLAY.CSS - SAUGE & OR
  * Style pour la page de jeu du personnage
  */
 
 /* ===========================
-   📐 LAYOUT 2 COLONNES - FIX DÉFINITIF
-   Nécessite le script fix-layout-auto.js
+   🎨 VARIABLES COMPATIBILITÉ
+=========================== */
+:root {
+    --bg-card: var(--sage-dark);
+    --bg-secondary: var(--sage-mid);
+    --bg-elevated: var(--sage-base);
+    --bg-tertiary: var(--sage-deep);
+    --electric-blue: var(--gold-base);
+    --electric-blue-light: var(--gold-bright);
+    --accent-primary: var(--gold-dark);
+    --dark-purple: var(--sage-deep);
+    --shadow-glow: var(--shadow-gold);
+}
+
+/* ===========================
+   📐 LAYOUT 2 COLONNES
 =========================== */
 main.max-w-6xl {
     display: flex;
@@ -13,7 +27,6 @@ main.max-w-6xl {
     align-items: flex-start;
 }
 
-/* Wrapper auto-généré pour les sections (sauf journal) */
 .main-content-wrapper {
     flex: 1;
     display: flex;
@@ -26,7 +39,6 @@ main.max-w-6xl {
     width: 100%;
 }
 
-/* Journal → colonne fixe sticky */
 .dice-journal-section {
     flex-shrink: 0;
     width: 380px;
@@ -37,9 +49,7 @@ main.max-w-6xl {
     max-height: calc(100vh - 2rem);
 }
 
-/* ===========================
-   FALLBACK : Si JS désactivé
-   =========================== */
+/* Fallback si JS désactivé */
 main.max-w-6xl:not(:has(.main-content-wrapper)) {
     display: grid;
     grid-template-columns: 1fr 380px;
@@ -55,25 +65,11 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
     grid-row: 1;
 }
 
-/* Mobile : 1 colonne */
-@media (max-width: 1024px) {
-    main.max-w-6xl {
-        grid-template-columns: 1fr;
-    }
-    
-    .dice-journal-section {
-        grid-column: 1;
-        grid-row: auto;
-        position: relative;
-        top: auto;
-    }
-}
-
 /* ===========================
    📜 JOURNAL DES LANCERS
 =========================== */
 .dice-journal-section {
-    background: var(--bg-card);
+    background: var(--sage-dark);
     border: 2px solid var(--border-subtle);
     border-radius: var(--radius-xl);
     overflow: hidden;
@@ -83,15 +79,14 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
     box-shadow: var(--shadow-lg);
 }
 
-/* En-tête */
 .journal-header {
     flex-shrink: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: var(--space-md) var(--space-lg);
-    background: linear-gradient(135deg, var(--dark-purple), var(--electric-blue));
-    border-bottom: 2px solid rgba(74, 144, 226, 0.2);
+    background: linear-gradient(135deg, var(--sage-deep), var(--sage-base));
+    border-bottom: 2px solid var(--border-medium);
 }
 
 .journal-title-group {
@@ -105,6 +100,12 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
+.journal-icon img {
+    width: 1.5rem;
+    height: 1.5rem;
+    filter: brightness(0) invert(1);
+}
+
 .journal-title {
     margin: 0;
     font-family: var(--font-heading);
@@ -116,8 +117,8 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
 }
 
 .journal-count {
-    background: rgba(255, 255, 255, 0.15);
-    color: rgba(255, 255, 255, 0.9);
+    background: rgba(201, 168, 76, 0.2);
+    color: var(--gold-bright);
     padding: 0.15rem 0.5rem;
     border-radius: 999px;
     font-size: 0.7rem;
@@ -125,12 +126,13 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
     font-family: var(--font-mono);
     min-width: 1.5rem;
     text-align: center;
+    border: 1px solid var(--border-medium);
 }
 
 .journal-clear-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: rgba(255, 255, 255, 0.9);
+    background: rgba(180, 60, 60, 0.15);
+    border: 1px solid rgba(180, 60, 60, 0.3);
+    color: #f4a0a0;
     padding: 0.35rem 0.75rem;
     border-radius: var(--radius-sm);
     font-size: 0.75rem;
@@ -140,39 +142,36 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
 }
 
 .journal-clear-btn:hover {
-    background: rgba(239, 68, 68, 0.2);
-    border-color: rgba(239, 68, 68, 0.5);
-    color: #fca5a5;
+    background: rgba(180, 60, 60, 0.25);
+    border-color: rgba(180, 60, 60, 0.5);
+    transform: translateY(-1px);
 }
 
-/* Corps scrollable */
 .journal-body {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    background: var(--bg-secondary);
+    background: var(--sage-mid);
     min-height: 0;
 }
 
-/* Scrollbar personnalisée */
 .journal-body::-webkit-scrollbar {
     width: 6px;
 }
 
 .journal-body::-webkit-scrollbar-track {
-    background: var(--bg-tertiary);
+    background: var(--sage-deepest);
 }
 
 .journal-body::-webkit-scrollbar-thumb {
-    background: var(--electric-blue);
+    background: var(--gold-base);
     border-radius: 3px;
 }
 
 .journal-body::-webkit-scrollbar-thumb:hover {
-    background: var(--electric-blue-light);
+    background: var(--gold-bright);
 }
 
-/* État vide */
 .journal-empty {
     display: flex;
     flex-direction: column;
@@ -191,6 +190,12 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
     animation: gentle-float 3s ease-in-out infinite;
 }
 
+.journal-empty-icon img {
+    width: 3rem;
+    height: 3rem;
+    filter: brightness(0) invert(0.5);
+}
+
 @keyframes gentle-float {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-6px); }
@@ -202,7 +207,6 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
     margin: 0;
 }
 
-/* Liste */
 .journal-list {
     list-style: none;
     margin: 0;
@@ -211,7 +215,6 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
     flex-direction: column-reverse;
 }
 
-/* Entrée individuelle */
 .journal-entry {
     display: grid;
     grid-template-columns: 2.5rem 1fr auto;
@@ -223,7 +226,7 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
 }
 
 .journal-entry:hover {
-    background: var(--bg-elevated);
+    background: var(--sage-base);
 }
 
 @keyframes slideIn {
@@ -241,7 +244,6 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
     border-bottom: none;
 }
 
-/* Badge dé */
 .journal-die-badge {
     width: 2.5rem;
     height: 2.5rem;
@@ -259,27 +261,27 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
 
 /* Couleurs par type */
 .journal-entry[data-type="ability"] .journal-die-badge {
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold-base));
 }
 
 .journal-entry[data-type="skill"] .journal-die-badge {
-    background: linear-gradient(135deg, #10b981, #047857);
+    background: linear-gradient(135deg, var(--sage-light), var(--sage-pale));
 }
 
 .journal-entry[data-type="attack"] .journal-die-badge {
-    background: linear-gradient(135deg, #f59e0b, #b45309);
+    background: linear-gradient(135deg, var(--gold-deep), var(--gold-dark));
 }
 
 .journal-entry[data-type="damage"] .journal-die-badge {
-    background: linear-gradient(135deg, #ef4444, #991b1b);
+    background: linear-gradient(135deg, #8b2020, #c0504a);
 }
 
 .journal-entry[data-type="free"] .journal-die-badge {
-    background: linear-gradient(135deg, #8b5cf6, #5b21b6);
+    background: linear-gradient(135deg, var(--sage-base), var(--sage-light));
 }
 
 .journal-entry[data-type="critical"] .journal-die-badge {
-    background: linear-gradient(135deg, var(--electric-blue), var(--accent-primary));
+    background: linear-gradient(135deg, var(--gold-base), var(--gold-bright));
     animation: critical-pulse 0.6s ease-out;
 }
 
@@ -289,7 +291,6 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
     100% { transform: scale(1); }
 }
 
-/* Contenu */
 .journal-entry-content {
     min-width: 0;
 }
@@ -318,7 +319,6 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
     font-family: var(--font-mono);
 }
 
-/* Timestamp */
 .journal-entry-time {
     font-size: 0.7rem;
     color: var(--text-muted);
@@ -327,34 +327,32 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
     flex-shrink: 0;
 }
 
-/* Totaux colorés */
 .roll-total {
     color: var(--text-primary);
 }
 
 .roll-total.high {
-    color: #10b981;
+    color: var(--sage-pale);
     font-weight: 700;
 }
 
 .roll-total.low {
-    color: #ef4444;
+    color: #f4a0a0;
     font-weight: 700;
 }
 
 .roll-total.critical {
-    color: var(--electric-blue);
+    color: var(--gold-bright);
     font-size: 1.05rem;
     font-weight: 700;
 }
 
-/* Séparateur de date */
 .journal-date-sep {
     text-align: center;
     font-size: 0.65rem;
     color: var(--text-muted);
     padding: var(--space-xs) 0;
-    background: var(--bg-tertiary);
+    background: var(--sage-deepest);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     border-bottom: 1px solid var(--border-subtle);
@@ -383,29 +381,33 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
 }
 
 .roll-result-content {
-    background: linear-gradient(135deg, var(--electric-blue), var(--accent-primary));
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold-base));
     border-radius: var(--radius-lg);
     padding: 1.25rem;
     box-shadow: var(--shadow-lg);
-    color: var(--text-primary);
+    color: var(--sage-deepest);
     font-weight: 600;
-    border: 1px solid rgba(74, 144, 226, 0.3);
+    border: 1px solid var(--gold-bright);
 }
 
 .roll-result-success .roll-result-content {
-    background: linear-gradient(135deg, #10b981, #047857);
+    background: linear-gradient(135deg, var(--sage-base), var(--sage-light));
+    color: var(--text-primary);
 }
 
 .roll-result-error .roll-result-content {
-    background: linear-gradient(135deg, #ef4444, #991b1b);
+    background: linear-gradient(135deg, #8b2020, #c0504a);
+    color: var(--text-primary);
 }
 
 .roll-result-warning .roll-result-content {
-    background: linear-gradient(135deg, #f59e0b, #b45309);
+    background: linear-gradient(135deg, var(--gold-deep), var(--gold-dark));
+    color: var(--gold-pale);
 }
 
 .roll-result-info .roll-result-content {
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    background: linear-gradient(135deg, var(--sage-mid), var(--sage-base));
+    color: var(--text-primary);
 }
 
 /* ===========================
@@ -424,14 +426,14 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
     justify-content: center;
     gap: var(--space-sm);
     padding: var(--space-lg) var(--space-md);
-    background: linear-gradient(135deg, var(--electric-blue), var(--accent-primary));
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold-base));
     border: none;
     border-radius: var(--radius-lg);
     cursor: pointer;
     font-family: var(--font-heading);
     font-weight: 700;
     font-size: 1rem;
-    color: var(--text-primary);
+    color: var(--sage-deepest);
     box-shadow: var(--shadow-md);
     transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     position: relative;
@@ -470,14 +472,12 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
-/* Variations de couleur */
-.dice-btn:nth-child(1) { background: linear-gradient(135deg, var(--gold-dark), var(--gold-base)); color: var(--sage-deepest); }
-.dice-btn:nth-child(2) { background: linear-gradient(135deg, var(--gold-dark), var(--gold-base)); color: var(--sage-deepest); }
-.dice-btn:nth-child(3) { background: linear-gradient(135deg, var(--gold-dark), var(--gold-base)); color: var(--sage-deepest); }
-.dice-btn:nth-child(4) { background: linear-gradient(135deg, var(--gold-dark), var(--gold-base)); color: var(--sage-deepest); }
-.dice-btn:nth-child(5) { background: linear-gradient(135deg, var(--gold-dark), var(--gold-base)); color: var(--sage-deepest); }
-.dice-btn:nth-child(6) { background: linear-gradient(135deg, var(--gold-dark), var(--gold-base)); color: var(--sage-deepest); }
-.dice-btn:nth-child(7) { background: linear-gradient(135deg, var(--gold-dark), var(--gold-base)); color: var(--sage-deepest); }
+.dice-icon img {
+    width: 4.5rem;
+    height: 4.5rem;
+    filter: brightness(0);
+}
+
 /* ===========================
    🃏 COMPÉTENCES
 =========================== */
@@ -488,7 +488,7 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
 }
 
 .skill-card {
-    background: var(--bg-card);
+    background: var(--sage-dark);
     border: 2px solid var(--border-subtle);
     border-radius: var(--radius-md);
     padding: var(--space-sm) var(--space-md);
@@ -497,19 +497,19 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
 }
 
 .skill-card:hover {
-    border-color: var(--electric-blue);
+    border-color: var(--gold-base);
     transform: translateY(-2px);
     box-shadow: var(--shadow-sm);
 }
 
 .skill-proficient {
-    border-color: #10b981;
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), var(--bg-card));
+    border-color: rgba(201, 168, 76, 0.4);
+    background: linear-gradient(135deg, rgba(201, 168, 76, 0.07), var(--sage-dark));
 }
 
 .skill-proficient:hover {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), var(--bg-card));
-    box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+    background: linear-gradient(135deg, rgba(201, 168, 76, 0.1), var(--sage-dark));
+    box-shadow: 0 0 12px rgba(201, 168, 76, 0.18);
 }
 
 .skill-card-content {
@@ -534,21 +534,21 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
 .skill-card-bonus {
     font-size: 1.25rem;
     font-weight: 700;
-    color: var(--electric-blue);
+    color: var(--gold-base);
     display: flex;
     align-items: center;
     gap: var(--space-xs);
-    font-family: var(--font-mono);
+    font-family: var(--font-heading);
 }
 
 .skill-proficient .skill-card-bonus {
-    color: #10b981;
+    color: var(--gold-bright);
 }
 
 .skill-proficiency-badge {
-    color: #f59e0b;
+    color: var(--gold-bright);
     font-size: 1rem;
-    filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.4));
+    filter: drop-shadow(0 2px 4px rgba(201, 168, 76, 0.4));
 }
 
 /* ===========================
@@ -561,7 +561,7 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
 }
 
 .weapon-card {
-    background: var(--bg-card);
+    background: var(--sage-dark);
     border: 2px solid var(--border-subtle);
     border-radius: var(--radius-lg);
     padding: var(--space-lg);
@@ -569,7 +569,7 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
 }
 
 .weapon-card:hover {
-    border-color: var(--electric-blue);
+    border-color: var(--gold-base);
     transform: translateY(-4px);
     box-shadow: var(--shadow-md);
 }
@@ -586,8 +586,11 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
 .weapon-name {
     font-family: var(--font-heading);
     font-size: 1.125rem;
-    color: var(--text-primary);
+    color: var(--gold-bright);
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
 }
 
 .weapon-stats {
@@ -596,7 +599,7 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
     gap: var(--space-md);
     margin-bottom: var(--space-md);
     padding: var(--space-md);
-    background: var(--bg-elevated);
+    background: var(--sage-mid);
     border-radius: var(--radius-md);
 }
 
@@ -616,10 +619,10 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
 }
 
 .weapon-stat-value {
-    font-family: var(--font-mono);
+    font-family: var(--font-heading);
     font-size: 1.75rem;
     font-weight: 700;
-    color: var(--electric-blue);
+    color: var(--gold-base);
 }
 
 .weapon-actions {
@@ -632,16 +635,22 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
 }
 
 .weapon-dice-icon {
-    width: 20px;
-    height: 20px;
+    width: 1.2rem;
+    height: 1.2rem;
     vertical-align: middle;
+    display: inline-block;
+}
+
+.weapon-dice-icon img,
+.btn img.weapon-dice-icon {
+    filter: brightness(0);
 }
 
 /* ===========================
    🎯 CARACTÉRISTIQUES
 =========================== */
 .ability-card {
-    background: var(--bg-card);
+    background: var(--sage-mid);
     border: 2px solid var(--border-subtle);
     border-radius: var(--radius-lg);
     padding: var(--space-md);
@@ -650,10 +659,10 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
 }
 
 .ability-card.card-clickable:hover {
-    border-color: var(--electric-blue);
-    background: linear-gradient(135deg, rgba(74, 144, 226, 0.1), var(--bg-card));
+    border-color: var(--gold-base);
+    background: linear-gradient(135deg, rgba(201, 168, 76, 0.08), var(--sage-mid));
     transform: translateY(-4px) scale(1.05);
-    box-shadow: var(--shadow-glow);
+    box-shadow: var(--shadow-gold);
 }
 
 .ability-card-abbr {
@@ -676,55 +685,9 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
 
 .ability-card-bonus {
     font-size: 0.8rem;
-    color: #10b981;
+    color: var(--sage-pale);
     font-weight: 600;
 }
-
-/* ===========================
-   📊 STATISTIQUES
-=========================== */
-.stat-box {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between; /* label en haut, chiffre en bas */
-    align-items: center;
-
-    text-align: center;
-    padding: var(--space-lg);
-    background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-card) 100%);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border-subtle);
-    box-shadow: var(--shadow-sm);
-    transition: all 0.3s;
-}
-
-
-.stat-box:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-    border-color: var(--border-medium);
-}
-
-.stat-box .stat-label {
-    display: block;
-
-    font-family: var(--font-heading);
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: var(--space-sm);
-}
-
-.stat-box .stat-value {
-    font-family: var(--font-heading);
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: var(--electric-blue);
-    line-height: 1;
-    text-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
-}
-
 
 /* ===========================
    🎨 LANCEUR PERSONNALISÉ
@@ -748,6 +711,19 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
 /* ===========================
    📱 RESPONSIVE
 =========================== */
+@media (max-width: 1024px) {
+    main.max-w-6xl {
+        flex-direction: column;
+    }
+    
+    .dice-journal-section {
+        width: 100%;
+        position: relative;
+        top: 0;
+        max-height: 500px;
+    }
+}
+
 @media (max-width: 768px) {
     .dice-roller-grid {
         grid-template-columns: repeat(3, 1fr);
@@ -784,7 +760,7 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
 .skill-card:focus-visible,
 .weapon-card:focus-visible,
 .ability-card:focus-visible {
-    outline: 3px solid var(--electric-blue);
+    outline: 3px solid var(--gold-base);
     outline-offset: 2px;
 }
 
@@ -805,7 +781,7 @@ main.max-w-6xl:not(:has(.main-content-wrapper)) > .dice-journal-section {
 }
 
 .text-red-600 {
-    color: #ef4444;
+    color: #f4a0a0;
 }
 
 .mt-6 {
