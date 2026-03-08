@@ -10,7 +10,7 @@ function calculateArmorClass(equippedItems, dexModifier) {
     }
 
     // Armures
-    if (item.category.startsWith('armor')) {
+    if (item.category && item.category.startsWith('armor')) {
       baseArmor = item;
     }
   }

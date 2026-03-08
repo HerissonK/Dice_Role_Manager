@@ -132,13 +132,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
-            if (password.length < 6) {
-                console.error('❌ Mot de passe trop court');
-                errorDiv.textContent = 'Le mot de passe doit contenir au moins 6 caractères';
-                errorDiv.classList.add('active');
+            if (password.length < 8) {
+                errorDiv.textContent = 'Le mot de passe doit contenir au moins 8 caractères (majuscule, minuscule, chiffre)';
                 return;
             }
             
+            // Vérification regex pour le mdp:
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+            if (!passwordRegex.test(password)) {
+                errorDiv.textContent = 'Le mot de passe doit contenir une majuscule, une minuscule et un chiffre';
+                return;
+            }
+
             // Validation email basique
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
@@ -233,62 +238,6 @@ function clearErrors() {
     if (registerError) {
         registerError.textContent = '';
         registerError.classList.remove('active');
-    }
-}
-
-// ✅ Fonction customAlert si pas déjà définie
-if (typeof customAlert === 'undefined') {
-    function customAlert(message, type = 'info', title = null) {
-        return new Promise((resolve) => {
-            const icons = {
-                success: '✅',
-                warning: '⚠️',
-                danger: '❌',
-                info: 'ℹ️'
-            };
-
-            const titles = {
-                success: 'Succès',
-                warning: 'Attention',
-                danger: 'Erreur',
-                info: 'Information'
-            };
-
-            const overlay = document.createElement('div');
-            overlay.className = 'custom-modal-overlay';
-            
-            overlay.innerHTML = `
-                <div class="custom-modal-dialog">
-                    <div class="custom-modal-icon ${type}">
-                        ${icons[type] || icons.info}
-                    </div>
-                    <h2 class="custom-modal-title">${title || titles[type]}</h2>
-                    <p class="custom-modal-message">${message}</p>
-                    <div class="custom-modal-actions">
-                        <button class="custom-modal-btn custom-modal-btn-primary" id="custom-alert-ok">
-                            OK
-                        </button>
-                    </div>
-                </div>
-            `;
-
-            document.body.appendChild(overlay);
-
-            const btnOk = overlay.querySelector('#custom-alert-ok');
-            
-            const close = () => {
-                overlay.classList.add('closing');
-                setTimeout(() => {
-                    document.body.removeChild(overlay);
-                    resolve();
-                }, 200);
-            };
-
-            btnOk.addEventListener('click', close);
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) close();
-            });
-        });
     }
 }
 

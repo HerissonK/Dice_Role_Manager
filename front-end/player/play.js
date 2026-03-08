@@ -4,166 +4,6 @@
  * @param {string} type - 'success', 'warning', 'danger', 'info'
  * @param {string} title - Titre du modal (optionnel)
  */
-function customAlert(message, type = 'info', title = null) {
-    return new Promise((resolve) => {
-        const icons = {
-            success: '✅',
-            warning: '⚠️',
-            danger: '❌',
-            info: 'ℹ️'
-        };
-
-        const titles = {
-            success: 'Succès',
-            warning: 'Attention',
-            danger: 'Erreur',
-            info: 'Information'
-        };
-
-        const overlay = document.createElement('div');
-        overlay.className = 'custom-modal-overlay';
-        
-        overlay.innerHTML = `
-            <div class="custom-modal-dialog">
-                <div class="custom-modal-icon ${type}">
-                    ${icons[type] || icons.info}
-                </div>
-                <h2 class="custom-modal-title">${title || titles[type]}</h2>
-                <p class="custom-modal-message">${message}</p>
-                <div class="custom-modal-actions">
-                    <button class="custom-modal-btn custom-modal-btn-primary" id="custom-alert-ok">
-                        OK
-                    </button>
-                </div>
-            </div>
-        `;
-
-        document.body.appendChild(overlay);
-
-        const btnOk = overlay.querySelector('#custom-alert-ok');
-        
-        const close = () => {
-            overlay.classList.add('closing');
-            setTimeout(() => {
-                document.body.removeChild(overlay);
-                resolve();
-            }, 200);
-        };
-
-        btnOk.addEventListener('click', close);
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) close();
-        });
-
-        // ESC pour fermer
-        const handleEsc = (e) => {
-            if (e.key === 'Escape') {
-                close();
-                document.removeEventListener('keydown', handleEsc);
-            }
-        };
-        document.addEventListener('keydown', handleEsc);
-    });
-}
-
-/**
- * Confirm personnalisé
- * @param {string} message - Le message à afficher
- * @param {Object} options - Options { title, confirmText, cancelText, type }
- */
-function customConfirm(message, options = {}) {
-    return new Promise((resolve) => {
-        const {
-            title = 'Confirmation',
-            confirmText = 'Confirmer',
-            cancelText = 'Annuler',
-            type = 'question'
-        } = options;
-
-        const icons = {
-            success: '✅',
-            warning: '⚠️',
-            danger: '❌',
-            question: '❓',
-            info: 'ℹ️'
-        };
-
-        const overlay = document.createElement('div');
-        overlay.className = 'custom-modal-overlay';
-        
-        overlay.innerHTML = `
-            <div class="custom-modal-dialog">
-                <div class="custom-modal-icon ${type}">
-                    ${icons[type] || icons.question}
-                </div>
-                <h2 class="custom-modal-title">${title}</h2>
-                <p class="custom-modal-message">${message}</p>
-                <div class="custom-modal-actions">
-                    <button class="custom-modal-btn custom-modal-btn-secondary" id="custom-confirm-cancel">
-                        ${cancelText}
-                    </button>
-                    <button class="custom-modal-btn custom-modal-btn-primary" id="custom-confirm-ok">
-                        ${confirmText}
-                    </button>
-                </div>
-            </div>
-        `;
-
-        document.body.appendChild(overlay);
-
-        const btnOk = overlay.querySelector('#custom-confirm-ok');
-        const btnCancel = overlay.querySelector('#custom-confirm-cancel');
-        
-        const close = (result) => {
-            overlay.classList.add('closing');
-            setTimeout(() => {
-                document.body.removeChild(overlay);
-                resolve(result);
-            }, 200);
-        };
-
-        btnOk.addEventListener('click', () => close(true));
-        btnCancel.addEventListener('click', () => close(false));
-        
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) close(false);
-        });
-
-        // ESC pour annuler
-        const handleEsc = (e) => {
-            if (e.key === 'Escape') {
-                close(false);
-                document.removeEventListener('keydown', handleEsc);
-            }
-        };
-        document.addEventListener('keydown', handleEsc);
-    });
-}
-
-/**
- * Confirm de succès (icône verte)
- */
-function customSuccessConfirm(message, options = {}) {
-    return customConfirm(message, {
-        ...options,
-        type: 'success'
-    });
-}
-
-/**
- * Confirm de danger (icône rouge)
- */
-function customDangerConfirm(message, options = {}) {
-    return customConfirm(message, {
-        ...options,
-        type: 'danger'
-    });
-}
-
-/**
- * Script pour la page de jeu du personnage
- * Version complète avec compétences
- */
 
 console.log('🎲 Play page loaded');
 
@@ -271,6 +111,16 @@ document.addEventListener('DOMContentLoaded', () => {
         loadCharacter();
     }
 });
+
+// ✅ AJOUT : Event listener pour le bouton "Effacer"
+    const clearBtn = document.getElementById('journal-clear');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', clearJournal);
+        console.log('✅ Event listener "Effacer journal" attaché');
+    }
+    
+    // ✅ AJOUT : Charger le journal au démarrage
+    renderJournal();
 
 /* =========================
    AFFICHAGE RÉSULTATS
@@ -541,190 +391,6 @@ function getWeaponAttackMod(weapon, abilities) {
     return strMod;                                              // Mêlée classique
 }
 
-/**
- * ⚔️ Jet d'attaque
- */
-async function rollWeaponAttack(weaponId) {
-    try {
-        const response = await fetch(`http://localhost:3000/api/play/${characterId}/roll/attack`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ weaponId })
-        });
-
-        if (!response.ok) {
-            throw new Error('Erreur lors du jet d\'attaque');
-        }
-
-        const data = await response.json();
-
-        // Afficher le résultat
-        let resultText = `${data.weaponName} - Attaque : 1d20 = ${data.d20}`;
-        
-        if (data.d20 === 20) {
-            resultText += 'CRITIQUE !';
-        } else if (data.d20 === 1) {
-            resultText += 'ÉCHEC CRITIQUE';
-        }
-        
-        resultText += ` ${data.attackModifier + data.proficiencyBonus >= 0 ? '+' : ''}${data.attackModifier + data.proficiencyBonus} = ${data.total}`;
-
-        showRollResult(resultText, data.isCritical ? 'success' : 'info');
-
-        console.log('Attack roll:', data);
-
-        // Si critique, proposer les dégâts
-        if (data.isCritical) {
-            setTimeout(() => {
-                showCriticalModal(weaponId, data.weaponName);
-            }, 800);
-        }
-
-    } catch (err) {
-        console.error('Erreur jet d\'attaque:', err);
-        showRollResult(`${err.message}`, 'error');
-    }
-}
-
-/**
- * 💥 Jet de dégâts
- */
-async function rollWeaponDamage(weaponId, isCritical = false) {
-    try {
-        const response = await fetch(`http://localhost:3000/api/play/${characterId}/roll/damage`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ weaponId, isCritical })
-        });
-
-        if (!response.ok) {
-            throw new Error('Erreur lors du jet de dégâts');
-        }
-
-        const data = await response.json();
-
-        // Afficher le résultat
-        let resultText = `${data.weaponName} - Dégâts${isCritical ? ' CRITIQUES' : ''} : `;
-        resultText += `${data.dice} = [${data.rolls.join(', ')}]`;
-        resultText += ` ${data.damageModifier >= 0 ? '+' : ''}${data.damageModifier} = ${data.total} ${data.damageType}`;
-
-        showRollResult(resultText, isCritical ? 'warning' : 'success');
-
-        console.log('Damage roll:', data);
-
-    } catch (err) {
-        console.error('Erreur jet de dégâts:', err);
-        showRollResult(`${err.message}`, 'error');
-    }
-}
-
-/* =========================
-   ROLLS - CARACTÉRISTIQUES
-========================= */
-
-async function rollAbility(ability, modifier, name) {
-    try {
-        const response = await fetch(`http://localhost:3000/api/play/${characterId}/roll/ability`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ 
-                ability, 
-                value: modifier 
-            }),
-        });
-
-        if (!response.ok) {
-            throw new Error('Erreur lors du jet de caractéristique');
-        }
-
-        const data = await response.json();
-
-        const total = data.roll + modifier;
-        showRollResult(
-            `${name} (${ability.toUpperCase()}) : 1d20 = ${data.roll} ${modifier >= 0 ? '+' : ''}${modifier} = ${total}`,
-            'success'
-        );
-
-        console.log('Roll result:', data);
-
-    } catch (err) {
-        console.error('Erreur jet de caractéristique:', err);
-        showRollResult(`${err.message}`, 'error');
-    }
-}
-
-/* =========================
-   ROLLS - COMPÉTENCES
-========================= */
-
-/**
- * ✨ NOUVEAU: Lancer une compétence
- */
-async function rollSkill(skillName, ability, bonus, isProficient) {
-    try {
-        // Utiliser la même route que les caractéristiques
-        const response = await fetch(`http://localhost:3000/api/play/${characterId}/roll/ability`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ 
-                ability, 
-                value: bonus 
-            }),
-        });
-
-        if (!response.ok) {
-            throw new Error('Erreur lors du jet de compétence');
-        }
-
-        const data = await response.json();
-
-        const profText = isProficient ? ' (Maîtrise ★)' : '';
-        showRollResult(
-            `${skillName}${profText} : 1d20 = ${data.roll} ${bonus >= 0 ? '+' : ''}${bonus} = ${data.roll + bonus}`,
-            'success'
-        );
-
-        console.log('Skill roll result:', data);
-
-    } catch (err) {
-        console.error('Erreur jet de compétence:', err);
-        showRollResult(`${err.message}`, 'error');
-    }
-}
-
-/* =========================
-   ROLLS - LIBRE
-========================= */
-
-async function rollFree(count, sides) {
-    try {
-        const response = await fetch('http://localhost:3000/api/play/roll', {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ 
-                dice: `${count}d${sides}` 
-            }),
-        });
-
-        if (!response.ok) {
-            throw new Error('Erreur lors du lancer de dés');
-        }
-
-        const data = await response.json();
-
-        showRollResult(
-            `${count}d${sides} = ${data.roll}`,
-            'success'
-        );
-
-        console.log('Dice roll:', data);
-
-    } catch (err) {
-        console.error('Erreur lancer de dés:', err);
-        showRollResult(`${err.message}`, 'error');
-    }
-}
-
 /* =========================
    ROLL PERSONNALISÉ
 ========================= */
@@ -804,16 +470,6 @@ function addJournalEntry(entry) {
     saveJournal(entries);
     renderJournal();
 }
-
-// ✅ AJOUT : Event listener pour le bouton "Effacer"
-    const clearBtn = document.getElementById('journal-clear');
-    if (clearBtn) {
-        clearBtn.addEventListener('click', clearJournal);
-        console.log('✅ Event listener "Effacer journal" attaché');
-    }
-    
-    // ✅ AJOUT : Charger le journal au démarrage
-    renderJournal();
 
 /**
  * Vider le journal
@@ -957,18 +613,19 @@ function renderJournal() {
  */
 async function rollAbility(ability, modifier, name) {
     try {
-        const response = await fetch(`http://localhost:3000/api/play/${characterId}/roll/ability`, {
+        // ✅ API_BASE_URL remplace http://localhost:3000/api
+        const response = await fetch(`${API_BASE_URL}/play/${characterId}/roll/ability`, {
             method: 'POST',
             headers: getAuthHeaders(),
-            body: JSON.stringify({ ability, value: modifier }),
+            body: JSON.stringify({ ability }),
         });
+
         if (!response.ok) throw new Error('Erreur jet caractéristique');
 
         const data = await response.json();
-        const total = data.roll + modifier;
 
         showRollResult(
-            `${name} : 1d20 = ${data.roll} ${modifier >= 0 ? '+' : ''}${modifier} = ${total}`,
+            `${name} : 1d20 = ${data.d20} ${data.modifier >= 0 ? '+' : ''}${data.modifier} = ${data.total}`,
             'success'
         );
 
@@ -976,9 +633,9 @@ async function rollAbility(ability, modifier, name) {
             type:  'ability',
             label: name,
             dice:  '1d20',
-            d20:   data.roll,
-            mod:   modifier,
-            total: total
+            d20:   data.d20,
+            mod:   data.modifier,
+            total: data.total
         });
 
     } catch (err) {
@@ -991,19 +648,18 @@ async function rollAbility(ability, modifier, name) {
  */
 async function rollSkill(skillName, ability, bonus, isProficient) {
     try {
-        const response = await fetch(`http://localhost:3000/api/play/${characterId}/roll/ability`, {
+        const response = await fetch(`${API_BASE_URL}/play/${characterId}/roll/ability`, {
             method: 'POST',
             headers: getAuthHeaders(),
-            body: JSON.stringify({ ability, value: bonus }),
+            body: JSON.stringify({ ability }),
         });
+
         if (!response.ok) throw new Error('Erreur jet compétence');
 
         const data = await response.json();
-        const total = data.roll + bonus;
-
         const profText = isProficient ? ' (Maîtrise ★)' : '';
         showRollResult(
-            `${skillName}${profText} : 1d20 = ${data.roll} ${bonus >= 0 ? '+' : ''}${bonus} = ${total}`,
+            `${skillName}${profText} : 1d20 = ${data.d20} ${data.modifier >= 0 ? '+' : ''}${data.modifier} = ${data.total}`,
             'success'
         );
 
@@ -1011,9 +667,9 @@ async function rollSkill(skillName, ability, bonus, isProficient) {
             type:   'skill',
             label:  `${skillName}${isProficient ? ' ★' : ''}`,
             dice:   '1d20',
-            d20:    data.roll,
-            mod:    bonus,
-            total:  total,
+            d20:    data.d20,
+            mod:    data.modifier,
+            total:  data.total,
             detail: isProficient ? 'Compétence maîtrisée' : null
         });
 
@@ -1027,7 +683,7 @@ async function rollSkill(skillName, ability, bonus, isProficient) {
  */
 async function rollWeaponAttack(weaponId) {
     try {
-        const response = await fetch(`http://localhost:3000/api/play/${characterId}/roll/attack`, {
+        const response = await fetch(`${API_BASE_URL}/play/${characterId}/roll/attack`, {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify({ weaponId })
@@ -1070,7 +726,7 @@ async function rollWeaponAttack(weaponId) {
  */
 async function rollWeaponDamage(weaponId, isCritical = false) {
     try {
-        const response = await fetch(`http://localhost:3000/api/play/${characterId}/roll/damage`, {
+        const response = await fetch(`${API_BASE_URL}/play/${characterId}/roll/damage`, {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify({ weaponId, isCritical })
@@ -1104,7 +760,7 @@ async function rollWeaponDamage(weaponId, isCritical = false) {
  */
 async function rollFree(count, sides) {
     try {
-        const response = await fetch('http://localhost:3000/api/play/roll', {
+        const response = await fetch(`${API_BASE_URL}/play/roll`, {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify({ dice: `${count}d${sides}` }),
@@ -1113,15 +769,15 @@ async function rollFree(count, sides) {
 
         const data = await response.json();
 
-        showRollResult(`${count}d${sides} = ${data.roll}`, 'success');
+        showRollResult(`${count}d${sides} = ${data.total}`, 'success');
 
         addJournalEntry({
             type:  'free',
             label: `Dé libre`,
             dice:  `${count}d${sides}`,
-            d20:   data.roll,
+            d20:   data.total,
             mod:   0,
-            total: data.roll
+            total: data.total
         });
 
     } catch (err) {

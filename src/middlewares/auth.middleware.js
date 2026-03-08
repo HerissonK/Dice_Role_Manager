@@ -15,7 +15,7 @@ function authenticate(req, res, next) {
     req.user = decoded;
     next();
   } catch (err) {
-    console.error('JWT error:', err.message);
+    logger.warn('JWT authentication failed', { error: err.message });
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
 }
