@@ -63,8 +63,8 @@ class RuleValidator {
         throw new Error(`Ability ${key} must be an integer`);
       }
 
-      if (value < 1 || value > 20) {
-        throw new Error(`Ability ${key} must be between 1 and 20`);
+      if (value < 8 || value > 15) {
+        throw new Error(`Ability ${key} must be between 8 and 15`);
       }
     }
   }

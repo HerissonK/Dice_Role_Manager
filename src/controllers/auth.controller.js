@@ -3,71 +3,55 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user.model');
 const jwtConfig = require('../config/jwt');
 const validator = require('validator');
+const { AppError } = require('../utils/errorHandler');
 
 // MIDDLEWARE DE VALIDATION
 function validateRegistration(req, res, next) {
   const { username, email, password } = req.body;
-  
   const errors = [];
-  
+
   if (!username || username.length < 3 || username.length > 50) {
     errors.push('Username must be 3-50 characters');
   }
-  
-  if (!validator.isEmail(email)) {
+
+  if (!email || !validator.isEmail(email)) {
     errors.push('Invalid email format');
   }
-  
+
   if (!password || password.length < 8) {
     errors.push('Password must be at least 8 characters');
   }
-  
+
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
-  if (!passwordRegex.test(password)) {
+  if (password && !passwordRegex.test(password)) {
     errors.push('Password must contain uppercase, lowercase and number');
   }
-  
+
   if (errors.length > 0) {
     return res.status(400).json({ errors });
   }
-  
+
   next();
 }
 
-async function register(req, res) {
+async function register(req, res, next) {
   try {
     const { username, email, password } = req.body;
-    
-    console.log('📝 Tentative d\'inscription:', { username, email });
-    
-    // Vérifier si l'email existe déjà
+
     const existingUser = await User.findByEmail(email);
     if (existingUser) {
-      console.log('❌ Email déjà utilisé:', email);
-      return res.status(409).json({ error: 'Cet email est déjà utilisé' });
+      throw new AppError('Cet email est déjà utilisé', 409);
     }
-    
-    // Hasher le mot de passe
-    const saltRounds = 10;
-    const passwordHash = await bcrypt.hash(password, saltRounds);
-    
-    // Créer l'utilisateur
-    const newUser = await User.create({
-      username,
-      email,
-      passwordHash
-    });
-    
-    console.log('✅ Utilisateur créé:', newUser.id);
-    
-    // Générer un token JWT
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    const newUser = await User.create({ username, email, passwordHash });
+
     const token = jwt.sign(
-      { id: newUser.id, role: newUser.role }, 
-      jwtConfig.secret, 
+      { id: newUser.id, role: newUser.role },
+      jwtConfig.secret,
       { expiresIn: jwtConfig.expiresIn }
     );
-    
-    // Renvoyer le token et les infos utilisateur
+
     res.status(201).json({
       message: 'Inscription réussie',
       token,
@@ -78,30 +62,33 @@ async function register(req, res) {
         role: newUser.role
       }
     });
-    
+
   } catch (error) {
-    console.error('❌ Erreur lors de l\'inscription:', error);
-    res.status(500).json({ error: 'Erreur serveur lors de l\'inscription' });
+    next(error);
   }
 }
 
-async function login(req, res) {
+async function login(req, res, next) {
   try {
     const { email, password } = req.body;
-    
+
+    if (!email || !password) {
+      throw new AppError('Email et mot de passe requis', 400);
+    }
+
     const user = await User.findByEmail(email);
     if (!user) {
-      return res.status(401).json({ error: 'Identifiants invalides' });
+      throw new AppError('Identifiants invalides', 401);
     }
 
     const isValid = await bcrypt.compare(password, user.password_hash);
     if (!isValid) {
-      return res.status(401).json({ error: 'Identifiants invalides' });
+      throw new AppError('Identifiants invalides', 401);
     }
 
     const token = jwt.sign(
-      { id: user.id, role: user.role }, 
-      jwtConfig.secret, 
+      { id: user.id, role: user.role },
+      jwtConfig.secret,
       { expiresIn: jwtConfig.expiresIn }
     );
 
@@ -114,14 +101,10 @@ async function login(req, res) {
         role: user.role
       }
     });
+
   } catch (error) {
-    console.error('❌ Erreur lors de la connexion:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    next(error);
   }
 }
 
-module.exports = { 
-  validateRegistration,
-  register,
-  login 
-};
+module.exports = { validateRegistration, register, login };

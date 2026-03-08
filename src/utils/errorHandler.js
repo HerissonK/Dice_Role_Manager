@@ -1,4 +1,3 @@
-// utils/errorHandler.js
 class AppError extends Error {
   constructor(message, statusCode) {
     super(message);
@@ -7,17 +6,24 @@ class AppError extends Error {
   }
 }
 
-// Middleware global
-app.use((err, req, res, next) => {
+// Middleware global d'erreur Express (4 paramètres obligatoires)
+function errorHandler(err, req, res, next) {
   const statusCode = err.statusCode || 500;
-  const message = err.isOperational ? err.message : 'Internal server error';
-  
+
   // Log complet en dev, minimal en prod
   if (process.env.NODE_ENV === 'development') {
-    console.error(err);
+    console.error('❌ Error:', err);
   } else {
-    console.error(err.message);
+    console.error('❌ Error:', err.message);
   }
-  
-  res.status(statusCode).json({ error: message });
-});
+
+  // Erreurs opérationnelles connues → message clair
+  if (err.isOperational) {
+    return res.status(statusCode).json({ error: err.message });
+  }
+
+  // Erreurs inattendues → message générique (ne pas exposer les détails)
+  return res.status(500).json({ error: 'Internal server error' });
+}
+
+module.exports = { AppError, errorHandler };

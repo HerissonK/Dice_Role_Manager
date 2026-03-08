@@ -352,59 +352,28 @@ class Character {
      EQUIPPED ITEMS
   ====================== */
   static async getEquippedItems(characterId, userId) {
-    try {
-      const result = await db.query(
-        `SELECT
-          i.id,
-          i.name,
-          i.category,
-          i.armor_class,
-          i.dex_modifier_rule,
-          i.damage_dice,
-          i.damage_type,
-          i.properties
-        FROM personnage_item pi
-        JOIN item i ON i.id = pi.item_id
-        JOIN personnage p ON p.id = pi.personnage_id
-        WHERE pi.personnage_id = $1
-          AND pi.equipped = true
-          AND p.user_id = $2`,
-        [characterId, userId]
-      );
+    // Plus de try/catch silencieux : on laisse l'erreur remonter
+    // pour qu'elle soit catchée par le controller et son errorHandler
+    const result = await db.query(
+      `SELECT
+        i.id,
+        i.name,
+        i.category,
+        i.armor_class,
+        i.dex_modifier_rule,
+        i.damage_dice,
+        i.damage_type,
+        i.properties
+      FROM personnage_item pi
+      JOIN item i ON i.id = pi.item_id
+      JOIN personnage p ON p.id = pi.personnage_id
+      WHERE pi.personnage_id = $1
+        AND pi.equipped = true
+        AND p.user_id = $2`,
+      [characterId, userId]
+    );
 
-      return result.rows;
-
-    } catch (err) {
-      console.error('getEquippedItems error:', err.message);
-      return [];
-    }
-  }
-
-  static calculateArmorClass(abilities, items) {
-    const dexMod = Math.floor((abilities.dex - 10) / 2);
-
-    let baseArmor = 10;
-    let shieldBonus = 0;
-    let dexRule = 'full';
-
-    for (const item of items) {
-      // ✅ Accepte 'armor' (table item) ET 'armor_light'/'armor_heavy' (ancienne logique)
-      if (item.category === 'armor' || item.category?.startsWith('armor')) {
-        baseArmor = item.armor_class || 10;
-        dexRule = item.dex_modifier_rule || 'full';
-      }
-
-      if (item.category === 'shield') {
-        shieldBonus += item.armor_class || 2;
-      }
-    }
-
-    let dexBonus = 0;
-    if (dexRule === 'full') dexBonus = dexMod;
-    else if (dexRule === 'max2') dexBonus = Math.min(dexMod, 2);
-    // none → 0
-
-    return baseArmor + dexBonus + shieldBonus;
+    return result.rows;
   }
 
   /* ======================
@@ -466,43 +435,20 @@ class Character {
   /* ======================
      DELETE
   ====================== */
-  static async deleteById(id, userId) {
-    const client = await db.connect();
+static async deleteById(id, userId) {
+  // ON DELETE CASCADE est défini dans init.sql sur :
+  // - personnage_caracteristique (personnage_id)
+  // - personnage_skill (personnage_id)
+  // - personnage_item (personnage_id)
+  // → supprimer le personnage suffit, tout le reste est nettoyé par PostgreSQL
+  const result = await db.query(
+    `DELETE FROM personnage
+     WHERE id = $1 AND user_id = $2`,
+    [id, userId]
+  );
 
-    try {
-      await client.query('BEGIN');
-
-      // Supprimer les compétences
-      await client.query(
-        `DELETE FROM personnage_skill
-         WHERE personnage_id = $1`,
-        [id]
-      );
-
-      // Supprimer les caractéristiques
-      await client.query(
-        `DELETE FROM personnage_caracteristique
-         WHERE personnage_id = $1`,
-        [id]
-      );
-
-      // Supprimer le personnage
-      const result = await client.query(
-        `DELETE FROM personnage
-         WHERE id = $1 AND user_id = $2`,
-        [id, userId]
-      );
-
-      await client.query('COMMIT');
-      return result.rowCount > 0;
-
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
-  }
+  return result.rowCount > 0;
+}
 }
 
 module.exports = Character;

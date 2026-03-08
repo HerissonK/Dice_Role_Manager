@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
+const { errorHandler } = require('./utils/errorHandler');
 
 const characterRoutes = require('./routes/character.routes');
 const authRoutes = require('./routes/auth.routes');
@@ -8,19 +9,31 @@ const playRoutes = require('./routes/play.routes');
 
 const app = express();
 
-/* ✅ 1. CORS EN PREMIER */
+/* CORS */
+const allowedOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(',').map(o => o.trim())
+  : ['http://localhost:8080'];
+
 const corsOptions = {
-  origin: true, //process.env.FRONTEND_URL || 'http://localhost:8080',
+  origin: (origin, callback) => {
+    // Autoriser les requêtes sans origin (Postman, curl, tests)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS: origin "${origin}" not allowed`));
+    }
+  },
   credentials: true,
 };
 
 app.use(cors(corsOptions));
 
-/* ✅ 2. JSON */
+/* JSON */
 app.use(express.json());
 
-
-/* ✅ 3. RATE LIMITERS */
+/* RATE LIMITERS */
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 15,
@@ -29,6 +42,7 @@ const loginLimiter = rateLimit({
 
 app.use('/api/auth/login', loginLimiter);
 
+/* Limiteur pour les routes de gestion des personnages */
 const createLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 20,
@@ -36,9 +50,10 @@ const createLimiter = rateLimit({
 
 app.use('/api/characters', createLimiter);
 
-/* ✅ 4. ROUTES */
+/* ROUTES */
 app.use('/api/characters', characterRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api', playRoutes);
+app.use(errorHandler);
 
 module.exports = app;
