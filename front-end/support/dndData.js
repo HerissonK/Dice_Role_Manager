@@ -4,24 +4,24 @@
    COMPÉTENCES
 ============================ */
 const allSkills = [
-    { id: 1, name: 'Acrobaties', ability: 'dex' },
-    { id: 2, name: 'Dressage', ability: 'wis' },
-    { id: 3, name: 'Arcanes', ability: 'int' },
-    { id: 4, name: 'Athlétisme', ability: 'str' },
-    { id: 5, name: 'Tromperie', ability: 'cha' },
-    { id: 6, name: 'Histoire', ability: 'int' },
-    { id: 7, name: 'Intuition', ability: 'wis' },
-    { id: 8, name: 'Intimidation', ability: 'cha' },
-    { id: 9, name: 'Investigation', ability: 'int' },
-    { id: 10, name: 'Médecine', ability: 'wis' },
-    { id: 11, name: 'Nature', ability: 'int' },
-    { id: 12, name: 'Perception', ability: 'wis' },
-    { id: 13, name: 'Représentation', ability: 'cha' },
-    { id: 14, name: 'Persuasion', ability: 'cha' },
-    { id: 15, name: 'Religion', ability: 'int' },
-    { id: 16, name: 'Escamotage', ability: 'dex' },
-    { id: 17, name: 'Discrétion', ability: 'dex' },
-    { id: 18, name: 'Survie', ability: 'wis' },
+    { id: 1, name: 'Acrobaties', ability: 'dexterity' },
+    { id: 2, name: 'Dressage', ability: 'wisdom' },
+    { id: 3, name: 'Arcanes', ability: 'intelligence' },
+    { id: 4, name: 'Athlétisme', ability: 'strength' },
+    { id: 5, name: 'Tromperie', ability: 'charisma' },
+    { id: 6, name: 'Histoire', ability: 'intelligence' },
+    { id: 7, name: 'Intuition', ability: 'wisdom' },
+    { id: 8, name: 'Intimidation', ability: 'charisma' },
+    { id: 9, name: 'Investigation', ability: 'intelligence' },
+    { id: 10, name: 'Médecine', ability: 'wisdom' },
+    { id: 11, name: 'Nature', ability: 'intelligence' },
+    { id: 12, name: 'Perception', ability: 'wisdom' },
+    { id: 13, name: 'Représentation', ability: 'charisma' },
+    { id: 14, name: 'Persuasion', ability: 'charisma' },
+    { id: 15, name: 'Religion', ability: 'intelligence' },
+    { id: 16, name: 'Escamotage', ability: 'dexterity' },
+    { id: 17, name: 'Discrétion', ability: 'dexterity' },
+    { id: 18, name: 'Survie', ability: 'wisdom' },
 ];
 
 /* ============================
@@ -688,6 +688,13 @@ const abilityAbbrev = {
     intelligence: 'INT',
     wisdom: 'SAG',
     charisma: 'CHA',
+    //panssement a la con pour que les skills puissent afficher les abréviations
+    str: 'FOR',
+    dex: 'DEX',
+    con: 'CON',
+    int: 'INT',
+    wis: 'SAG',
+    cha: 'CHA',
 };
 
 const abilityDescriptions = {
