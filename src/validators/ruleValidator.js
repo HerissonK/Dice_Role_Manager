@@ -15,6 +15,7 @@ class RuleValidator {
     this.validateName(data.name);
     this.validateLevel(data.level);
     this.validateAbilities(data.abilities);
+    this.validatePointBuy(data.abilities);
   }
 
   /**
@@ -92,6 +93,23 @@ class RuleValidator {
 
     return modifiers;
   }
+
+  static validatePointBuy(abilities) {
+    const costs = { 8: 0, 9: 1, 10: 2, 11: 3, 12: 4, 13: 5, 14: 7, 15: 9 };
+    let total = 0;
+
+    for (const [key, value] of Object.entries(abilities)) {
+      if (!(value in costs)) {
+        throw new Error(`Score ${key}=${value} invalide pour le Point Buy (8-15 autorisés avant bonus raciaux)`);
+      }
+      total += costs[value];
+    }
+
+    if (total > 27) {
+      throw new Error(`Point Buy dépasse le budget (${total}/27 points utilisés)`);
+    }
+  }
+
 }
 
 module.exports = RuleValidator;
