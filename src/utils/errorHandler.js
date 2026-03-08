@@ -9,10 +9,11 @@ class AppError extends Error {
 function errorHandler(err, req, res, next) {
   const statusCode = err.statusCode || 500;
 
-  logger.error('Unhandled error', {
+  // ✅ console.error remplace logger (non importé)
+  console.error('Unhandled error', {
     message: err.message,
     stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
-    statusCode: err.statusCode || 500
+    statusCode
   });
 
   if (err.isOperational) {

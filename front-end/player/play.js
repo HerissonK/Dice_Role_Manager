@@ -158,17 +158,13 @@ async function loadCharacter() {
     try {
         hideError();
 
-        const response = await fetch(`http://localhost:3000/api/play/${characterId}`, {
+        const response = await fetch(`${API_BASE_URL}/play/${characterId}`, {
             headers: getAuthHeaders(),
         });
 
         if (!response.ok) {
-            if (response.status === 404) {
-                throw new Error('Personnage non trouvé');
-            }
-            if (response.status === 401) {
-                throw new Error('Non authentifié. Veuillez vous reconnecter.');
-            }
+            if (response.status === 404) throw new Error('Personnage non trouvé');
+            if (response.status === 401) throw new Error('Non authentifié. Veuillez vous reconnecter.');
             throw new Error(`Erreur ${response.status}: ${response.statusText}`);
         }
 
@@ -593,15 +589,11 @@ function renderJournal() {
 }
 
 // ─────────────────────────────────────────────────────
-// PATCH DES FONCTIONS EXISTANTES pour alimenter le journal
+// FONCTIONS DE ROLL
 // ─────────────────────────────────────────────────────
 
-/**
- * Remplacer rollAbility pour alimenter le journal
- */
 async function rollAbility(ability, modifier, name) {
     try {
-        // ✅ API_BASE_URL remplace http://localhost:3000/api
         const response = await fetch(`${API_BASE_URL}/play/${characterId}/roll/ability`, {
             method: 'POST',
             headers: getAuthHeaders(),
@@ -631,9 +623,6 @@ async function rollAbility(ability, modifier, name) {
     }
 }
 
-/**
- * Remplacer rollSkill pour alimenter le journal
- */
 async function rollSkill(skillName, ability, bonus, isProficient) {
     try {
         const response = await fetch(`${API_BASE_URL}/play/${characterId}/roll/ability`, {
@@ -645,9 +634,12 @@ async function rollSkill(skillName, ability, bonus, isProficient) {
         if (!response.ok) throw new Error('Erreur jet compétence');
 
         const data = await response.json();
+
+        const total = data.d20 + bonus;
+
         const profText = isProficient ? ' (Maîtrise ★)' : '';
         showRollResult(
-            `${skillName}${profText} : 1d20 = ${data.d20} ${data.modifier >= 0 ? '+' : ''}${data.modifier} = ${data.total}`,
+            `${skillName}${profText} : 1d20 = ${data.d20} ${bonus >= 0 ? '+' : ''}${bonus} = ${total}`,
             'success'
         );
 
@@ -656,8 +648,8 @@ async function rollSkill(skillName, ability, bonus, isProficient) {
             label:  `${skillName}${isProficient ? ' ★' : ''}`,
             dice:   '1d20',
             d20:    data.d20,
-            mod:    data.modifier,
-            total:  data.total,
+            mod:    bonus,
+            total:  total,
             detail: isProficient ? 'Compétence maîtrisée' : null
         });
 
@@ -666,9 +658,6 @@ async function rollSkill(skillName, ability, bonus, isProficient) {
     }
 }
 
-/**
- * Remplacer rollWeaponAttack pour alimenter le journal
- */
 async function rollWeaponAttack(weaponId) {
     try {
         const response = await fetch(`${API_BASE_URL}/play/${characterId}/roll/attack`, {
@@ -709,9 +698,6 @@ async function rollWeaponAttack(weaponId) {
     }
 }
 
-/**
- * Remplacer rollWeaponDamage pour alimenter le journal
- */
 async function rollWeaponDamage(weaponId, isCritical = false) {
     try {
         const response = await fetch(`${API_BASE_URL}/play/${characterId}/roll/damage`, {
@@ -743,9 +729,6 @@ async function rollWeaponDamage(weaponId, isCritical = false) {
     }
 }
 
-/**
- * Remplacer rollFree pour alimenter le journal
- */
 async function rollFree(count, sides) {
     try {
         const response = await fetch(`${API_BASE_URL}/play/roll`, {
@@ -773,9 +756,7 @@ async function rollFree(count, sides) {
     }
 }
 
-/**
- * 💥 Afficher le modal de coup critique
- */
+// Afficher le modal de coup critique
 async function showCriticalModal(weaponId, weaponName) {
     const confirmed = await customConfirm(
         `Coup critique avec ${weaponName} !\n\nVoulez-vous lancer les dégâts critiques maintenant ?`,

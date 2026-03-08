@@ -150,10 +150,9 @@ class Character {
 
   /* ======================
      FIND ONE (DETAIL)
-     ✅ RÉCUPÈRE SKILLS + APPLIQUE BONUS RACIAUX
   ====================== */
   static async findById(id, userId) {
-    // 1. Récupérer les infos du personnage
+    // Récupérer les infos du personnage
     const characterResult = await db.query(
       `SELECT
         p.id,
@@ -194,7 +193,7 @@ class Character {
 
     const row = characterResult.rows[0];
 
-    // 2. ✅ NOUVEAU: Récupérer les compétences de classe stockées
+    // Récupérer les compétences de classe stockées
     const skillsResult = await db.query(
       `SELECT skill_name, source
        FROM personnage_skill
@@ -206,7 +205,7 @@ class Character {
       .filter(r => r.source === 'class')
       .map(r => r.skill_name);
     
-    // 3. Fusionner compétences background + classe
+    // Fusionner compétences background + classe
     const backgroundSkills = row.background_skills || [];
     const allSkills = [...new Set([...backgroundSkills, ...classSkills])];
     
@@ -214,7 +213,7 @@ class Character {
     console.log('📋 Compétences classe:', classSkills);
     console.log('✅ Compétences totales:', allSkills);
 
-    // 4. Caractéristiques de base (SANS bonus raciaux)
+    // Caractéristiques de base (SANS bonus raciaux)
     const baseAbilities = {
       str: row.str ?? 10,
       dex: row.dex ?? 10,
@@ -224,7 +223,7 @@ class Character {
       cha: row.cha ?? 10
     };
 
-    // 5. ✅ NOUVEAU: Appliquer les bonus raciaux
+    // Appliquer les bonus raciaux
     const racialBonuses = row.racial_bonuses || {};
     const finalAbilities = { ...baseAbilities };
     
@@ -238,7 +237,7 @@ class Character {
     console.log('📊 Bonus raciaux:', racialBonuses);
     console.log('✅ Caractéristiques finales:', finalAbilities);
 
-    // 6. Calculer PV et CA avec les caractéristiques FINALES
+    // Calculer PV et CA avec les caractéristiques FINALES
     const conMod = Math.floor((finalAbilities.con - 10) / 2);
     const baseHit = row.hit_die;
     const level = row.level;
@@ -259,15 +258,14 @@ class Character {
       background: row.background,
       pv,
       armorClass,
-      abilities: finalAbilities, // ✅ AVEC bonus raciaux appliqués
-      skills: allSkills, // ✅ Background + Classe fusionnées
+      abilities: finalAbilities,
+      skills: allSkills,
       items
     };
   }
 
   /* ======================
      FIND ALL (LIST)
-     ✅ AVEC BONUS RACIAUX
   ====================== */
   static async findAllByUser(userId) {
     const result = await db.query(
@@ -318,7 +316,7 @@ class Character {
         cha: row.cha ?? 10
       };
 
-      // ✅ Appliquer bonus raciaux
+      // Appliquer bonus raciaux
       const racialBonuses = row.racial_bonuses || {};
       const finalAbilities = { ...baseAbilities };
       
@@ -347,13 +345,46 @@ class Character {
     });
   }
 
+  /* ======================
+   CALCULATE ARMOR CLASS
+====================== */
+static calculateArmorClass(abilities, items) {
+  const dexMod = Math.floor((abilities.dex - 10) / 2);
+
+  let baseArmor = null;
+  let dexRule = 'full';
+  let shieldBonus = 0;
+
+  for (const item of items) {
+    const category = item.category || '';
+
+    if (category.startsWith('armor') || category === 'armor') {
+      baseArmor = item.armor_class;
+      dexRule = item.dex_modifier_rule || 'full';
+    }
+
+    if (category === 'shield') {
+      shieldBonus += item.armor_class || 2;
+    }
+  }
+
+  // Pas d'armure → CA de base 10 + DEX
+  if (!baseArmor) {
+    return 10 + dexMod + shieldBonus;
+  }
+
+  let dexBonus = 0;
+  if (dexRule === 'full') dexBonus = dexMod;
+  if (dexRule === 'max2') dexBonus = Math.min(dexMod, 2);
+  if (dexRule === 'none') dexBonus = 0;
+
+  return baseArmor + dexBonus + shieldBonus;
+}
 
   /* ======================
      EQUIPPED ITEMS
   ====================== */
   static async getEquippedItems(characterId, userId) {
-    // Plus de try/catch silencieux : on laisse l'erreur remonter
-    // pour qu'elle soit catchée par le controller et son errorHandler
     const result = await db.query(
       `SELECT
         i.id,
@@ -436,11 +467,6 @@ class Character {
      DELETE
   ====================== */
 static async deleteById(id, userId) {
-  // ON DELETE CASCADE est défini dans init.sql sur :
-  // - personnage_caracteristique (personnage_id)
-  // - personnage_skill (personnage_id)
-  // - personnage_item (personnage_id)
-  // → supprimer le personnage suffit, tout le reste est nettoyé par PostgreSQL
   const result = await db.query(
     `DELETE FROM personnage
      WHERE id = $1 AND user_id = $2`,
