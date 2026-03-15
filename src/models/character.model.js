@@ -161,7 +161,7 @@ class Character {
         c.name AS class,
         c.hit_die,
         s.name AS species,
-        s.ability_bonuses AS racial_bonuses, -- ✅ AJOUTÉ
+        s.ability_bonuses AS racial_bonuses,
         b.name AS background,
         b.skill_proficiencies AS background_skills,
         pc.str,
