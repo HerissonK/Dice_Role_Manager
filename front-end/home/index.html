@@ -198,25 +198,8 @@
 
   .btn-primary:hover { filter: brightness(1.2); transform: translateY(-2px); cursor: none; }
 
-  .btn-ghost {
-    font-family: 'Cinzel', serif;
-    font-size: 13px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    padding: 13px 36px;
-    background: transparent;
-    color: var(--gold);
-    border: 1px solid rgba(201,168,76,0.4);
-    cursor: pointer;
-    text-decoration: none;
-    clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
-    transition: background 0.3s, transform 0.2s;
-  }
-
-  .btn-ghost:hover { background: rgba(201,168,76,0.1); transform: translateY(-2px); cursor: none; }
-
   .scroll-hint {
-    position: absolute;
+    position: flex;
     bottom: 32px;
     left: 50%;
     transform: translateX(-50%);
@@ -635,8 +618,7 @@
     <h1 class="hero-title">Dice Role<br>Manager</h1>
     <p class="hero-sub">Créez votre héros. Lancez vos sorts.<br>Laissez le serveur faire les calculs.</p>
     <div class="hero-cta">
-      <a href="#scroll-story" class="btn-primary">Découvrir</a>
-      <a href="#projects" class="btn-ghost">Voir les projets</a>
+      <a href="/front-end/home/home.html" class="btn-primary">Voir le projet</a>
     </div>
   </div>
 
@@ -645,7 +627,7 @@
   </div>
 
   <div class="scroll-hint">
-    <span>Défiler</span>
+    <span>Défiler pour en savoir plus</span>
     <div class="scroll-line"></div>
   </div>
 </section>
@@ -665,19 +647,11 @@
         <svg id="scrollSvg" viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg" width="480" height="480">
           <!-- Étape 1 : D20 -->
           <g id="scene1" opacity="1">
-            <polygon points="240,40 380,130 380,310 240,400 100,310 100,130" fill="none" stroke="rgba(201,168,76,0.15)" stroke-width="1"/>
-            <polygon points="240,80 350,152 350,288 240,360 130,288 130,152" fill="#1e2a1f" stroke="rgba(201,168,76,0.3)" stroke-width="1.5"/>
-            <text x="240" y="250" text-anchor="middle" font-size="120" font-weight="900" fill="rgba(201,168,76,0.08)" font-family="'Cinzel Decorative', serif">20</text>
-            <text x="240" y="258" text-anchor="middle" font-size="72" font-weight="900" fill="url(#goldText)" font-family="'Cinzel Decorative', serif">20</text>
-            <polygon points="240,80 350,152 350,288 240,360 130,288 130,152" fill="none" stroke="rgba(201,168,76,0.5)" stroke-width="2"/>
-            <defs>
-              <linearGradient id="goldText" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#e0c068"/>
-                <stop offset="100%" stop-color="#8a6a1e"/>
-              </linearGradient>
-            </defs>
+            <image href="/front-end/assets/nav/builder.png"
+            x="0" y="-10" width="480" height="480"
+            preserveAspectRatio="xMidYMid meet"
+            opacity="0.9"/>
           </g>
-
           <!-- Étape 2 : Achat de points -->
           <g id="scene2" opacity="0">
             <text x="240" y="60" text-anchor="middle" font-size="13" letter-spacing="5" fill="rgba(201,168,76,0.5)" font-family="'Cinzel', serif">ACHAT DE POINTS</text>
@@ -759,7 +733,7 @@
         <span class="tech-tag">bcrypt</span>
         <span class="tech-tag">Vanilla JS</span>
       </div>
-      <a href="#" class="project-link">Voir le projet →</a>
+      <a href="/front-end/home/home.html" class="project-link">Voir le projet →</a>
       <div class="project-number">01</div>
     </div>
 
