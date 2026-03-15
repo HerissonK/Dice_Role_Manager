@@ -98,6 +98,27 @@ const updateCharacter = async (req, res, next) => {
 };
 
 /**
+ * Update only the character's name (PATCH /characters/:id/name)
+ */
+const updateCharacterName = async (req, res, next) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { name } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Le nom ne peut pas être vide' });
+    }
+
+    const updated = await Character.updateName(id, req.user.id, name);
+    if (!updated) return res.status(404).json({ error: 'Personnage non trouvé' });
+
+    res.json({ success: true, name: name.trim() });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * DELETE
  */
 const deleteCharacter = async (req, res, next) => {
@@ -121,5 +142,6 @@ module.exports = {
   getCharacterById,
   getCharacterArmorClass,
   updateCharacter,
-  deleteCharacter
+  deleteCharacter,
+  updateCharacterName,
 };

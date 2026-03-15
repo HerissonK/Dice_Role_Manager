@@ -20,7 +20,7 @@
                     </div>
                     <div class="header-actions">
                         <a href="/front-end/builder/builder.html" class="btn btn-primary">Créer un personnage</a>
-                        <a href="/front-end/home/index.html" class="btn btn-outline">Accueil</a>
+                        <a href="/front-end/home/home.html" class="btn btn-outline">Accueil</a>
                         <button id="btn-logout" class="btn btn-outline">Déconnexion</button>
                     </div>
                 </div>
@@ -80,6 +80,37 @@
             </div>
         </div>
     </div>
+    <div id="rename-modal" class="modal" style="display: none;">
+        <div class="modal-overlay" id="rename-overlay"></div>
+        <div class="modal-content" style="max-width: 420px;">
+            <div class="modal-header">
+            <h2>Renommer le personnage</h2>
+            <button id="rename-cancel" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+            <form id="rename-form">
+                <div style="margin-bottom: 16px;">
+                <label class="form-label">Nouveau nom</label>
+                <input 
+                    id="rename-input" 
+                    type="text" 
+                    class="form-input" 
+                    maxlength="50"
+                    placeholder="Nom du personnage"
+                    required
+                />
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" id="rename-cancel-btn" class="btn btn-outline"
+                    onclick="document.getElementById('rename-modal').style.display='none'">
+                    Annuler
+                </button>
+                <button type="submit" class="btn btn-primary">Sauvegarder</button>
+                </div>
+            </form>
+            </div>
+        </div>
+        </div>
     <script src="/front-end/support/ui.js"></script>
     <script src="/front-end/support/dndData.js"></script>
     <script src="/front-end/support/auth.js"></script>

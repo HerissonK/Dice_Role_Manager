@@ -8,6 +8,7 @@ const {
   getCharacterById,
   updateCharacter,
   deleteCharacter,
+  updateCharacterName,
 } = require('../controllers/character.controller');
 
 // Auth obligatoire
@@ -19,5 +20,6 @@ router.get('/', getCharacters);
 router.get('/:id', getCharacterById);
 router.put('/:id', updateCharacter);
 router.delete('/:id', deleteCharacter);
+router.patch('/:id/name', updateCharacterName);
 
 module.exports = router;

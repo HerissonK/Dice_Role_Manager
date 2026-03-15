@@ -65,7 +65,9 @@
     z-index: 1000;
     opacity: 0.4;
   }
-
+  #scrollSvg g {
+  transition: opacity 0.5s;
+}
   /* ══════════════════════════════
      HERO SECTION
   ══════════════════════════════ */
@@ -602,7 +604,7 @@
 <nav>
   <a href="#" class="nav-logo">DRM</a>
   <ul class="nav-links">
-    <li><a href="#scroll-story">Fonctionnalités</a></li>
+    <li><a href="#scroll-story" onclick="forceStep(0)">Fonctionnalités</a></li>
     <li><a href="#projects">Projets</a></li>
     <li><a href="#contact">Contact</a></li>
   </ul>
@@ -645,13 +647,27 @@
 
       <div class="scroll-visual">
         <svg id="scrollSvg" viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg" width="480" height="480">
-          <!-- Étape 1 : D20 -->
+
+          <!-- DEFS globaux — en dehors des scènes -->
+          <defs>
+            <linearGradient id="goldText" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#e0c068"/>
+              <stop offset="100%" stop-color="#8a6a1e"/>
+            </linearGradient>
+            <linearGradient id="barGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#c9a84c"/>
+              <stop offset="100%" stop-color="#e8621a"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Étape 1 : Screenshot builder -->
           <g id="scene1" opacity="1">
             <image href="/front-end/assets/nav/builder.png"
-            x="0" y="-10" width="480" height="480"
-            preserveAspectRatio="xMidYMid meet"
-            opacity="0.9"/>
+                  x="0" y="-10" width="480" height="480"
+                  preserveAspectRatio="xMidYMid meet"
+                  opacity="0.9"/>
           </g>
+
           <!-- Étape 2 : Achat de points -->
           <g id="scene2" opacity="0">
             <text x="240" y="60" text-anchor="middle" font-size="13" letter-spacing="5" fill="rgba(201,168,76,0.5)" font-family="'Cinzel', serif">ACHAT DE POINTS</text>
@@ -660,41 +676,29 @@
               <rect x="50" y="14" width="240" height="18" rx="3" fill="rgba(201,168,76,0.1)"/>
               <rect x="50" y="14" width="180" height="18" rx="3" fill="url(#barGrad)"/>
               <text x="302" y="28" font-size="12" fill="#c9a84c" font-family="'Cinzel', serif">15</text>
-
               <text x="0" y="72" font-size="12" fill="#7a9e70" font-family="'Cinzel', serif">DEX</text>
               <rect x="50" y="58" width="240" height="18" rx="3" fill="rgba(201,168,76,0.1)"/>
               <rect x="50" y="58" width="150" height="18" rx="3" fill="url(#barGrad)"/>
               <text x="302" y="72" font-size="12" fill="#c9a84c" font-family="'Cinzel', serif">13</text>
-
               <text x="0" y="116" font-size="12" fill="#7a9e70" font-family="'Cinzel', serif">CON</text>
               <rect x="50" y="102" width="240" height="18" rx="3" fill="rgba(201,168,76,0.1)"/>
               <rect x="50" y="102" width="200" height="18" rx="3" fill="url(#barGrad)"/>
               <text x="302" y="116" font-size="12" fill="#c9a84c" font-family="'Cinzel', serif">14</text>
-
               <text x="0" y="160" font-size="12" fill="#7a9e70" font-family="'Cinzel', serif">INT</text>
               <rect x="50" y="146" width="240" height="18" rx="3" fill="rgba(201,168,76,0.1)"/>
               <rect x="50" y="146" width="100" height="18" rx="3" fill="url(#barGrad)"/>
               <text x="302" y="160" font-size="12" fill="#c9a84c" font-family="'Cinzel', serif">10</text>
-
               <text x="0" y="204" font-size="12" fill="#7a9e70" font-family="'Cinzel', serif">SAG</text>
               <rect x="50" y="190" width="240" height="18" rx="3" fill="rgba(201,168,76,0.1)"/>
               <rect x="50" y="190" width="120" height="18" rx="3" fill="url(#barGrad)"/>
               <text x="302" y="204" font-size="12" fill="#c9a84c" font-family="'Cinzel', serif">12</text>
-
               <text x="0" y="248" font-size="12" fill="#7a9e70" font-family="'Cinzel', serif">CHA</text>
               <rect x="50" y="234" width="240" height="18" rx="3" fill="rgba(201,168,76,0.1)"/>
               <rect x="50" y="234" width="80" height="18" rx="3" fill="url(#barGrad)"/>
               <text x="302" y="248" font-size="12" fill="#c9a84c" font-family="'Cinzel', serif">8</text>
-
               <text x="0" y="306" font-size="11" fill="rgba(201,168,76,0.5)" font-family="'Cinzel', serif">POINTS RESTANTS</text>
               <text x="0" y="336" font-size="44" font-weight="700" fill="#c9a84c" font-family="'Cinzel Decorative', serif">4 / 27</text>
             </g>
-            <defs>
-              <linearGradient id="barGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#c9a84c"/>
-                <stop offset="100%" stop-color="#e8621a"/>
-              </linearGradient>
-            </defs>
           </g>
 
           <!-- Étape 3 : Jet de dés -->
@@ -706,6 +710,8 @@
             <text x="240" y="340" text-anchor="middle" font-size="14" letter-spacing="4" fill="#7a9e70" font-family="'Cinzel', serif">d20 + 5 modificateur</text>
             <circle cx="240" cy="240" r="160" fill="none" stroke="rgba(232,98,26,0.3)" stroke-width="3" stroke-dasharray="20,10"/>
           </g>
+
+        </svg>
         </svg>
       </div>
     </div>
@@ -1118,49 +1124,64 @@
     }
   ];
 
-  let currentStep = -1;
+let currentStep = -1;
+let scrollLocked = false;
 
-  function updateStep(idx) {
-    if (idx === currentStep) return;
-    currentStep = idx;
-    const s = steps[idx];
-
-    document.querySelectorAll('#scrollSvg > g').forEach(g => {
-      g.style.transition = 'opacity 0.5s';
-      g.style.opacity = '0';
-    });
-
-    setTimeout(() => {
-      const target = document.getElementById(s.scene);
-      if (target) target.style.opacity = '1';
-    }, 300);
-
-    const block = document.getElementById('scrollText');
-    block.style.opacity = '0';
-    block.style.transform = 'translateY(20px)';
-
-    setTimeout(() => {
-      document.getElementById('stepNum').textContent   = s.num;
-      document.getElementById('stepLabel').textContent = s.label;
-      document.getElementById('stepTitle').textContent = s.title;
-      document.getElementById('stepBody').innerHTML    = s.body;
-      block.style.transition = 'opacity 0.5s, transform 0.5s';
-      block.style.opacity    = '1';
-      block.style.transform  = 'translateY(0)';
-    }, 350);
-  }
-
-  window.addEventListener('scroll', () => {
-    const story   = document.getElementById('scroll-story');
-    const rect    = story.getBoundingClientRect();
-    const total   = story.offsetHeight - window.innerHeight;
-    const scrolled = Math.max(0, -rect.top);
-    const progress = Math.min(1, scrolled / total);
-    const idx = Math.min(steps.length - 1, Math.floor(progress * steps.length));
-    updateStep(idx);
+function setScene(idx) {
+  // Cache toutes les scènes sans transition (instantané)
+  document.querySelectorAll('#scrollSvg > g[id]').forEach(g => {
+    g.style.transition = 'none';
+    g.style.opacity = '0';
   });
+  // Affiche la cible après un tick
+  requestAnimationFrame(() => {
+    const target = document.getElementById(steps[idx].scene);
+    if (target) {
+      target.style.transition = 'opacity 0.5s';
+      target.style.opacity = '1';
+    }
+  });
+  // Texte
+  const s = steps[idx];
+  const block = document.getElementById('scrollText');
+  block.style.transition = 'none';
+  block.style.opacity = '0';
+  block.style.transform = 'translateY(20px)';
+  requestAnimationFrame(() => {
+    document.getElementById('stepNum').textContent   = s.num;
+    document.getElementById('stepLabel').textContent = s.label;
+    document.getElementById('stepTitle').textContent = s.title;
+    document.getElementById('stepBody').innerHTML    = s.body;
+    block.style.transition = 'opacity 0.5s, transform 0.5s';
+    block.style.opacity    = '1';
+    block.style.transform  = 'translateY(0)';
+  });
+  currentStep = idx;
+}
 
-  updateStep(0);
+function forceStep(idx) {
+  scrollLocked = true;
+  setScene(idx);
+  setTimeout(() => { scrollLocked = false; }, 800);
+}
+
+function updateStep(idx) {
+  if (scrollLocked) return;
+  if (idx === currentStep) return;
+  setScene(idx);
+}
+
+window.addEventListener('scroll', () => {
+  const story   = document.getElementById('scroll-story');
+  const rect    = story.getBoundingClientRect();
+  const total   = story.offsetHeight - window.innerHeight;
+  const scrolled = Math.max(0, -rect.top);
+  const progress = Math.min(1, scrolled / total);
+  const idx = Math.min(steps.length - 1, Math.floor(progress * steps.length));
+  updateStep(idx);
+});
+
+setScene(0);
 
   // ── REVEAL ON SCROLL
   const reveals = document.querySelectorAll('.reveal');

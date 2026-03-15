@@ -464,6 +464,19 @@ static calculateArmorClass(abilities, items) {
   }
 
   /* ======================
+     UPDATE NAME ONLY
+  ====================== */
+static async updateName(id, userId, newName) {
+  if (!newName || !newName.trim()) {
+    throw new Error('Le nom ne peut pas être vide');
+  }
+  const result = await db.query(
+    `UPDATE personnage SET name = $1 WHERE id = $2 AND user_id = $3`,
+    [newName.trim(), id, userId]
+  );
+  return result.rowCount > 0;
+}
+  /* ======================
      DELETE
   ====================== */
 static async deleteById(id, userId) {

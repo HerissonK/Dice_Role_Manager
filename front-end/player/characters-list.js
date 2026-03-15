@@ -48,6 +48,12 @@ async function loadCharacters() {
     const emptyMessage = document.getElementById('empty-message');
     const charactersGrid = document.getElementById('characters-grid');
     
+    // Reset complet avant chaque chargement
+    loadingMessage.style.display = 'block';
+    emptyMessage.style.display = 'none';
+    charactersGrid.style.display = 'none';
+    charactersGrid.innerHTML = '';
+    
     try {
         const response = await authenticatedFetch(`${API_BASE_URL}/characters`);
         
@@ -176,6 +182,14 @@ function displayCharacters(characters) {
                             onclick="viewCharacter(${character.id})"
                             title="Voir les détails"
                         >
+                            <svg class="icon"><use href="#icon-edit"/></svg>
+                        </button>
+                        <button 
+                            class="btn btn-outline btn-sm btn-rename"
+                            data-character-id="${character.id}"
+                            data-character-name="${character.name.replace(/"/g, '&quot;')}"
+                            title="Renommer"
+                        >
                             <svg class="icon"><use href="#icon-eye"/></svg>
                         </button>
                         <button 
@@ -207,7 +221,15 @@ function displayCharacters(characters) {
             playCharacter(characterId);
         });
     });
-    
+    const renameButtons = grid.querySelectorAll('.btn-rename');
+    renameButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            renameCharacter(
+                btn.getAttribute('data-character-id'),
+                btn.getAttribute('data-character-name')
+            );
+        });
+    });
     console.log('✅ Tous les event listeners configurés');
 }
 
@@ -326,6 +348,49 @@ function showCharacterModal(character) {
     document.getElementById('modal-overlay').onclick = () => {
         modal.style.display = 'none';
     };
+}
+
+// Fonction de renommage
+async function renameCharacter(characterId, currentName) {
+  const modal = document.getElementById('rename-modal');
+  const input = document.getElementById('rename-input');
+  const form  = document.getElementById('rename-form');
+
+  input.value = currentName;
+  modal.style.display = 'flex';
+  input.focus();
+  input.select();
+
+  return new Promise((resolve) => {
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const newName = input.value.trim();
+      if (!newName) return;
+
+      try {
+        const response = await authenticatedFetch(
+          `${API_BASE_URL}/characters/${characterId}/name`,
+          { method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: newName }) }
+        );
+        if (!response.ok) throw new Error('Erreur lors du renommage');
+        modal.style.display = 'none';
+        loadCharacters();
+      } catch (err) {
+        await customAlert(err.message, 'danger', 'Erreur');
+      }
+      resolve();
+    };
+
+    document.getElementById('rename-cancel').onclick = () => {
+      modal.style.display = 'none';
+      resolve();
+    };
+    document.getElementById('rename-overlay').onclick = () => {
+      modal.style.display = 'none';
+      resolve();
+    };
+  });
 }
 
 // Supprimer un personnage

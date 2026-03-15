@@ -139,7 +139,7 @@ async function register(username, email, password) {
 function logout() {
     console.log('👋 logout()');
     clearSession();
-    window.location.href = '/front-end/home/index.html';
+    window.location.href = '/front-end/home/home.html';
 }
 
 // Protéger une page (rediriger si non connecté)
@@ -147,7 +147,7 @@ function requireAuth() {
     console.log('🔒 requireAuth()');
     if (!isAuthenticated()) {
         console.warn('⚠️ Non authentifié, redirection...');
-        window.location.href = '/front-end/home/index.html';
+        window.location.href = '/front-end/home/home.html';
         return false;
     }
     return true;
@@ -175,7 +175,7 @@ async function authenticatedFetch(url, options = {}) {
     if (response.status === 401) {
         console.error('❌ Token invalide ou expiré');
         clearSession();
-        window.location.href = '/front-end/home/index.html';
+        window.location.href = '/front-end/home/home.html';
         throw new Error('Session expirée');
     }
 
