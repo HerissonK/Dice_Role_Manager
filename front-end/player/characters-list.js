@@ -182,7 +182,7 @@ function displayCharacters(characters) {
                             onclick="viewCharacter(${character.id})"
                             title="Voir les détails"
                         >
-                            <svg class="icon"><use href="#icon-edit"/></svg>
+                            <svg class="icon"><use href="#icon-eye"/></svg>
                         </button>
                         <button 
                             class="btn btn-outline btn-sm btn-rename"
@@ -190,7 +190,7 @@ function displayCharacters(characters) {
                             data-character-name="${character.name.replace(/"/g, '&quot;')}"
                             title="Renommer"
                         >
-                            <svg class="icon"><use href="#icon-eye"/></svg>
+                            <svg class="icon"><use href="#icon-edit"/></svg>    
                         </button>
                         <button 
                             class="btn btn-outline btn-sm" 
