@@ -212,53 +212,104 @@ The application will be available at `http://localhost:8080`.
 ## 📁 Project Structure
 
 ```
-.
-├── front-end/                  # User interface
-│   ├── index.html              # Home page (login / register)
-│   ├── builder.html            # Character creation (8 steps)
-│   ├── my-characters.html      # Character list
-│   ├── play.html               # Play mode (dice + skills + weapons)
-│   ├── app.js                  # Builder logic (Point Buy, steps)
-│   ├── auth.js                 # JWT management (login, logout, session)
-│   ├── characters-list.js      # Character display and deletion
-│   ├── play.js                 # Dice rolls, journal, weapons
-│   ├── home.js                 # Login / register forms
-│   ├── dndData.js              # D&D data (races, classes, backgrounds…)
-│   ├── styles-dark-gaming.css  # Main Dark Gaming theme
-│   ├── play-dark-gaming.css    # Play page specific styles
-│   └── play.css                # Alternative Mystic Tavern theme
-│
-├── src/                        # Node.js / Express back-end
-│   ├── app.js                  # Express setup (CORS, routes)
-│   ├── server.js               # Server entry point
-│   ├── config/
-│   │   ├── database.js         # PostgreSQL pool
-│   │   ├── jwt.js              # JWT configuration
-│   │   └── logger.js           # Winston logger
-│   ├── controllers/
-│   │   ├── auth.controller.js  # Register / login
-│   │   ├── character.controller.js  # CRUD characters
-│   │   └── play.controller.js  # Dice rolls, attack, damage
-│   ├── middlewares/
-│   │   └── auth.middleware.js  # JWT verification
-│   ├── models/
-│   │   ├── character.model.js  # Character SQL queries
-│   │   └── user.model.js       # User SQL queries
-│   ├── routes/
-│   │   ├── auth.routes.js
-│   │   ├── character.routes.js
-│   │   └── play.routes.js
-│   ├── services/
-│   │   └── armor.service.js    # Armor Class calculation
-│   ├── validators/
-│   │   └── ruleValidator.js    # D&D rule validation
-│   └── utils/
-│       ├── dice.js             # Dice roll functions
-│       ├── dnd.rules.js        # Attack modifier calculations
-│       └── modifiers.util.js   # Ability score modifier
-│
-├── init.sql                    # Table creation + reference data
-├── populate_item_table.sql     # Item table population
+Documentation/
+├── Architecture_Diagram.html
+├── Architecture_Diagram_Mermaid.md
+├── DB_Diagram.html
+├── DB_Diagram_Mermaid.md
+├── Idea_development.md
+├── README_FR.md
+├── Sprint_plan.md
+├── Sprint_review.md
+├── Testing.md
+├── init.sql
+└── populate_item_table.sql
+
+front-end/
+├── assets
+│   ├── class-icons
+│   │   ├── artificer.svg
+│   │   ├── barbarian.svg
+│   │   ├── bard.svg
+│   │   ├── cleric.svg
+│   │   ├── druid.svg
+│   │   ├── fighter.svg
+│   │   ├── monk.svg
+│   │   ├── paladin.svg
+│   │   ├── ranger.svg
+│   │   ├── rogue.svg
+│   │   ├── sorcerer.svg
+│   │   ├── warlock.svg
+│   │   └── wizard.svg
+│   ├── dice
+│   │   ├── advantage.svg
+│   │   ├── d10.svg
+│   │   ├── d12.svg
+│   │   ├── d20.svg
+│   │   ├── d4.svg
+│   │   ├── d6.svg
+│   │   ├── d8.svg
+│   │   ├── disadvantage.svg
+│   │   └── roll.svg
+│   └── nav
+│       ├── archive.svg
+│       ├── book.svg
+│       ├── builder.png
+│       ├── melee.svg
+│       ├── party.svg
+│       ├── reach.svg
+│       ├── source-book.svg
+│       └── test.svg
+├── builder
+│   ├── builder.html
+│   └── builder.js
+├── home
+│   ├── home.html
+│   ├── home.js
+│   └── index.html
+├── player
+│   ├── characters-list.js
+│   ├── my-characters.html
+│   ├── play.html
+│   └── play.js
+├── styles
+│   ├── character-card.css
+│   ├── play-sauge-or.css
+│   └── styles-sauge-or.css
+└── support
+    ├── auth.js
+    ├── dndData.js
+    └── ui.js
+src
+├── app.js
+├── config
+│   ├── database.js
+│   ├── jwt.js
+│   └── logger.js
+├── controllers
+│   ├── auth.controller.js
+│   ├── character.controller.js
+│   └── play.controller.js
+├── middlewares
+│   └── auth.middleware.js
+├── models
+│   ├── character.model.js
+│   └── user.model.js
+├── routes
+│   ├── auth.routes.js
+│   ├── character.routes.js
+│   └── play.routes.js
+├── server.js
+├── services
+│   └── armor.service.js
+├── utils
+│   ├── dice.js
+│   ├── errorHandler.js
+│   └── modifiers.util.js
+└── validators
+    └── ruleValidator.js
+└── package-lock.json
+└── package.json
 └── README.md
 ```
 
