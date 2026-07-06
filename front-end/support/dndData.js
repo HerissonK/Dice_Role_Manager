@@ -705,3 +705,7 @@ const abilityDescriptions = {
     wisdom: 'Perception',
     charisma: 'Présence',
 };
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { pointBuyCosts };
+}
