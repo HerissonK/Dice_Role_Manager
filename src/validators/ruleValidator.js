@@ -1,11 +1,16 @@
 /**
  * RuleValidator
- * Validation des règles de création de personnage D&D 5e
+ * Server-side validation of D&D 5e character creation rules.
+ * All checks here are authoritative: the client-side calculations in
+ * front-end/builder/builder.js are only a UX convenience and are never
+ * trusted — every character is re-validated here before persistence.
  */
 class RuleValidator {
   /**
-   * Validation globale d'un personnage
-   * @param {Object} data
+   * Runs the full validation pipeline for a character creation payload.
+   * Throws on the first rule violation encountered.
+   * @param {Object} data - Raw character data sent by the client.
+   * @throws {Error} If the payload is missing or any sub-validation fails.
    */
   static validateCharacter(data) {
     if (!data || typeof data !== 'object') {
@@ -19,8 +24,9 @@ class RuleValidator {
   }
 
   /**
-   * Validation du nom du personnage
+   * Validates a character name (2 to 100 characters, non-empty string).
    * @param {string} name
+   * @throws {Error} If the name is missing or out of the allowed length range.
    */
   static validateName(name) {
     if (!name || typeof name !== 'string') {
@@ -33,8 +39,9 @@ class RuleValidator {
   }
 
   /**
-   * Validation du niveau (1 à 20)
+   * Validates character level (must be an integer between 1 and 20).
    * @param {number} level
+   * @throws {Error} If level is not an integer or out of range.
    */
   static validateLevel(level) {
     if (!Number.isInteger(level) || level < 1 || level > 20) {
@@ -43,8 +50,11 @@ class RuleValidator {
   }
 
   /**
-   * Validation des caractéristiques D&D
-   * @param {Object} abilities
+   * Validates the six D&D ability scores (str, dex, con, int, wis, cha).
+   * Each score must be present, an integer, and within the 8-15 range
+   * allowed by the Point Buy system (before racial bonuses are applied).
+   * @param {Object<string, number>} abilities
+   * @throws {Error} If an ability is missing, non-integer, or out of range.
    */
   static validateAbilities(abilities) {
     if (!abilities || typeof abilities !== 'object') {
@@ -71,18 +81,19 @@ class RuleValidator {
   }
 
   /**
-   * Calcul des modificateurs D&D
-   * @param {number} score
-   * @returns {number}
+   * Converts a raw ability score into its D&D 5e modifier.
+   * Formula: floor((score - 10) / 2).
+   * @param {number} score - Final ability score (after racial bonuses).
+   * @returns {number} The corresponding modifier.
    */
   static calculateModifier(score) {
     return Math.floor((score - 10) / 2);
   }
 
   /**
-   * Calcul de tous les modificateurs
-   * @param {Object} abilities
-   * @returns {Object}
+   * Applies calculateModifier() to every ability in the given set.
+   * @param {Object<string, number>} abilities
+   * @returns {Object<string, number>} Map of ability name to modifier.
    */
   static calculateAllModifiers(abilities) {
     const modifiers = {};
@@ -94,6 +105,15 @@ class RuleValidator {
     return modifiers;
   }
 
+  /**
+   * Re-validates the Point Buy budget server-side. The client (builder.js)
+   * already prevents the user from overspending in the UI, but this method
+   * guarantees that no request can bypass that rule by calling the API
+   * directly with a tampered payload.
+   * @param {Object<string, number>} abilities - Raw scores (8-15) before racial bonuses.
+   * @throws {Error} If a score is outside the 8-15 range, or if the total
+   *   cost exceeds the 27-point official D&D 5e Point Buy budget.
+   */
   static validatePointBuy(abilities) {
     const costs = { 8: 0, 9: 1, 10: 2, 11: 3, 12: 4, 13: 5, 14: 7, 15: 9 };
     let total = 0;

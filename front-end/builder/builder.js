@@ -1250,13 +1250,33 @@ async function handleSave() {
 }
 
 
-// Fonctions utilitaires pour Point Buy
+// Point Buy utility functions
+// Note: this client-side calculation is a UX convenience only (instant visual
+// feedback while the user adjusts scores). It is never trusted as-is: every
+// value is re-validated server-side by RuleValidator.validatePointBuy()
+// before a character is persisted (see src/validators/ruleValidator.js).
+
+/**
+ * Computes the total Point Buy cost of a full set of ability scores,
+ * using the official D&D 5e cost table (pointBuyCosts).
+ * @param {Object<string, number>} scores - Current scores (8-15) for str, dex, con, int, wis, cha.
+ * @returns {number} Total points spent.
+ */
 function calculatePointsUsed(scores) {
     return Object.values(scores).reduce((total, score) => {
         return total + (pointBuyCosts[score] || 0);
     }, 0);
 }
 
+/**
+ * Checks whether a given ability can be increased by 1 point, i.e. it is
+ * not already at MAX_SCORE and enough points remain to cover the marginal
+ * cost of the next value (the cost per point increases as the score rises).
+ * @param {string} ability - Ability key (e.g. 'str', 'dex'...).
+ * @param {Object<string, number>} scores - Current scores.
+ * @param {number} pointsRemaining - Points left in the 27-point budget.
+ * @returns {boolean} True if the increase is allowed.
+ */
 function canIncrease(ability, scores, pointsRemaining) {
     const currentScore = scores[ability];
     if (currentScore >= MAX_SCORE) return false;
@@ -1267,6 +1287,17 @@ function canIncrease(ability, scores, pointsRemaining) {
     return pointsRemaining >= costDiff;
 }
 
+/**
+ * Checks whether a given ability can be decreased by 1 point, i.e. it is
+ * strictly above MIN_SCORE.
+ * @param {string} ability - Ability key (e.g. 'str', 'dex'...).
+ * @param {Object<string, number>} scores - Current scores.
+ * @returns {boolean} True if the decrease is allowed.
+ */
 function canDecrease(ability, scores) {
     return scores[ability] > MIN_SCORE;
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { calculatePointsUsed, canIncrease, canDecrease, MIN_SCORE, MAX_SCORE };
 }

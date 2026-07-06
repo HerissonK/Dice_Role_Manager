@@ -345,9 +345,24 @@ class Character {
     });
   }
 
-  /* ======================
-   CALCULATE ARMOR CLASS
-====================== */
+  /**
+   * Calculates a character's Armor Class (AC) from their Dexterity modifier
+   * and equipped items, following the D&D 5e ruleset.
+   *
+   * Rules applied:
+   *  - No armor equipped: AC = 10 + DEX modifier (+ shield bonus if any).
+   *  - Light armor (`dex_modifier_rule: 'full'`): full DEX modifier applies.
+   *  - Medium armor (`dex_modifier_rule: 'max2'`): DEX modifier capped at +2.
+   *  - Heavy armor (`dex_modifier_rule: 'none'`): DEX modifier ignored.
+   *  - A shield always adds a flat bonus (default +2) on top of the above.
+   *
+   * This is a pure function: it performs no database access and is safe to
+   * unit test in isolation (see tests/character.model.test.js).
+   *
+   * @param {{dex: number}} abilities - Character's final ability scores (after racial bonuses).
+   * @param {Array<{category: string, armor_class?: number, dex_modifier_rule?: string}>} items - Equipped items.
+   * @returns {number} The computed Armor Class.
+   */
 static calculateArmorClass(abilities, items) {
   const dexMod = Math.floor((abilities.dex - 10) / 2);
 

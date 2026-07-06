@@ -39,10 +39,6 @@
   .hero-text { position:relative;z-index:10;text-align:center;margin-bottom:24px;width:100%; }
   .hero-eyebrow { font-family:'Cinzel',serif;font-size:clamp(9px,1.5vw,11px);letter-spacing:8px;color:var(--gold);opacity:0.7;margin-bottom:16px;text-transform:uppercase; }
 
-  /* ── CORRECTIF FLOU TITRE ──
-     Le filter:drop-shadow sur un élément avec -webkit-background-clip:text
-     provoque un rendu flou sur les navigateurs webkit/blink.
-     Solution : on retire le filter du texte et on porte le halo sur un pseudo-élément du wrapper. */
   .hero-title-wrap { position:relative;display:inline-block;margin-bottom:20px; }
   .hero-title-wrap::before {
     content:'';
@@ -56,7 +52,6 @@
     font-weight:900;line-height:1.05;
     background:linear-gradient(135deg,var(--gold-light) 0%,var(--gold) 50%,var(--gold-dark) 100%);
     -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-    /* PAS de filter ici — c'est la cause du flou */
     animation:title-in 1.2s cubic-bezier(0.16,1,0.3,1) both;
   }
   @keyframes title-in { from{opacity:0;transform:translateY(30px) scale(0.95)} to{opacity:1;transform:translateY(0) scale(1)} }
