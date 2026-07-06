@@ -383,7 +383,6 @@ static calculateArmorClass(abilities, items) {
     }
   }
 
-  // Pas d'armure → CA de base 10 + DEX
   if (!baseArmor) {
     return 10 + dexMod + shieldBonus;
   }
