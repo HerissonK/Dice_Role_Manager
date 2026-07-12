@@ -1,5 +1,6 @@
 const Character = require('../models/character.model');
 const { AppError } = require('../utils/errorHandler');
+const RollJournalService = require('../services/rollJournal.service');
 
 /**
  * Utilitaire : parse et valide un ID numérique depuis req.params
@@ -176,6 +177,92 @@ exports.rollDamage = async (req, res, next) => {
       isCritical: isCritical || false
     });
 
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * Résout une attaque complète (jet d'attaque + dégâts) en un seul appel
+ * serveur. Corrige la faille identifiée en section 15 du dossier : le
+ * critique n'est plus jamais transmis par le client entre deux requêtes,
+ * il est déterminé et exploité dans la même exécution serveur.
+ */
+exports.resolveAttack = async (req, res, next) => {
+  try {
+    const id = parseId(req.params.id);
+    const { weaponId } = req.body;
+    if (!weaponId) throw new AppError('weaponId est requis', 400);
+
+    const character = await Character.findById(id, req.user.id);
+    if (!character) throw new AppError('Personnage introuvable', 404);
+
+    const weapon = character.items.find(item =>
+      item.id === weaponId || item.id === Number(weaponId)
+    );
+    if (!weapon) throw new AppError(`Arme id=${weaponId} introuvable`, 400);
+
+    const damageDice = weapon.damage_dice || weapon.damage;
+    if (!damageDice) throw new AppError('Cet item n\'est pas une arme', 400);
+
+    const attackMod = getWeaponAttackMod(weapon, character.abilities);
+    const proficiencyBonus = 2;
+    const attackRoll = Math.floor(Math.random() * 20) + 1;
+    const isCritical = attackRoll === 20;
+    const isFumble = attackRoll === 1;
+
+    const result = {
+      weaponName: weapon.name,
+      attack: {
+        d20: attackRoll,
+        attackModifier: attackMod,
+        proficiencyBonus,
+        total: attackRoll + attackMod + proficiencyBonus,
+        isCritical,
+        isFumble
+      },
+      damage: null
+    };
+
+    // Les dégâts ne sont calculés que si l'attaque touche (pas d'échec critique).
+    // isCritical vient de attackRoll ci-dessus — jamais du client.
+    if (!isFumble) {
+      const [count, sides] = damageDice.split('d').map(Number);
+      const diceCount = isCritical ? count * 2 : count;
+      const rolls = Array.from({ length: diceCount }, () =>
+        Math.floor(Math.random() * sides) + 1
+      );
+      const diceTotal = rolls.reduce((sum, r) => sum + r, 0);
+
+      result.damage = {
+        damageType: weapon.damage_type || weapon.damageType || '',
+        dice: isCritical ? `${diceCount}d${sides}` : damageDice,
+        rolls,
+        diceTotal,
+        damageModifier: attackMod,
+        total: diceTotal + attackMod
+      };
+    }
+
+    await RollJournalService.addRoll(id, { type: 'attack', ...result });
+
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * Renvoie le journal des lancers récents d'un personnage (composant NoSQL, Redis).
+ */
+exports.getRollJournal = async (req, res, next) => {
+  try {
+    const id = parseId(req.params.id);
+    const character = await Character.findById(id, req.user.id);
+    if (!character) throw new AppError('Personnage introuvable', 404);
+
+    const rolls = await RollJournalService.getRecentRolls(id);
+    res.json(rolls);
   } catch (err) {
     next(err);
   }

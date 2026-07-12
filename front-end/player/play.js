@@ -296,7 +296,7 @@ function renderWeapons(character) {
 
     weaponsDiv.innerHTML = '';
 
-    // ✅ Accepte damage_dice (DB) OU damage (data.js)
+    // Accepte damage_dice (DB) OU damage (data.js)
     const weapons = (character.items || []).filter(item =>
         item.damage_dice || item.damage
     );
@@ -312,7 +312,7 @@ function renderWeapons(character) {
         const proficiencyBonus = 2;
         const attackBonus = attackMod + proficiencyBonus;
 
-        // ✅ Normaliser les champs (DB = damage_dice/damage_type, data.js = damage/damageType)
+        // Normaliser les champs (DB = damage_dice/damage_type, data.js = damage/damageType)
         const damageDice = weapon.damage_dice || weapon.damage || '?';
         const damageType = weapon.damage_type || weapon.damageType || '';
 
@@ -337,7 +337,7 @@ function renderWeapons(character) {
             <div class="weapon-actions">
                 <button 
                     class="btn btn-primary btn-sm"
-                    onclick="rollWeaponAttack(${weapon.id})"
+                    onclick="resolveWeaponAttack(${weapon.id})"
                 >
                     <img src="/front-end/assets/dice/d20.svg" alt="d20" class="weapon-dice-icon"> Attaque
                 </button>
@@ -658,9 +658,9 @@ async function rollSkill(skillName, ability, bonus, isProficient) {
     }
 }
 
-async function rollWeaponAttack(weaponId) {
+async function resolveWeaponAttack(weaponId) {
     try {
-        const response = await fetch(`${API_BASE_URL}/play/${characterId}/roll/attack`, {
+        const response = await fetch(`${API_BASE_URL}/play/${characterId}/roll/resolve-attack`, {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify({ weaponId })
@@ -668,61 +668,45 @@ async function rollWeaponAttack(weaponId) {
         if (!response.ok) throw new Error('Erreur jet d\'attaque');
 
         const data = await response.json();
-        const totalMod = data.attackModifier + data.proficiencyBonus;
+        const { attack, damage, weaponName } = data;
+        const totalMod = attack.attackModifier + attack.proficiencyBonus;
 
-        let resultText = `${data.weaponName} — Attaque : 1d20 = ${data.d20}`;
-        if (data.d20 === 20) resultText += 'CRITIQUE !';
-        else if (data.d20 === 1) resultText += 'ÉCHEC';
-        resultText += ` ${totalMod >= 0 ? '+' : ''}${totalMod} = ${data.total}`;
+        let attackText = `${weaponName} — Attaque : 1d20 = ${attack.d20}`;
+        if (attack.isCritical) attackText += ' CRITIQUE !';
+        else if (attack.isFumble) attackText += ' ÉCHEC';
+        attackText += ` ${totalMod >= 0 ? '+' : ''}${totalMod} = ${attack.total}`;
 
-        showRollResult(resultText, data.isCritical ? 'success' : 'info');
+        showRollResult(attackText, attack.isCritical ? 'success' : 'info');
 
         addJournalEntry({
-            type:   data.isCritical ? 'critical' : 'attack',
-            label:  `${data.weaponName} — Attaque`,
+            type:   attack.isCritical ? 'critical' : 'attack',
+            label:  `${weaponName} — Attaque`,
             dice:   '1d20',
-            d20:    data.d20,
+            d20:    attack.d20,
             mod:    totalMod,
-            total:  data.total,
-            detail: data.isCritical ? 'Coup critique !' : data.isFumble ? 'Échec critique' : null
+            total:  attack.total,
+            detail: attack.isCritical ? 'Coup critique !' : attack.isFumble ? 'Échec critique' : null
         });
 
-        if (data.isCritical) {
-            setTimeout(() => {
-                showCriticalModal(weaponId, data.weaponName);
-            }, 800);
+        // Les dégâts sont désormais calculés dans le même appel serveur —
+        // isCritical n'est plus jamais renvoyé par le client (cf. section 15
+        // du dossier). damage est null uniquement en cas d'échec critique.
+        if (damage) {
+            let damageText = `${weaponName} — Dégâts${attack.isCritical ? ' CRITIQUES' : ''} : `;
+            damageText += `${damage.dice}=[${damage.rolls.join(', ')}] ${damage.damageModifier >= 0 ? '+' : ''}${damage.damageModifier} = ${damage.total} ${damage.damageType}`;
+
+            showRollResult(damageText, attack.isCritical ? 'warning' : 'success');
+
+            addJournalEntry({
+                type:   'damage',
+                label:  `${weaponName} — Dégâts${attack.isCritical ? ' critiques' : ''}`,
+                dice:   damage.dice,
+                rolls:  damage.rolls,
+                mod:    damage.damageModifier,
+                total:  damage.total,
+                detail: `${damage.damageType}${attack.isCritical ? ' · Dés doublés' : ''}`
+            });
         }
-
-    } catch (err) {
-        showRollResult(`${err.message}`, 'error');
-    }
-}
-
-async function rollWeaponDamage(weaponId, isCritical = false) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/play/${characterId}/roll/damage`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ weaponId, isCritical })
-        });
-        if (!response.ok) throw new Error('Erreur jet de dégâts');
-
-        const data = await response.json();
-
-        let resultText = `${data.weaponName} — Dégâts${isCritical ? ' CRITIQUES' : ''} : `;
-        resultText += `${data.dice}=[${data.rolls.join(', ')}] ${data.damageModifier >= 0 ? '+' : ''}${data.damageModifier} = ${data.total} ${data.damageType}`;
-
-        showRollResult(resultText, isCritical ? 'warning' : 'success');
-
-        addJournalEntry({
-            type:   'damage',
-            label:  `${data.weaponName} — Dégâts${isCritical ? ' critiques' : ''}`,
-            dice:   data.dice,
-            rolls:  data.rolls,
-            mod:    data.damageModifier,
-            total:  data.total,
-            detail: `${data.damageType}${isCritical ? ' · Dés doublés' : ''}`
-        });
 
     } catch (err) {
         showRollResult(`${err.message}`, 'error');
