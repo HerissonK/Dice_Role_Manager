@@ -15,7 +15,7 @@
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'dice_app') THEN
-    CREATE ROLE dice_app WITH LOGIN PASSWORD 'change_moi_avant_utilisation';
+    CREATE ROLE dice_app WITH LOGIN PASSWORD 'Reception123+';
   END IF;
 END
 $$;
