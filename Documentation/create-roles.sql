@@ -8,14 +8,15 @@
 -- (création/modification de tables, exécuté par le superuser lors des
 -- migrations) du rôle utilisé par l'application Node.js au quotidien
 -- (lecture/écriture de données uniquement, aucun droit de DDL).
---
--- ⚠️ Changez le mot de passe ci-dessous avant toute utilisation réelle,
--- et ne le committez jamais dans un dépôt Git.
 
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'dice_app') THEN
+  IF NOT EXISTS (
+    SELECT FROM pg_catalog.pg_roles WHERE rolname = 'dice_app'
+  ) THEN
     CREATE ROLE dice_app WITH LOGIN PASSWORD 'Reception123+';
+  ELSE
+    ALTER ROLE dice_app WITH PASSWORD 'Reception123+';
   END IF;
 END
 $$;

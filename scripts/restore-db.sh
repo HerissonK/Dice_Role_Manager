@@ -8,7 +8,7 @@ if [ -z "${1:-}" ]; then
   exit 1
 fi
 
-DB_NAME="${DB_NAME:-dice_roll_manager}"
+DB_NAME="${DB_NAME:-dndr}"
 DB_SUPERUSER="${DB_SUPERUSER:-postgres}"
 
 psql -U "$DB_SUPERUSER" -d "$DB_NAME" < "$1"

@@ -3,7 +3,7 @@
 # Usage : ./scripts/init-db.sh
 set -euo pipefail
 
-DB_NAME="${DB_NAME:-dice_roll_manager}"
+DB_NAME="${DB_NAME:-dnd}"
 DB_SUPERUSER="${DB_SUPERUSER:-postgres}"
 
 echo "==> Création de la base ${DB_NAME}..."
