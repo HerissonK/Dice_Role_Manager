@@ -3,9 +3,22 @@ const RuleValidator = require('../validators/ruleValidator');
 
 class Character {
 
-  /* ======================
-     CREATE
-  ====================== */
+  /**
+   * Creates a new character with its abilities, chosen skills and equipment,
+   * inside a single database transaction (all-or-nothing).
+   *
+   * @param {object} data - Character data (validated via RuleValidator).
+   * @param {string} data.name
+   * @param {number} data.level
+   * @param {number} data.classId
+   * @param {number} data.speciesId
+   * @param {number} data.backgroundId
+   * @param {number} data.userId
+   * @param {Object<string, number>} data.abilities
+   * @param {string[]} [data.skills]
+   * @param {object[]} [data.equipment]
+   * @returns {Promise<number>} The newly created character's id.
+   */
 
   static async create(data) {
     RuleValidator.validateCharacter(data);
@@ -421,9 +434,15 @@ static calculateArmorClass(abilities, items) {
     return result.rows;
   }
 
-  /* ======================
-     UPDATE
-  ====================== */
+  /**
+   * Updates a character's core fields and ability scores. Only affects rows
+   * owned by the given user (WHERE id AND user_id).
+   *
+   * @param {number} id
+   * @param {number} userId
+   * @param {object} data - Updated character data (validated via RuleValidator).
+   * @returns {Promise<boolean>} True if a row was updated, false if not found/not owned.
+   */
   static async updateById(id, userId, data) {
     RuleValidator.validateCharacter(data);
     const client = await db.connect();
@@ -477,9 +496,15 @@ static calculateArmorClass(abilities, items) {
     }
   }
 
-  /* ======================
-     UPDATE NAME ONLY
-  ====================== */
+  /**
+   * Renames a character. Only affects the row owned by the given user.
+   *
+   * @param {number} id
+   * @param {number} userId
+   * @param {string} newName
+   * @returns {Promise<boolean>} True if renamed, false if not found/not owned.
+   * @throws {Error} If newName is empty or whitespace-only.
+   */
 static async updateName(id, userId, newName) {
   if (!newName || !newName.trim()) {
     throw new Error('Le nom ne peut pas être vide');
@@ -490,9 +515,14 @@ static async updateName(id, userId, newName) {
   );
   return result.rowCount > 0;
 }
-  /* ======================
-     DELETE
-  ====================== */
+
+  /**
+   * Deletes a character. Only affects the row owned by the given user.
+   *
+   * @param {number} id
+   * @param {number} userId
+   * @returns {Promise<boolean>} True if deleted, false if not found/not owned.
+   */
 static async deleteById(id, userId) {
   const result = await db.query(
     `DELETE FROM personnage
