@@ -343,7 +343,7 @@ function renderWeapons(character) {
                 </button>
                 <button 
                     class="btn btn-outline btn-sm"
-                    onclick="rollWeaponDamage(${weapon.id}, false)"
+                    onclick="rollWeaponDamage(${weapon.id})"
                 >
                     <img src="/front-end/assets/nav/reach.svg" alt="d6" class="weapon-dice-icon"> Dégâts
                 </button>
@@ -713,6 +713,36 @@ async function resolveWeaponAttack(weaponId) {
     }
 }
 
+async function rollWeaponDamage(weaponId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/play/${characterId}/roll/damage`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ weaponId })
+        });
+        if (!response.ok) throw new Error('Erreur jet de dégâts');
+
+        const data = await response.json();
+
+        let resultText = `${data.weaponName} — Dégâts : `;
+        resultText += `${data.dice}=[${data.rolls.join(', ')}] ${data.damageModifier >= 0 ? '+' : ''}${data.damageModifier} = ${data.total} ${data.damageType}`;
+
+        showRollResult(resultText, 'success');
+
+        addJournalEntry({
+            type:   'damage',
+            label:  `${data.weaponName} — Dégâts`,
+            dice:   data.dice,
+            rolls:  data.rolls,
+            mod:    data.damageModifier,
+            total:  data.total,
+            detail: data.damageType
+        });
+
+    } catch (err) {
+        showRollResult(`${err.message}`, 'error');
+    }
+}
 async function rollFree(count, sides) {
     try {
         const response = await fetch(`${API_BASE_URL}/play/roll`, {
@@ -737,23 +767,6 @@ async function rollFree(count, sides) {
 
     } catch (err) {
         showRollResult(`${err.message}`, 'error');
-    }
-}
-
-// Afficher le modal de coup critique
-async function showCriticalModal(weaponId, weaponName) {
-    const confirmed = await customConfirm(
-        `Coup critique avec ${weaponName} !\n\nVoulez-vous lancer les dégâts critiques maintenant ?`,
-        {
-            title: 'COUP CRITIQUE !',
-            confirmText: 'Lancer les dégâts',
-            cancelText: 'Plus tard',
-            type: 'warning'
-        }
-    );
-    
-    if (confirmed) {
-        rollWeaponDamage(weaponId, true);
     }
 }
 

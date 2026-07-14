@@ -141,7 +141,7 @@ exports.rollAttack = async (req, res, next) => {
 exports.rollDamage = async (req, res, next) => {
   try {
     const id = parseId(req.params.id);
-    const { weaponId, isCritical } = req.body;
+    const { weaponId } = req.body; // isCritical n'est plus jamais lu depuis req.body
 
     if (!weaponId) throw new AppError('weaponId est requis', 400);
 
@@ -156,25 +156,27 @@ exports.rollDamage = async (req, res, next) => {
     const damageDice = weapon.damage_dice || weapon.damage;
     if (!damageDice) throw new AppError('Cet item n\'est pas une arme', 400);
 
-    const [count, sides] = damageDice.split('d').map(Number);
-    const diceCount = isCritical ? count * 2 : count; // dés doublés sur critique
+    // Cette route ne sert plus qu'aux dégâts "manuels" hors combat (sorts à
+    // toucher automatique, etc.) : un critique doit obligatoirement passer
+    // par resolveAttack, jamais par cette route.
+    const isCritical = false;
 
-    const rolls = Array.from({ length: diceCount }, () =>
+    const [count, sides] = damageDice.split('d').map(Number);
+    const rolls = Array.from({ length: count }, () =>
       Math.floor(Math.random() * sides) + 1
     );
-
     const diceTotal = rolls.reduce((sum, r) => sum + r, 0);
     const damageMod = getWeaponAttackMod(weapon, character.abilities);
 
     res.json({
       weaponName: weapon.name,
       damageType: weapon.damage_type || weapon.damageType || '',
-      dice: isCritical ? `${diceCount}d${sides}` : damageDice,
+      dice: damageDice,
       rolls,
       diceTotal,
       damageModifier: damageMod,
       total: diceTotal + damageMod,
-      isCritical: isCritical || false
+      isCritical
     });
 
   } catch (err) {
