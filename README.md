@@ -64,14 +64,18 @@ Application web full-stack de création et gestion de personnages pour **Donjons
 │               Back-end (Node.js)                 │
 │  Express · JWT · bcrypt · express-rate-limit     │
 │  Routes: /api/auth · /api/characters · /api/play │
-└────────────────────┬────────────────────────────┘
-                     │ pg (node-postgres)
-┌────────────────────▼────────────────────────────┐
-│              Base de données                     │
-│  PostgreSQL · 9 tables · JSONB pour les données  │
-│  D&D (bonus raciaux, propriétés d'armes, etc.)  │
-└─────────────────────────────────────────────────┘
+└──────────┬──────────────────────────┬────────────┘
+           │ pg (node-postgres)       │ redis
+┌──────────▼────────────────┐  ┌──────▼─────────────┐
+│   Base de données (SQL)   │  │  Cache NoSQL         │
+│   PostgreSQL · 9 tables   │  │  Redis (Docker)      │
+│   JSONB pour les données  │  │  Journal des lancers │
+│   D&D, rôle applicatif    │  │  (clé-valeur)         │
+│   restreint (dice_app)    │  │                       │
+└────────────────────────────┘  └───────────────────────┘
 ```
+
+PostgreSQL est installé nativement en local ; seul le service Redis, ajouté spécifiquement pour le journal des lancers, est conteneurisé via Docker Compose (voir [Installation](#-installation)).
 
 ---
 
@@ -82,6 +86,7 @@ Application web full-stack de création et gestion de personnages pour **Donjons
 | Node.js | 18+ |
 | npm | 9+ |
 | PostgreSQL | 14+ |
+| Docker | 24+ (pour le service Redis) |
 
 ---
 
@@ -111,16 +116,25 @@ cp .env.example .env
 ### 4. Initialiser la base de données
 
 ```bash
-psql -U <votre_user> -d <votre_db> -f Documentation/init.sql
+chmod +x scripts/*.sh
+./scripts/init-db.sh
 ```
 
-Ce script crée les 9 tables de l'application et insère les données D&D de référence (espèces, classes, historiques).
+Ce script crée les 9 tables de l'application, insère les données D&D de référence (espèces, classes, historiques), et crée un rôle PostgreSQL applicatif restreint (`dice_app`, sans droit de création/suppression de tables — voir [Base de données](#-base-de-données)).
 
 ### 5. Peupler la table des items (armes, armures, boucliers)
 
 ```bash
-psql -U <votre_user> -d <votre_db> -f Documentation/populate_item_table.sql
+psql -U <votre_superuser> -d dnd -f Documentation/populate_item_table.sql
 ```
+
+### 6. Démarrer le service Redis (conteneurisé)
+
+```bash
+docker compose up -d
+```
+
+Redis héberge le journal des lancers de dés (composant NoSQL). Vérifiez qu'il tourne avec `docker ps` (statut `healthy`).
 
 ---
 
@@ -133,12 +147,15 @@ Créez un fichier `.env` à la racine du projet :
 PORT=3000
 NODE_ENV=development
 
-# Base de données PostgreSQL
+# Base de données PostgreSQL (rôle applicatif restreint, créé par init-db.sh)
 DB_HOST=localhost
 DB_PORT=5432
-DB_USER=votre_user
+DB_USER=dice_app
 DB_PASSWORD=votre_mot_de_passe
 DB_NAME=dnd
+
+# Redis (journal des lancers, composant NoSQL)
+REDIS_URL=redis://localhost:6379
 
 # JWT
 JWT_SECRET=votre_secret_très_long_et_aléatoire
@@ -148,7 +165,7 @@ JWT_EXPIRES_IN=24h
 LOG_LEVEL=info
 ```
 
-> ⚠️ Ne committez jamais votre fichier `.env` en production.
+> ⚠️ Ne committez jamais votre fichier `.env` en production. `DB_USER` doit correspondre au rôle applicatif restreint `dice_app` (voir [Base de données](#-base-de-données)), pas au superuser PostgreSQL utilisé pour les migrations.
 
 ---
 
@@ -171,6 +188,10 @@ La base repose sur **9 tables**, réparties en trois groupes fonctionnels : les 
 | `personnage_item` | Items équipés par personnage | Personnage |
 
 Les tables de référence D&D sont peuplées automatiquement par `init.sql` (espèces, classes, historiques) et `populate_item_table.sql` (items). Elles ne sont jamais modifiées par l'utilisateur.
+
+### Rôle applicatif restreint
+
+L'application se connecte via un rôle PostgreSQL dédié (`dice_app`), créé par `Documentation/create-roles.sql` avec des droits strictement limités aux opérations CRUD (`SELECT`, `INSERT`, `UPDATE`, `DELETE`) — aucun droit de création, modification ou suppression de tables. Le compte superuser (`postgres`) n'est utilisé que pour les migrations (`init-db.sh`), jamais par l'application au quotidien.
 
 ### Compte administrateur par défaut
 
@@ -244,6 +265,7 @@ L'application sera accessible sur `http://localhost:8080`.
 │   ├── server.js
 │   ├── config/
 │   │   ├── database.js
+│   │   ├── redis.js             # Connexion Redis (composant NoSQL)
 │   │   ├── jwt.js
 │   │   └── logger.js
 │   ├── controllers/
@@ -259,23 +281,35 @@ L'application sera accessible sur `http://localhost:8080`.
 │   │   ├── auth.routes.js
 │   │   ├── character.routes.js
 │   │   └── play.routes.js
+│   ├── services/
+│   │   └── rollJournal.service.js  # Composant NoSQL : journal des lancers (Redis)
 │   ├── validators/
 │   │   └── ruleValidator.js
 │   └── utils/
 │       ├── dice.js
 │       └── modifiers.util.js
 │
-├── tests/                      # Tests automatisés (Jest)
+├── tests/                      # Tests automatisés (Jest — 102 tests)
 │   ├── character.model.test.js
+│   ├── character.model.findById.test.js
+│   ├── character.model.write.test.js
+│   ├── rollJournal.service.test.js
 │   ├── diceutils.test.js
 │   ├── pointbuy.test.js
 │   ├── rulevalidator.test.js
 │   └── testEnv.setup.js
 │
+├── scripts/                    # Scripts de déploiement et d'administration
+│   ├── init-db.sh               # Initialise le schéma, le rôle applicatif et les données
+│   ├── backup-db.sh             # Sauvegarde horodatée (pg_dump)
+│   └── restore-db.sh            # Restauration depuis une sauvegarde
+│
 ├── Documentation/
 │   ├── init.sql                 # Création des tables + données de référence
+│   ├── create-roles.sql         # Création du rôle applicatif restreint (dice_app)
 │   └── populate_item_table.sql  # Population de la table item
 │
+├── docker-compose.yml           # Service Redis conteneurisé
 └── README.md
 ```
 
@@ -351,11 +385,12 @@ Authorization: Bearer <token_jwt>
 |---------|-------|-------------|------|
 | GET | `/api/play/:id` | Charger un personnage | ✅ |
 | POST | `/api/play/:id/roll/ability` | Jet de caractéristique | ✅ |
-| POST | `/api/play/:id/roll/attack` | Jet d'attaque avec arme | ✅ |
-| POST | `/api/play/:id/roll/damage` | Jet de dégâts | ✅ |
+| POST | `/api/play/:id/roll/resolve-attack` | Jet d'attaque **et** dégâts résolus en un seul appel serveur | ✅ |
+| POST | `/api/play/:id/roll/damage` | Jet de dégâts isolé (hors combat, jamais critique) | ✅ |
 | POST | `/api/play/roll` | Lancer libre (NdX) | ✅ |
+| GET | `/api/play/:id/journal` | Journal des lancers récents (Redis, composant NoSQL) | ✅ |
 
-**Exemple — Jet d'attaque :**
+**Exemple — Jet d'attaque résolu :**
 ```json
 // Corps
 { "weaponId": 3 }
@@ -363,14 +398,26 @@ Authorization: Bearer <token_jwt>
 // Réponse
 {
   "weaponName": "Épée longue",
-  "d20": 18,
-  "attackModifier": 3,
-  "proficiencyBonus": 2,
-  "total": 23,
-  "isCritical": false,
-  "isFumble": false
+  "attack": {
+    "d20": 20,
+    "attackModifier": 3,
+    "proficiencyBonus": 2,
+    "total": 25,
+    "isCritical": true,
+    "isFumble": false
+  },
+  "damage": {
+    "damageType": "slashing",
+    "dice": "2d8",
+    "rolls": [6, 7],
+    "diceTotal": 13,
+    "damageModifier": 3,
+    "total": 16
+  }
 }
 ```
+
+> ⚠️ `isCritical` est déterminé et exploité **uniquement côté serveur**, dans ce même appel. La route `/roll/damage` isolée n'accepte plus de valeur `isCritical` transmise par le client — elle ne renvoie que des dégâts non critiques, afin qu'aucun chemin de contournement ne subsiste (voir section 15 du dossier RNCP pour le détail de la faille corrigée).
 
 ---
 
@@ -450,7 +497,7 @@ Les maîtrises proviennent de deux sources fusionnées :
 
 ## 🧪 Tests
 
-Le projet inclut une suite de tests automatisés avec **Jest** :
+Le projet inclut une suite de tests automatisés avec **Jest** — 102 tests répartis en 7 suites :
 
 ```bash
 npm test
@@ -462,8 +509,11 @@ npm test
 | `character.model.test.js` | Calcul de la Classe d'Armure (`calculateArmorClass`) |
 | `diceutils.test.js` | Lancers de dés et calcul de modificateurs |
 | `pointbuy.test.js` | Logique Point Buy côté front-end |
+| `character.model.findById.test.js` | Accès aux données SQL — lecture (`findById`, `getEquippedItems`, `findAllByUser`) |
+| `character.model.write.test.js` | Accès aux données SQL — écriture (`create`, `updateById`, `updateName`, `deleteById`) |
+| `rollJournal.service.test.js` | Accès aux données **NoSQL** (Redis) — journal des lancers, isolation entre personnages |
 
-> Les fonctions pures (validation, calculs métier) sont couvertes. La couche d'accès direct aux données (requêtes SQL) reste à couvrir par des tests d'intégration (`supertest`, déjà en dépendance).
+Les composants d'accès aux données (SQL et NoSQL) sont couverts par des tests dédiés qui vérifient à la fois leur comportement fonctionnel et leur sécurité : requêtes SQL systématiquement paramétrées, chaque opération filtrée par `user_id`, et journaux Redis isolés par personnage.
 
 ---
 
@@ -476,6 +526,8 @@ npm test
   - 20 créations de personnages par heure
 - Requêtes SQL paramétrées (protection contre l'injection SQL)
 - Validation des données côté serveur (`ruleValidator.js`), indépendante du front-end
+- Principe du moindre privilège en base de données : rôle applicatif `dice_app` restreint aux opérations CRUD, distinct du superuser utilisé pour les migrations
+- Jet critique aux dégâts (`isCritical`) déterminé et exploité exclusivement côté serveur (`resolveAttack`), jamais transmis par le client entre deux appels
 
 ---
 
