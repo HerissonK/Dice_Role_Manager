@@ -294,9 +294,39 @@
     --class-icon: url('/front-end/assets/class-icons/ranger.svg');
 }
 
-/* Paladin */
-.character-card[data-class="Paladin"] {
-    --class-icon: url('/front-end/assets/class-icons/paladin.svg');
+/* Barbare */
+.character-card[data-class="Barbare"] {
+    --class-icon: url('/front-end/assets/class-icons/barbarian.svg');
+}
+
+/* Barde */
+.character-card[data-class="Barde"] {
+    --class-icon: url('/front-end/assets/class-icons/bard.svg');
+}
+
+/* Druide */
+.character-card[data-class="Druide"] {
+    --class-icon: url('/front-end/assets/class-icons/druid.svg');
+}
+
+/* Moine */
+.character-card[data-class="Moine"] {
+    --class-icon: url('/front-end/assets/class-icons/monk.svg');
+}
+
+/* Ensorceleur */
+.character-card[data-class="Ensorceleur"] {
+    --class-icon: url('/front-end/assets/class-icons/sorcerer.svg');
+}
+
+/* Occultiste */
+.character-card[data-class="Occultiste"] {
+    --class-icon: url('/front-end/assets/class-icons/warlock.svg');
+}
+
+/* Artificier */
+.character-card[data-class="Artificier"] {
+    --class-icon: url('/front-end/assets/class-icons/artificer.svg');
 }
 
 /* ===========================
