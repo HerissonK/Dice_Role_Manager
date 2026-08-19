@@ -55,7 +55,7 @@ app.use('/api/characters', characterRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api', playRoutes);
 
-/* 6. ERROR HANDLER — doit être en dernier */
+/* 6. ERROR HANDLER */
 app.use(errorHandler);
 
 module.exports = app;

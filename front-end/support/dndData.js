@@ -43,6 +43,7 @@ const races = [
         traits: ['Polyvalence'],
         speed: 30,
         languages: ['Commun', '+1 au choix'],
+        subspecies: [],
     },
     {
         id: 2,
@@ -52,6 +53,23 @@ const races = [
         traits: ['Vision dans le noir', 'Sens aiguisés', 'Ascendance féerique', 'Transe'],
         speed: 30,
         languages: ['Commun', 'Elfique'],
+        subspecies: [
+            {
+                id: 3,
+                name: 'Haut-elfe',
+                description: 'Formé aux arts martiaux et versé dans la magie arcanique.',
+                abilityBonuses: { intelligence: 1 },
+                traits: ['Sort mineur (cantrip) au choix', 'Maîtrise d\'une arme de guerre'],
+            },
+            {
+                id: 4,
+                name: 'Elfe sylvestre',
+                description: 'Rapide et discret, en harmonie avec les forêts profondes.',
+                abilityBonuses: { wisdom: 1 },
+                traits: ['Masque de la nature (camouflage)', 'Vitesse accrue'],
+                speedOverride: 35,
+            },
+        ],
     },
     {
         id: 3,
@@ -61,6 +79,22 @@ const races = [
         traits: ['Vision dans le noir', 'Résistance naine', 'Connaissance de la pierre'],
         speed: 25,
         languages: ['Commun', 'Nain'],
+        subspecies: [
+        {
+            id: 1,
+            name: 'Nain des collines',
+            description: 'Sens aiguisés, intuition profonde et grande résistance.',
+            abilityBonuses: { wisdom: 1 },
+            traits: ['Ténacité naine (+1 PV par niveau)'],
+        },
+        {
+            id: 2,
+            name: 'Nain des montagnes',
+            description: 'Robuste et habitué au maniement des armes et armures.',
+            abilityBonuses: { strength: 2 },
+            traits: ['Maîtrise des armures légères et intermédiaires'],
+        },
+        ],
     },
     {
         id: 4,
@@ -70,6 +104,22 @@ const races = [
         traits: ['Chanceux', 'Brave', 'Agilité halfeline'],
         speed: 25,
         languages: ['Commun', 'Halfelin'],
+        subspecies: [
+            {
+                id: 7,
+                name: 'Halfelin pied-léger',
+                description: 'Discret et sociable, capable de se dissimuler facilement.',
+                abilityBonuses: { charisma: 1 },
+                traits: ['Discrétion naturelle (peut se cacher derrière une créature plus grande)'],
+            },
+            {
+                id: 8,
+                name: 'Halfelin robuste',
+                description: 'Plus résistant physiquement que ses cousins.',
+                abilityBonuses: { constitution: 1 },
+                traits: ['Résistance au poison'],
+            },
+        ],
     },
     {
         id: 5,
@@ -79,6 +129,7 @@ const races = [
         traits: ['Ascendance draconique', 'Arme de souffle'],
         speed: 30,
         languages: ['Commun', 'Draconique'],
+        subspecies: [],
     },
     {
         id: 6,
@@ -88,6 +139,52 @@ const races = [
         traits: ['Vision dans le noir', 'Ascendance féerique'],
         speed: 30,
         languages: ['Commun', 'Elfique', '+1 au choix'],
+        subspecies: [],
+    },
+    {
+        id: 7,
+        name: 'Demi-orc',
+        description: 'Puissants et endurants, tiraillés entre deux héritages.',
+        abilityBonuses: { strength: 2, constitution: 1 },
+        traits: ['Vision dans le noir', 'Robustesse implacable', 'Attaques sauvages'],
+        speed: 30,
+        languages: ['Commun', 'Orc'],
+        subspecies: [],
+    },
+    {
+        id: 8,
+        name: 'Gnome',
+        description: 'Petits, curieux et ingénieux, doués pour la magie et l\'artisanat.',
+        abilityBonuses: { intelligence: 2 },
+        traits: ['Vision dans le noir', 'Ruse gnome'],
+        speed: 25,
+        languages: ['Commun', 'Gnome'],
+        subspecies: [
+            {
+                id: 5,
+                name: 'Gnome des forêts',
+                description: 'Discret et doué pour l\'illusion, à l\'aise avec les petits animaux.',
+                abilityBonuses: { dexterity: 1 },
+                traits: ['Illusion mineure (cantrip)', 'Communication avec les petites bêtes'],
+            },
+            {
+                id: 6,
+                name: 'Gnome des rochers',
+                description: 'Bricoleur ingénieux, robuste et inventif.',
+                abilityBonuses: { constitution: 1 },
+                traits: ['Bricolage (créations mécaniques miniatures)'],
+            },
+        ],
+    },
+    {
+        id: 9,
+        name: 'Tieffelin',
+        description: 'Marqués par un héritage infernal lointain.',
+        abilityBonuses: { charisma: 2, intelligence: 1 },
+        traits: ['Vision dans le noir', 'Résistance infernale', 'Legs de l\'infernal'],
+        speed: 30,
+        languages: ['Commun', 'Infernal'],
+        subspecies: [],
     },
 ];
 
@@ -105,7 +202,6 @@ const weapons = {
         properties: ['versatile'],
         versatileDamage: '1d10'
     },
-
     shortsword: {
         id: 'shortsword',
         name: 'Epée courte',
@@ -115,7 +211,6 @@ const weapons = {
         properties: ['finesse', 'light'],
         versatileDamage: '1d8'
     },
-
     greatsword: {
         id: 'greatsword',
         name: 'Epée a deux mains',
@@ -125,7 +220,6 @@ const weapons = {
         properties: ['heavy', 'two-handed'],
         versatileDamage: '2d6'
     },
-
     javelin: {
         id: 'javelin',
         name: 'Javelot',
@@ -135,7 +229,6 @@ const weapons = {
         properties: ['thrown', 'range'],
         range: '30/120'
     },
-
     morningstar: {
         id: 'morningstar',
         name: 'Étoile du matin',
@@ -144,7 +237,6 @@ const weapons = {
         damageType: 'piercing',
         properties: []
     },
-
     shortbow: {
         id: 'shortbow',
         name: 'Arc court',
@@ -154,7 +246,6 @@ const weapons = {
         properties: ['range'],
         range: '80/320'
     },
-
     longbow: {
         id: 'longbow',
         name: 'Arc long',
@@ -164,7 +255,6 @@ const weapons = {
         properties: ['heavy', 'range', 'two-handed'],
         range: '150/600'
     },
-
     dagger: {
         id: 'dagger',
         name: 'Dague',
@@ -174,7 +264,6 @@ const weapons = {
         properties: ['finesse', 'light', 'thrown'],
         range: '20/60'
     },
-
     crossbow_light: {
         id: 'crossbow_light',
         name: 'Arbalète légère',
@@ -184,7 +273,6 @@ const weapons = {
         properties: ['loading', 'range', 'two-handed'],
         range: '80/320'
     },
-
     rapier: {
         id: 'rapier',
         name: 'Rapière',
@@ -192,7 +280,236 @@ const weapons = {
         damage: '1d8',
         damageType: 'piercing',
         properties: ['finesse']
-    }
+    },
+
+    // ============================
+    // ARMES COURANTES DE MÊLÉE (ajoutées)
+    // ============================
+    club: {
+        id: 'club',
+        name: 'Gourdin',
+        category: 'simple_melee',
+        damage: '1d4',
+        damageType: 'bludgeoning',
+        properties: ['light']
+    },
+    greatclub: {
+        id: 'greatclub',
+        name: 'Gourdin géant',
+        category: 'simple_melee',
+        damage: '1d8',
+        damageType: 'bludgeoning',
+        properties: ['two-handed']
+    },
+    handaxe: {
+        id: 'handaxe',
+        name: 'Hachette',
+        category: 'simple_melee',
+        damage: '1d6',
+        damageType: 'slashing',
+        properties: ['light', 'thrown'],
+        range: '20/60'
+    },
+    lighthammer: {
+        id: 'lighthammer',
+        name: 'Marteau léger',
+        category: 'simple_melee',
+        damage: '1d4',
+        damageType: 'bludgeoning',
+        properties: ['light', 'thrown'],
+        range: '20/60'
+    },
+    mace: {
+        id: 'mace',
+        name: 'Masse d\'armes',
+        category: 'simple_melee',
+        damage: '1d6',
+        damageType: 'bludgeoning',
+        properties: []
+    },
+    quarterstaff: {
+        id: 'quarterstaff',
+        name: 'Bâton',
+        category: 'simple_melee',
+        damage: '1d6',
+        damageType: 'bludgeoning',
+        properties: ['versatile'],
+        versatileDamage: '1d8'
+    },
+    sickle: {
+        id: 'sickle',
+        name: 'Faucille',
+        category: 'simple_melee',
+        damage: '1d4',
+        damageType: 'slashing',
+        properties: ['light']
+    },
+    spear: {
+        id: 'spear',
+        name: 'Épieu',
+        category: 'simple_melee',
+        damage: '1d6',
+        damageType: 'piercing',
+        properties: ['thrown', 'versatile'],
+        versatileDamage: '1d8',
+        range: '20/60'
+    },
+
+    // ============================
+    // ARMES COURANTES À DISTANCE
+    // ============================
+    dart: {
+        id: 'dart',
+        name: 'Fléchette',
+        category: 'simple_ranged',
+        damage: '1d4',
+        damageType: 'piercing',
+        properties: ['finesse', 'thrown'],
+        range: '20/60'
+    },
+    sling: {
+        id: 'sling',
+        name: 'Fronde',
+        category: 'simple_ranged',
+        damage: '1d4',
+        damageType: 'bludgeoning',
+        properties: ['range'],
+        range: '30/120'
+    },
+
+    // ============================
+    // ARMES DE GUERRE DE MÊLÉE
+    // ============================
+    battleaxe: {
+        id: 'battleaxe',
+        name: 'Hache d\'armes',
+        category: 'martial_melee',
+        damage: '1d8',
+        damageType: 'slashing',
+        properties: ['versatile'],
+        versatileDamage: '1d10'
+    },
+    greataxe: {
+        id: 'greataxe',
+        name: 'Hache d\'armes à deux mains',
+        category: 'martial_melee',
+        damage: '1d12',
+        damageType: 'slashing',
+        properties: ['heavy', 'two-handed']
+    },
+    flail: {
+        id: 'flail',
+        name: 'Fléau d\'armes',
+        category: 'martial_melee',
+        damage: '1d8',
+        damageType: 'bludgeoning',
+        properties: []
+    },
+    glaive: {
+        id: 'glaive',
+        name: 'Glaive',
+        category: 'martial_melee',
+        damage: '1d10',
+        damageType: 'slashing',
+        properties: ['heavy', 'reach', 'two-handed']
+    },
+    halberd: {
+        id: 'halberd',
+        name: 'Hallebarde',
+        category: 'martial_melee',
+        damage: '1d10',
+        damageType: 'slashing',
+        properties: ['heavy', 'reach', 'two-handed']
+    },
+    lance: {
+        id: 'lance',
+        name: 'Lance de cavalier',
+        category: 'martial_melee',
+        damage: '1d12',
+        damageType: 'piercing',
+        properties: ['reach', 'special']
+    },
+    maul: {
+        id: 'maul',
+        name: 'Maillet',
+        category: 'martial_melee',
+        damage: '2d6',
+        damageType: 'bludgeoning',
+        properties: ['heavy', 'two-handed']
+    },
+    pike: {
+        id: 'pike',
+        name: 'Pique',
+        category: 'martial_melee',
+        damage: '1d10',
+        damageType: 'piercing',
+        properties: ['heavy', 'reach', 'two-handed']
+    },
+    scimitar: {
+        id: 'scimitar',
+        name: 'Cimeterre',
+        category: 'martial_melee',
+        damage: '1d6',
+        damageType: 'slashing',
+        properties: ['finesse', 'light']
+    },
+    trident: {
+        id: 'trident',
+        name: 'Trident',
+        category: 'martial_melee',
+        damage: '1d6',
+        damageType: 'piercing',
+        properties: ['thrown', 'versatile'],
+        versatileDamage: '1d8',
+        range: '20/60'
+    },
+    warpick: {
+        id: 'warpick',
+        name: 'Pic de guerre',
+        category: 'martial_melee',
+        damage: '1d8',
+        damageType: 'piercing',
+        properties: []
+    },
+    warhammer: {
+        id: 'warhammer',
+        name: 'Marteau de guerre',
+        category: 'martial_melee',
+        damage: '1d8',
+        damageType: 'bludgeoning',
+        properties: ['versatile'],
+        versatileDamage: '1d10'
+    },
+    whip: {
+        id: 'whip',
+        name: 'Fouet',
+        category: 'martial_melee',
+        damage: '1d4',
+        damageType: 'slashing',
+        properties: ['finesse', 'reach']
+    },
+
+    // ============================
+    // ARMES DE GUERRE À DISTANCE
+    // ============================
+    handcrossbow: {
+        id: 'handcrossbow',
+        name: 'Arbalète de poing',
+        category: 'martial_ranged',
+        damage: '1d6',
+        damageType: 'piercing',
+        properties: ['light', 'loading', 'range'],
+        range: '30/120'
+    },
+    heavycrossbow: {
+        id: 'heavycrossbow',
+        name: 'Arbalète lourde',
+        category: 'martial_ranged',
+        damage: '1d10',
+        damageType: 'piercing',
+        properties: ['heavy', 'loading', 'range', 'two-handed'],
+        range: '100/400'
+    },
 };
 
 
@@ -635,8 +952,305 @@ const classes = [
                 ]
             },
         ]
-    }
+    },
+    {
+        id: 7,
+        name: 'Barbare',
+        description: 'Guerrier primitif capable d\'entrer dans une rage destructrice.',
+        hitDie: 12,
+        primaryAbility: 'strength',
+        savingThrows: ['strength', 'constitution'],
+        armorProficiencies: ['Armures légères', 'Armures intermédiaires', 'Boucliers'],
+        weaponProficiencies: ['Armes courantes', 'Armes de guerre'],
+        skills: ['Dressage', 'Athlétisme', 'Intimidation', 'Nature', 'Perception', 'Survie'],
+        skillChoices: 2,
 
+        equipmentChoices: [
+            {
+                id: 'weapon_main',
+                label: 'Arme principale',
+                options: [
+                    {
+                        id: 'greataxe_javelins',
+                        name: 'Guerrier bestial',
+                        items: ['Hache d\'armes à deux mains', 'Javelot'],
+                        itemsData: [weapons.greataxe, weapons.javelin]
+                    },
+                    {
+                        id: 'handaxes_javelins',
+                        name: 'Chasseur',
+                        items: ['Hachette', 'Hachette', 'Javelot'],
+                        itemsData: [weapons.handaxe, weapons.handaxe, weapons.javelin]
+                    }
+                ]
+            },
+            {
+                id: 'pack',
+                label: 'Paquetage',
+                options: [
+                    {
+                        id: 'priest_pack',
+                        name: 'Paquetage du guerrier',
+                        items: ['Sac', 'Bougies', 'Encens', 'Vêtements', 'Rations']
+                    },
+                    {
+                        id: 'explorer_pack',
+                        name: 'Paquetage d\'explorateur',
+                        items: ['Sac', 'Torche', 'Corde', 'Rations']
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        id: 8,
+        name: 'Barde',
+        description: 'Artiste polyvalent qui manie la magie par la musique et les mots.',
+        hitDie: 8,
+        primaryAbility: 'charisma',
+        savingThrows: ['dexterity', 'charisma'],
+        armorProficiencies: ['Armures légères'],
+        weaponProficiencies: ['Armes courantes', 'Arbalète de poing', 'Épée longue', 'Rapière', 'Épée courte'],
+        skills: ['Acrobaties', 'Dressage', 'Arcanes', 'Athlétisme', 'Tromperie', 'Histoire', 'Intuition', 'Intimidation', 'Investigation', 'Médecine', 'Nature', 'Perception', 'Représentation', 'Persuasion', 'Religion', 'Escamotage', 'Discrétion', 'Survie'],
+        skillChoices: 3,
+
+        equipmentChoices: [
+            {
+                id: 'weapon_main',
+                label: 'Arme principale',
+                options: [
+                    {
+                        id: 'rapier_dagger',
+                        name: 'Barde vagabond',
+                        items: ['Rapière', 'Dague', 'Armure de cuir'],
+                        itemsData: [weapons.rapier, weapons.dagger, armors.leather]
+                    },
+                    {
+                        id: 'longsword_dagger',
+                        name: 'Barde érudit',
+                        items: ['Épée longue', 'Dague', 'Armure de cuir'],
+                        itemsData: [weapons.longsword, weapons.dagger, armors.leather]
+                    }
+                ]
+            },
+            {
+                id: 'pack',
+                label: 'Paquetage',
+                options: [
+                    {
+                        id: 'priest_pack',
+                        name: 'Paquetage du ménestrel',
+                        items: ['Sac', 'Bougies', 'Encens', 'Vêtements', 'Rations']
+                    },
+                    {
+                        id: 'explorer_pack',
+                        name: 'Paquetage d\'explorateur',
+                        items: ['Sac', 'Torche', 'Corde', 'Rations']
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        id: 9,
+        name: 'Druide',
+        description: 'Gardien de la nature, capable de se transformer en animal.',
+        hitDie: 8,
+        primaryAbility: 'wisdom',
+        savingThrows: ['intelligence', 'wisdom'],
+        armorProficiencies: ['Armures légères', 'Armures intermédiaires (non métalliques)', 'Boucliers (non métalliques)'],
+        weaponProficiencies: ['Dague', 'Javelot', 'Fronde', 'Bâton'],
+        skills: ['Arcanes', 'Dressage', 'Intuition', 'Médecine', 'Nature', 'Perception', 'Religion', 'Survie'],
+        skillChoices: 2,
+
+        equipmentChoices: [
+            {
+                id: 'weapon_main',
+                label: 'Arme principale',
+                options: [
+                    {
+                        id: 'shield_scimitar',
+                        name: 'Druide sauvage',
+                        items: ['Cimeterre', 'Armure de cuir', 'Bouclier (non métallique)'],
+                        itemsData: [
+                            weapons.scimitar,
+                            armors.leather,
+                            { name: 'Bouclier en bois', category: 'shield', armor_class: 2 }
+                        ]
+                    },
+                    {
+                        id: 'sling_club',
+                        name: 'Druide errant',
+                        items: ['Fronde', 'Gourdin', 'Armure de peau'],
+                        itemsData: [weapons.sling, weapons.club, armors.hide]
+                    }
+                ]
+            },
+            {
+                id: 'pack',
+                label: 'Paquetage',
+                options: [
+                    {
+                        id: 'priest_pack',
+                        name: 'Paquetage du druide',
+                        items: ['Sac', 'Bougies', 'Encens', 'Vêtements', 'Rations']
+                    },
+                    {
+                        id: 'explorer_pack',
+                        name: 'Paquetage d\'explorateur',
+                        items: ['Sac', 'Torche', 'Corde', 'Rations']
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        id: 10,
+        name: 'Moine',
+        description: 'Adepte des arts martiaux qui canalise une énergie intérieure (le ki).',
+        hitDie: 8,
+        primaryAbility: 'dexterity',
+        savingThrows: ['strength', 'dexterity'],
+        armorProficiencies: ['Aucune'],
+        weaponProficiencies: ['Armes courantes', 'Épée courte'],
+        skills: ['Acrobaties', 'Athlétisme', 'Histoire', 'Intuition', 'Religion', 'Discrétion'],
+        skillChoices: 2,
+
+        equipmentChoices: [
+            {
+                id: 'weapon_main',
+                label: 'Arme principale',
+                options: [
+                    {
+                        id: 'shortsword_monk',
+                        name: 'Moine martial',
+                        items: ['Épée courte'],
+                        itemsData: [weapons.shortsword]
+                    },
+                    {
+                        id: 'quarterstaff_darts',
+                        name: 'Moine ascète',
+                        items: ['Bâton', 'Fléchette'],
+                        itemsData: [weapons.quarterstaff, weapons.dart]
+                    }
+                ]
+            },
+            {
+                id: 'pack',
+                label: 'Paquetage',
+                options: [
+                    {
+                        id: 'priest_pack',
+                        name: 'Paquetage du moine',
+                        items: ['Sac', 'Bougies', 'Encens', 'Vêtements', 'Rations']
+                    },
+                    {
+                        id: 'explorer_pack',
+                        name: 'Paquetage d\'explorateur',
+                        items: ['Sac', 'Torche', 'Corde', 'Rations']
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        id: 11,
+        name: 'Ensorceleur',
+        description: 'Lanceur de sorts dont la magie jaillit d\'un don inné.',
+        hitDie: 6,
+        primaryAbility: 'charisma',
+        savingThrows: ['constitution', 'charisma'],
+        armorProficiencies: ['Aucune'],
+        weaponProficiencies: ['Dague', 'Fronde', 'Bâton', 'Arbalète légère'],
+        skills: ['Arcanes', 'Tromperie', 'Intuition', 'Intimidation', 'Persuasion', 'Religion'],
+        skillChoices: 2,
+
+        equipmentChoices: [
+            {
+                id: 'weapon_main',
+                label: 'Arme principale',
+                options: [
+                    {
+                        id: 'shortsword_monk',
+                        name: 'Moine martial',
+                        items: ['Épée courte'],
+                        itemsData: [weapons.shortsword]
+                    },
+                    {
+                        id: 'quarterstaff_darts',
+                        name: 'Moine ascète',
+                        items: ['Bâton', 'Fléchette'],
+                        itemsData: [weapons.quarterstaff, weapons.dart]
+                    }
+                ]
+            },
+            {
+                id: 'pack',
+                label: 'Paquetage',
+                options: [
+                    {
+                        id: 'priest_pack',
+                        name: 'Paquetage de l\'ensorceleur',
+                        items: ['Sac', 'Bougies', 'Encens', 'Vêtements', 'Rations']
+                    },
+                    {
+                        id: 'explorer_pack',
+                        name: 'Paquetage d\'explorateur',
+                        items: ['Sac', 'Torche', 'Corde', 'Rations']
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        id: 12,
+        name: 'Occultiste',
+        description: 'Lanceur de sorts lié par un pacte à une entité surnaturelle.',
+        hitDie: 8,
+        primaryAbility: 'charisma',
+        savingThrows: ['wisdom', 'charisma'],
+        armorProficiencies: ['Armures légères'],
+        weaponProficiencies: ['Armes courantes'],
+        skills: ['Arcanes', 'Tromperie', 'Histoire', 'Intimidation', 'Investigation', 'Nature', 'Religion'],
+        skillChoices: 2,
+
+        equipmentChoices: [
+            {
+                id: 'weapon_main',
+                label: 'Arme principale',
+                options: [
+                    {
+                        id: 'tome_pact',
+                        name: 'Occultiste du pacte du grimoire',
+                        items: ['Arbalète légère', 'Armure de cuir', 'Dague'],
+                        itemsData: [weapons.crossbow_light, armors.leather, weapons.dagger]
+                    },
+                    {
+                        id: 'blade_pact',
+                        name: 'Occultiste du pacte de la lame',
+                        items: ['Épée courte', 'Armure de cuir'],
+                        itemsData: [weapons.shortsword, armors.leather]
+                    }
+                ]
+            },
+            {
+                id: 'pack',
+                label: 'Paquetage',
+                options: [
+                    {
+                        id: 'priest_pack',
+                        name: 'Paquetage de l\'occultiste',
+                        items: ['Sac', 'Bougies', 'Encens', 'Vêtements', 'Rations']
+                    },
+                    {
+                        id: 'explorer_pack',
+                        name: 'Paquetage d\'explorateur',
+                        items: ['Sac', 'Torche', 'Corde', 'Rations']
+                    }
+                ]
+            }
+        ]
+    },
 ];
 
 /* ============================
@@ -649,6 +1263,13 @@ const backgrounds = [
     { id: 4, name: 'Soldat', skillProficiencies: ['Athlétisme', 'Intimidation'], toolProficiencies: [], languages: 0, feature: 'Grade militaire', equipment: [] },
     { id: 5, name: 'Héros du peuple', skillProficiencies: ['Dressage', 'Survie'], toolProficiencies: [], languages: 0, feature: 'Hospitalité rustique', equipment: [] },
     { id: 6, name: 'Noble', skillProficiencies: ['Histoire', 'Persuasion'], toolProficiencies: [], languages: 1, feature: 'Position privilégiée', equipment: [] },
+    { id: 7, name: 'Charlatan', skillProficiencies: ['Tromperie', 'Escamotage'], toolProficiencies: [], languages: 0, feature: 'Fausse identité', equipment: [] },
+    { id: 8, name: 'Artisan de guilde', skillProficiencies: ['Intuition', 'Persuasion'], toolProficiencies: [], languages: 1, feature: 'Reconnaissance de guilde', equipment: [] },
+    { id: 9, name: 'Ermite', skillProficiencies: ['Médecine', 'Religion'], toolProficiencies: [], languages: 1, feature: 'Découverte', equipment: [] },
+    { id: 10, name: 'Marginal', skillProficiencies: ['Athlétisme', 'Survie'], toolProficiencies: [], languages: 1, feature: 'Guide de voyage', equipment: [] },
+    { id: 11, name: 'Marin', skillProficiencies: ['Athlétisme', 'Perception'], toolProficiencies: [], languages: 0, feature: 'Sens marin', equipment: [] },
+    { id: 12, name: 'Gamin des rues', skillProficiencies: ['Escamotage', 'Discrétion'], toolProficiencies: [], languages: 0, feature: 'Passages secrets de la ville', equipment: [] },
+    { id: 13, name: 'Saltimbanque', skillProficiencies: ['Acrobaties', 'Représentation'], toolProficiencies: [], languages: 0, feature: 'Grâce du public', equipment: [] },
 ];
 
 /* ============================
