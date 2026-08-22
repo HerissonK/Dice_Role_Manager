@@ -12,6 +12,7 @@ class Character {
    * @param {number} data.level
    * @param {number} data.classId
    * @param {number} data.speciesId
+   * @param {number} [data.subspeciesId] - Optional; only set for species with subraces.
    * @param {number} data.backgroundId
    * @param {number} data.userId
    * @param {Object<string, number>} data.abilities
@@ -28,6 +29,7 @@ class Character {
       level,
       classId,
       speciesId,
+      subspeciesId,
       backgroundId,
       abilities,
       userId,
@@ -47,10 +49,10 @@ class Character {
       // 1. Créer le personnage
       const result = await client.query(
         `INSERT INTO personnage
-         (name, level, class_id, species_id, background_id, user_id)
-         VALUES ($1, $2, $3, $4, $5, $6)
+         (name, level, class_id, species_id, subspecies_id, background_id, user_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING id`,
-        [name, level, classId, speciesId, backgroundId, userId]
+        [name, level, classId, speciesId, subspeciesId || null, backgroundId, userId]
       );
 
       const characterId = result.rows[0].id;
@@ -165,7 +167,8 @@ class Character {
      FIND ONE (DETAIL)
   ====================== */
   static async findById(id, userId) {
-    // Récupérer les infos du personnage
+    // Récupérer les infos du personnage, y compris la sous-espèce si elle existe
+    // (LEFT JOIN car subspecies_id peut être NULL pour les espèces qui n'en ont pas)
     const characterResult = await db.query(
       `SELECT
         p.id,
@@ -175,6 +178,10 @@ class Character {
         c.hit_die,
         s.name AS species,
         s.ability_bonuses AS racial_bonuses,
+        s.speed AS species_speed,
+        sub.name AS subspecies_name,
+        sub.ability_bonuses AS subspecies_bonuses,
+        sub.speed_override AS subspecies_speed_override,
         b.name AS background,
         b.skill_proficiencies AS background_skills,
         pc.str,
@@ -186,6 +193,7 @@ class Character {
       FROM personnage p
       JOIN dnd_class c ON c.id = p.class_id
       JOIN dnd_species s ON s.id = p.species_id
+      LEFT JOIN dnd_subspecies sub ON sub.id = p.subspecies_id
       JOIN dnd_background b ON b.id = p.background_id
       LEFT JOIN (
         SELECT personnage_id,
@@ -226,7 +234,7 @@ class Character {
     console.log('📋 Compétences classe:', classSkills);
     console.log('✅ Compétences totales:', allSkills);
 
-    // Caractéristiques de base (SANS bonus raciaux)
+    // Caractéristiques de base (SANS bonus raciaux ni de sous-espèce)
     const baseAbilities = {
       str: row.str ?? 10,
       dex: row.dex ?? 10,
@@ -236,18 +244,27 @@ class Character {
       cha: row.cha ?? 10
     };
 
-    // Appliquer les bonus raciaux
+    // Appliquer les bonus raciaux (espèce), puis les bonus de sous-espèce
+    // par-dessus. Les deux niveaux sont additifs (ex: Nain des montagnes =
+    // aucun bonus d'espèce de base + bonus de sous-espèce {"str":2}).
     const racialBonuses = row.racial_bonuses || {};
+    const subspeciesBonuses = row.subspecies_bonuses || {};
     const finalAbilities = { ...baseAbilities };
-    
+
     for (const [ability, bonus] of Object.entries(racialBonuses)) {
+      if (finalAbilities[ability] !== undefined && bonus) {
+        finalAbilities[ability] += bonus;
+      }
+    }
+    for (const [ability, bonus] of Object.entries(subspeciesBonuses)) {
       if (finalAbilities[ability] !== undefined && bonus) {
         finalAbilities[ability] += bonus;
       }
     }
     
     console.log('📊 Caractéristiques de base:', baseAbilities);
-    console.log('📊 Bonus raciaux:', racialBonuses);
+    console.log('📊 Bonus raciaux (espèce):', racialBonuses);
+    console.log('📊 Bonus de sous-espèce:', subspeciesBonuses);
     console.log('✅ Caractéristiques finales:', finalAbilities);
 
     // Calculer PV et CA avec les caractéristiques FINALES
@@ -262,12 +279,17 @@ class Character {
     const items = await this.getEquippedItems(row.id, userId);
     const armorClass = this.calculateArmorClass(finalAbilities, items);
 
+    // La sous-espèce peut remplacer la vitesse de l'espèce (ex: Elfe sylvestre = 35)
+    const speed = row.subspecies_speed_override ?? row.species_speed;
+
     return {
       id: row.id,
       name: row.name,
       level: row.level,
       class: row.class,
       species: row.species,
+      subspecies: row.subspecies_name || null,
+      speed,
       background: row.background,
       pv,
       armorClass,
@@ -290,7 +312,9 @@ class Character {
         c.name AS class,
         c.hit_die,
         s.name AS species,
-        s.ability_bonuses AS racial_bonuses, -- ✅ AJOUTÉ
+        s.ability_bonuses AS racial_bonuses,
+        sub.name AS subspecies_name,
+        sub.ability_bonuses AS subspecies_bonuses,
         b.name AS background,
         pc.str,
         pc.dex,
@@ -301,6 +325,7 @@ class Character {
       FROM personnage p
       JOIN dnd_class c ON c.id = p.class_id
       JOIN dnd_species s ON s.id = p.species_id
+      LEFT JOIN dnd_subspecies sub ON sub.id = p.subspecies_id
       JOIN dnd_background b ON b.id = p.background_id
       LEFT JOIN (
         SELECT personnage_id,
@@ -329,11 +354,17 @@ class Character {
         cha: row.cha ?? 10
       };
 
-      // Appliquer bonus raciaux
+      // Appliquer bonus raciaux (espèce) puis bonus de sous-espèce
       const racialBonuses = row.racial_bonuses || {};
+      const subspeciesBonuses = row.subspecies_bonuses || {};
       const finalAbilities = { ...baseAbilities };
-      
+
       for (const [ability, bonus] of Object.entries(racialBonuses)) {
+        if (finalAbilities[ability] !== undefined && bonus) {
+          finalAbilities[ability] += bonus;
+        }
+      }
+      for (const [ability, bonus] of Object.entries(subspeciesBonuses)) {
         if (finalAbilities[ability] !== undefined && bonus) {
           finalAbilities[ability] += bonus;
         }
@@ -351,6 +382,7 @@ class Character {
         level: row.level,
         class: row.class,
         species: row.species,
+        subspecies: row.subspecies_name || null,
         background: row.background,
         pv,
         created_at: row.created_at
@@ -456,13 +488,15 @@ static calculateArmorClass(abilities, items) {
              level = $2,
              class_id = $3,
              species_id = $4,
-             background_id = $5
-         WHERE id = $6 AND user_id = $7`,
+             subspecies_id = $5,
+             background_id = $6
+         WHERE id = $7 AND user_id = $8`,
         [
           data.name,
           data.level,
           data.classId,
           data.speciesId,
+          data.subspeciesId || null,
           data.backgroundId,
           id,
           userId
@@ -515,14 +549,9 @@ static async updateName(id, userId, newName) {
   );
   return result.rowCount > 0;
 }
-
-  /**
-   * Deletes a character. Only affects the row owned by the given user.
-   *
-   * @param {number} id
-   * @param {number} userId
-   * @returns {Promise<boolean>} True if deleted, false if not found/not owned.
-   */
+  /* ======================
+     DELETE
+  ====================== */
 static async deleteById(id, userId) {
   const result = await db.query(
     `DELETE FROM personnage

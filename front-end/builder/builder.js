@@ -12,6 +12,7 @@ const appState = {
     currentStep: 0,
     characterName: '',
     selectedRace: null,
+    selectedSubspecies: null,
     selectedClass: null,
     abilityScores: null,
 
@@ -26,7 +27,10 @@ const appState = {
     selectedEquipment: {}
 };
 
-const steps = ['Nom', 'Espèce', 'Classe', 'Caractéristiques', 'Historique', 'Compétences', 'Équipement', 'Fiche'];
+// Étape "Sous-espèce" toujours présente dans la liste (pour l'indicateur de
+// progression), mais sautée automatiquement à la navigation si l'espèce
+// choisie n'a pas de sous-race officielle (voir handleNext/handlePrevious).
+const steps = ['Nom', 'Espèce', 'Sous-espèce', 'Classe', 'Caractéristiques', 'Historique', 'Compétences', 'Équipement', 'Fiche'];
 
 // Constantes pour Point Buy
 const POINT_BUY_MAX = 27;
@@ -84,21 +88,24 @@ function renderMainContent() {
             renderRaceSelection(container);
             break;
         case 2:
-            renderClassSelection(container);
+            renderSubspeciesSelection(container);
             break;
         case 3:
-            renderAbilityScores(container);
+            renderClassSelection(container);
             break;
         case 4:
-            renderBackgroundSelection(container);
+            renderAbilityScores(container);
             break;
         case 5:
-            renderSkillSelection(container);
+            renderBackgroundSelection(container);
             break;
         case 6:
-            renderEquipmentSelection(container);
+            renderSkillSelection(container);
             break;
         case 7:
+            renderEquipmentSelection(container);
+            break;
+        case 8:
             renderCharacterSheet(container);
             break;
     }
@@ -145,6 +152,7 @@ function renderRaceSelection(container) {
         const bonusesHTML = Object.entries(race.abilityBonuses)
             .map(([ability, bonus]) => `<div>${abilityNames[ability]} +${bonus}</div>`)
             .join('');
+        const hasSubspecies = (race.subspecies || []).length > 0;
 
         return `
             <div class="card selection-card card-clickable ${isSelected ? 'card-selected' : ''}" data-race-id="${race.id}">
@@ -168,6 +176,7 @@ function renderRaceSelection(container) {
                             ${race.traits.map(trait => `<li>${trait}</li>`).join('')}
                         </ul>
                     </div>
+                    ${hasSubspecies ? `<div class="text-xs text-blue-600 mt-2">${race.subspecies.length} sous-races disponibles</div>` : ''}
                 </div>
             </div>
         `;
@@ -183,13 +192,91 @@ function renderRaceSelection(container) {
     container.querySelectorAll('[data-race-id]').forEach(card => {
         card.addEventListener('click', () => {
             const raceId = Number(card.getAttribute('data-race-id'));
-            appState.selectedRace = races.find(r => r.id === raceId);
+            const newRace = races.find(r => r.id === raceId);
+
+            // Si l'espèce change, la sous-espèce précédemment choisie
+            // n'a plus de sens (elle appartenait à une autre espèce).
+            if (appState.selectedRace?.id !== newRace.id) {
+                appState.selectedSubspecies = null;
+            }
+
+            appState.selectedRace = newRace;
             render();
         });
     });
 }
 
-// Étape 2: Sélection de la classe
+// Étape 2 (conditionnelle) : Sélection de la sous-espèce
+// Ne s'affiche dans le parcours que si l'espèce choisie a des sous-races
+// officielles (voir handleNext/handlePrevious pour le saut automatique).
+function renderSubspeciesSelection(container) {
+    const race = appState.selectedRace;
+    const options = race?.subspecies || [];
+
+    if (options.length === 0) {
+        // Filet de sécurité : ne devrait normalement jamais s'afficher,
+        // handleNext/handlePrevious sautent cette étape dans ce cas.
+        container.innerHTML = `
+            <div class="card p-6 text-center">
+                <p class="text-gray-600">Cette espèce n'a pas de sous-race officielle.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const optionsHTML = options.map(sub => {
+        const isSelected = appState.selectedSubspecies?.id === sub.id;
+        const bonusEntries = Object.entries(sub.abilityBonuses || {});
+        const bonusesHTML = bonusEntries.length
+            ? bonusEntries.map(([ability, bonus]) => `<div>${abilityNames[ability]} +${bonus}</div>`).join('')
+            : '<div class="text-gray-500">Aucun bonus de caractéristique fixe</div>';
+
+        return `
+            <div class="card selection-card card-clickable ${isSelected ? 'card-selected' : ''}" data-subspecies-id="${sub.id}">
+                <h3 class="mb-2">${sub.name}</h3>
+                <p class="text-gray-600 mb-4 text-sm">${sub.description}</p>
+
+                <div class="space-y-2 text-sm">
+                    <div>
+                        <span class="font-semibold">Bonus de caractéristiques :</span>
+                        <div class="text-gray-700 mt-1">${bonusesHTML}</div>
+                    </div>
+                    ${sub.speedOverride ? `
+                        <div>
+                            <span class="font-semibold">Vitesse :</span> ${sub.speedOverride} pieds (au lieu de ${race.speed})
+                        </div>
+                    ` : ''}
+                    <div>
+                        <span class="font-semibold">Traits :</span>
+                        <ul class="list-disc text-gray-700 mt-1">
+                            ${(sub.traits || []).map(trait => `<li>${trait}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    container.innerHTML = `
+        <div class="max-w-6xl">
+            <h2 class="mb-6 text-center">Choisissez votre sous-espèce</h2>
+            <p class="text-center text-gray-600 mb-6">
+                ${race.name} propose ${options.length} sous-races officielles.
+            </p>
+            <div class="grid grid-cols-1 md-grid-cols-2 lg-grid-cols-3">${optionsHTML}</div>
+        </div>
+    `;
+
+    container.querySelectorAll('[data-subspecies-id]').forEach(card => {
+        card.addEventListener('click', () => {
+            const subId = Number(card.getAttribute('data-subspecies-id'));
+            appState.selectedSubspecies = options.find(s => s.id === subId);
+            render();
+        });
+    });
+}
+
+// Étape 3: Sélection de la classe
 function renderClassSelection(container) {
     const classesHTML = classes.map(cls => {
         const isSelected = appState.selectedClass?.id === cls.id;
@@ -242,7 +329,7 @@ function renderClassSelection(container) {
     });
 }
 
-// Étape 3: Caractéristiques (Point Buy)
+// Étape 4: Caractéristiques (Point Buy)
 function renderAbilityScores(container) {
     if (!appState.abilityScores) {
         appState.abilityScores = {
@@ -378,7 +465,7 @@ function renderAbilityScores(container) {
     });
 }
 
-// Étape 4: Sélection de l'historique
+// Étape 5: Sélection de l'historique
 function renderBackgroundSelection(container) {
     const backgroundsHTML = backgrounds.map(bg => {
         const isSelected = String(appState.selectedBackground?.id) === String(bg.id);
@@ -450,7 +537,7 @@ function renderBackgroundSelection(container) {
 }
 
 
-// Étape 5: Sélection des compétences
+// Étape 6: Sélection des compétences
 function renderSkillSelection(container) {
     console.log('selectedClass:', appState.selectedClass);
 
@@ -721,7 +808,7 @@ function getAttackAbility(weapon, abilities) {
 
 
 
-// Étape 7: Fiche de personnage
+// Étape 8: Fiche de personnage
 function renderCharacterSheet(container) {
     if (!appState.selectedRace || !appState.selectedClass || !appState.abilityScores || !appState.selectedBackground) {
         container.innerHTML = '<p>Données manquantes...</p>';
@@ -729,17 +816,30 @@ function renderCharacterSheet(container) {
     }
     
     const race = appState.selectedRace;
+    const subspecies = appState.selectedSubspecies; // peut être null si l'espèce n'en a pas
     const cls = appState.selectedClass;
     const bg = appState.selectedBackground;
     const level = 1;
     
-    // Appliquer les bonus raciaux
+    // Appliquer les bonus raciaux (espèce)
     const finalScores = { ...appState.abilityScores };
     Object.entries(race.abilityBonuses).forEach(([ability, bonus]) => {
         if (bonus) {
             finalScores[ability] += bonus;
         }
     });
+
+    // Appliquer les bonus de sous-espèce, s'il y en a une sélectionnée
+    if (subspecies) {
+        Object.entries(subspecies.abilityBonuses || {}).forEach(([ability, bonus]) => {
+            if (bonus) {
+                finalScores[ability] += bonus;
+            }
+        });
+    }
+
+    // La sous-espèce peut remplacer la vitesse de base (ex: Elfe sylvestre = 35)
+    const effectiveSpeed = subspecies?.speedOverride || race.speed;
     
     const dexMod = getAbilityModifier(finalScores.dexterity);
     const armorClass = computeArmorClass(dexMod);
@@ -749,11 +849,13 @@ function renderCharacterSheet(container) {
     const maxHP = cls.hitDie + constitutionMod;
     const proficiencyBonus = 2;
     
-    // Caractéristiques
+    // Caractéristiques (le badge de bonus combine espèce + sous-espèce)
     const abilitiesHTML = Object.keys(abilityNames).map(ability => {
         const score = finalScores[ability];
         const modifier = getAbilityModifier(score);
-        const bonus = race.abilityBonuses[ability] || 0;
+        const raceBonus = race.abilityBonuses[ability] || 0;
+        const subspeciesBonus = subspecies?.abilityBonuses?.[ability] || 0;
+        const totalBonus = raceBonus + subspeciesBonus;
         
         return `
             <div class="ability-card">
@@ -762,7 +864,7 @@ function renderCharacterSheet(container) {
                 <div class="badge badge-secondary">
                     ${modifier >= 0 ? '+' : ''}${modifier}
                 </div>
-                ${bonus > 0 ? `<div class="ability-card-bonus">+${bonus} racial</div>` : ''}
+                ${totalBonus > 0 ? `<div class="ability-card-bonus">+${totalBonus} racial</div>` : ''}
             </div>
         `;
     }).join('');
@@ -826,6 +928,9 @@ function renderCharacterSheet(container) {
                 </div>
             `;
         }).join('');
+
+    // Traits combinés (espèce + sous-espèce)
+    const allTraits = [...race.traits, ...(subspecies?.traits || [])];
     
     container.innerHTML = `
         <div class="max-w-5xl">
@@ -844,7 +949,7 @@ function renderCharacterSheet(container) {
                     </div>
                     <div>
                         <label class="stat-label">Espèce</label>
-                        <p class="text-xl font-semibold">${race.name}</p>
+                        <p class="text-xl font-semibold">${race.name}${subspecies ? ` — ${subspecies.name}` : ''}</p>
                     </div>
                 </div>
                 
@@ -873,7 +978,7 @@ function renderCharacterSheet(container) {
                     </div>
                     <div class="stat-box">
                         <label class="stat-label">Vitesse</label>
-                        <p class="stat-value">${race.speed} pi</p>
+                        <p class="stat-value">${effectiveSpeed} pi</p>
                     </div>
                 </div>
                 
@@ -940,11 +1045,11 @@ function renderCharacterSheet(container) {
                 
                 <div class="separator"></div>
                 
-                <!-- Traits raciaux -->
+                <!-- Traits raciaux (espèce + sous-espèce) -->
                 <div class="mb-6">
                     <h3 class="mb-4">Traits raciaux</h3>
                     <div class="grid grid-cols-1 md-grid-cols-2 gap-2">
-                        ${race.traits.map(trait => `<span class="badge badge-outline">${trait}</span>`).join('')}
+                        ${allTraits.map(trait => `<span class="badge badge-outline">${trait}</span>`).join('')}
                     </div>
                 </div>
                 
@@ -980,7 +1085,8 @@ function renderNavigationButtons() {
     const container = document.getElementById('navigation-buttons');
     
     // Masquer les boutons pour l'étape des caractéristiques (elle a ses propres boutons)
-    if (appState.currentStep === 3) {
+    // Étape 4 désormais (décalée d'un cran par l'ajout de l'étape Sous-espèce).
+    if (appState.currentStep === 4) {
         container.classList.add('hidden');
         return;
     }
@@ -1035,17 +1141,34 @@ function renderNavigationButtons() {
 
 // Navigation
 function handleNext() {
-    if (canGoNext() && appState.currentStep < steps.length - 1) {
-        appState.currentStep++;
-        render();
+    if (!canGoNext() || appState.currentStep >= steps.length - 1) return;
+
+    let nextStep = appState.currentStep + 1;
+
+    // Étape "Sous-espèce" (index 2) sautée si l'espèce choisie n'a pas de
+    // sous-race officielle.
+    if (nextStep === 2 && (appState.selectedRace?.subspecies?.length || 0) === 0) {
+        appState.selectedSubspecies = null;
+        nextStep = 3;
     }
+
+    appState.currentStep = nextStep;
+    render();
 }
 
 function handlePrevious() {
-    if (appState.currentStep > 0) {
-        appState.currentStep--;
-        render();
+    if (appState.currentStep <= 0) return;
+
+    let prevStep = appState.currentStep - 1;
+
+    // Même règle au retour : on ne repasse pas par l'étape Sous-espèce
+    // si l'espèce actuelle n'en a pas.
+    if (prevStep === 2 && (appState.selectedRace?.subspecies?.length || 0) === 0) {
+        prevStep = 1;
     }
+
+    appState.currentStep = prevStep;
+    render();
 }
 
 function canGoNext() {
@@ -1054,15 +1177,22 @@ function canGoNext() {
             return appState.characterName.trim().length > 0;
         case 1:
             return appState.selectedRace !== null;
-        case 2:
-            return appState.selectedClass !== null;
+        case 2: {
+            const options = appState.selectedRace?.subspecies || [];
+            // Pas de sous-race pour cette espèce : cette étape est de toute
+            // façon sautée par handleNext, mais on reste permissif ici.
+            if (options.length === 0) return true;
+            return appState.selectedSubspecies !== null;
+        }
         case 3:
-            return appState.abilityScores !== null;
+            return appState.selectedClass !== null;
         case 4:
-            return appState.selectedBackground !== null;
+            return appState.abilityScores !== null;
         case 5:
-            return appState.classSkills.length === appState.selectedClass.skillChoices;
+            return appState.selectedBackground !== null;
         case 6:
+            return appState.classSkills.length === appState.selectedClass.skillChoices;
+        case 7:
             return Object.keys(appState.selectedEquipment).length ===
                    (appState.selectedClass.equipmentChoices?.length || 0);
         default:
@@ -1081,6 +1211,7 @@ function handleExport() {
     const character = {
         name: appState.characterName,
         race: appState.selectedRace.name,
+        subspecies: appState.selectedSubspecies?.name || null,
         class: appState.selectedClass.name,
         background: appState.selectedBackground.name,
         level: 1,
@@ -1167,6 +1298,7 @@ async function handleSave() {
         level: 1,
         classId: appState.selectedClass.id,
         speciesId: appState.selectedRace.id,
+        subspeciesId: appState.selectedSubspecies ? appState.selectedSubspecies.id : null,
         backgroundId: appState.selectedBackground.id,
         abilities: apiAbilities,
         skills: appState.selectedSkills,
