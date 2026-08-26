@@ -211,6 +211,14 @@ function renderCharacter(character) {
     document.getElementById('charPV').textContent = character.pv || '?';
     document.getElementById('charAC').textContent = character.armorClass || '?';
 
+    const proficiencyBonus = character.proficiencyBonus ?? DEFAULT_PROFICIENCY_BONUS;
+    document.getElementById('charProficiency').textContent = `+${proficiencyBonus}`;
+
+    const proficiencyBadge = document.getElementById('proficiencyBadge');
+    if (proficiencyBadge) {
+        proficiencyBadge.textContent = `★ = Maîtrise (+${proficiencyBonus})`;
+    }
+
     // Initiative (modificateur de Dextérité)
     const dexMod = abilityModifier(character.abilities?.dex || 10);
     document.getElementById('charInit').textContent = 
