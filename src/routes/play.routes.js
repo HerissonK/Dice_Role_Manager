@@ -11,5 +11,6 @@ router.post('/play/:id/roll/attack', authenticate, playController.rollAttack);
 router.post('/play/:id/roll/damage', authenticate, playController.rollDamage);
 router.post('/play/:id/roll/resolve-attack', authenticate, playController.resolveAttack);
 router.get('/play/:id/journal', authenticate, playController.getRollJournal);
+router.get('/play/:id/at-level/:level', authenticate, playController.getPlayCharacterAtLevel);
 
 module.exports = router;

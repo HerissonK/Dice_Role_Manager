@@ -86,21 +86,90 @@ async function loadCharacters() {
 }
 
 /**
- * Rediriger vers la page de jeu
- * ✅ FIX: Utilise 'play' au lieu de 'play.html' pour serveur sans extension
+ * 🆕 Petit sélecteur de niveau de jeu, construit dynamiquement (aucune
+ * dépendance à une structure HTML existante), pour éviter de casser quoi
+ * que ce soit si le markup de my-characters.html change par ailleurs.
+ * Résout avec le niveau choisi (Number), ou null si annulé.
  */
-function playCharacter(id) {
-    console.log('🎲 playCharacter appelé avec id:', id);
-    console.log('📍 Type de id:', typeof id);
-    
+function showLevelSelectModal(maxLevel) {
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText =
+            'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;' +
+            'align-items:center;justify-content:center;z-index:1000;';
+
+        const box = document.createElement('div');
+        box.style.cssText =
+            'background:#1e2a1f;border:1px solid #d4af37;border-radius:8px;' +
+            'padding:24px;min-width:280px;max-width:90vw;text-align:center;' +
+            'color:#f0e8d0;font-family:inherit;';
+
+        const title = document.createElement('h3');
+        title.textContent = 'À quel niveau voulez-vous jouer ?';
+        title.style.cssText = 'margin-bottom:16px;';
+
+        const select = document.createElement('select');
+        select.style.cssText =
+            'width:100%;padding:8px;margin-bottom:16px;background:#233524;' +
+            'color:#f0e8d0;border:1px solid #d4af37;border-radius:4px;';
+
+        const safeMaxLevel = Math.max(1, maxLevel || 1);
+        for (let lvl = 1; lvl <= safeMaxLevel; lvl++) {
+            const opt = document.createElement('option');
+            opt.value = lvl;
+            opt.textContent = `Niveau ${lvl}${lvl === safeMaxLevel ? ' (maximum atteint)' : ''}`;
+            if (lvl === safeMaxLevel) opt.selected = true;
+            select.appendChild(opt);
+        }
+
+        const btnRow = document.createElement('div');
+        btnRow.style.cssText = 'display:flex;gap:8px;justify-content:center;';
+
+        const btnCancel = document.createElement('button');
+        btnCancel.textContent = 'Annuler';
+        btnCancel.className = 'btn btn-outline btn-sm';
+        btnCancel.addEventListener('click', () => {
+            document.body.removeChild(overlay);
+            resolve(null);
+        });
+
+        const btnConfirm = document.createElement('button');
+        btnConfirm.textContent = 'Jouer à ce niveau';
+        btnConfirm.className = 'btn btn-primary btn-sm';
+        btnConfirm.addEventListener('click', () => {
+            document.body.removeChild(overlay);
+            resolve(Number(select.value));
+        });
+
+        btnRow.appendChild(btnCancel);
+        btnRow.appendChild(btnConfirm);
+        box.appendChild(title);
+        box.appendChild(select);
+        box.appendChild(btnRow);
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+    });
+}
+
+/**
+ * Rediriger vers la page de jeu, après avoir demandé à quel niveau jouer.
+ * Le niveau maximum atteint (character.level) borne le choix — impossible
+ * de jouer au-delà, cohérent avec la validation faite côté serveur dans
+ * Character.getCharacterAtLevel().
+ */
+async function playCharacter(id, maxLevel) {
+    console.log('🎲 playCharacter appelé avec id:', id, 'niveau max:', maxLevel);
+
     if (!id) {
         console.error('❌ ID manquant!');
         alert('Erreur: ID du personnage manquant');
         return;
     }
-    
-    // ✅ CORRECTION: pas de .html car le serveur retire les extensions
-    const url = `play?id=${id}`;
+
+    const chosenLevel = await showLevelSelectModal(maxLevel);
+    if (chosenLevel === null) return; // annulé par l'utilisateur
+
+    const url = `play?id=${id}&level=${chosenLevel}`;
     console.log('🔗 Redirection vers:', url);
     window.location.href = url;
 }
@@ -138,7 +207,7 @@ function displayCharacters(characters) {
                     <div class="character-meta">
                         <div class="character-meta-item">
                             <span class="character-meta-label">Espèce:</span>
-                            ${character.species}
+                            ${character.species}${character.subspecies ? ` (${character.subspecies})` : ''}
                         </div>
                         <div class="character-meta-item">
                             <span class="character-meta-label">Historique:</span>
@@ -149,7 +218,7 @@ function displayCharacters(characters) {
                     <!-- STATS CLÉS -->
                     <div class="character-key-stats">
                         <div class="key-stat">
-                            <div class="key-stat-label">Niveau</div>
+                            <div class="key-stat-label">Niveau max</div>
                             <div class="key-stat-value level">${character.level}</div>
                         </div>
                         <div class="key-stat">
@@ -173,6 +242,7 @@ function displayCharacters(characters) {
                         <button 
                             class="btn btn-primary btn-sm btn-play"
                             data-character-id="${character.id}"
+                            data-character-level="${character.level}"
                             title="Jouer avec ce personnage"
                         >
                             Jouer
@@ -214,11 +284,12 @@ function displayCharacters(characters) {
     
     playButtons.forEach((btn, index) => {
         const characterId = btn.getAttribute('data-character-id');
-        console.log(`  → Bouton ${index + 1}: ID = ${characterId}`);
+        const characterLevel = Number(btn.getAttribute('data-character-level'));
+        console.log(`  → Bouton ${index + 1}: ID = ${characterId}, niveau max = ${characterLevel}`);
         
         btn.addEventListener('click', (event) => {
             console.log('🖱️ Clic sur bouton Play');
-            playCharacter(characterId);
+            playCharacter(characterId, characterLevel);
         });
     });
     const renameButtons = grid.querySelectorAll('.btn-rename');
@@ -271,7 +342,7 @@ function showCharacterModal(character) {
         <div class="character-details">
             <div class="detail-section">
                 <h4>Informations générales</h4>
-                <p><strong>Espèce:</strong> ${character.species}</p>
+                <p><strong>Espèce:</strong> ${character.species}${character.subspecies ? ` (${character.subspecies})` : ''}</p>
                 <p><strong>Classe:</strong> ${character.class}</p>
                 <p><strong>Niveau:</strong> ${character.level}</p>
                 <p><strong>Historique:</strong> ${character.background}</p>

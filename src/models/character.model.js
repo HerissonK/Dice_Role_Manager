@@ -1,5 +1,6 @@
 const db = require('../config/database');
 const RuleValidator = require('../validators/ruleValidator');
+const { getProficiencyBonus } = require('../utils/proficiency.util');
 
 class Character {
 
@@ -296,6 +297,184 @@ class Character {
       abilities: finalAbilities,
       skills: allSkills,
       items
+    };
+  }
+
+  /**
+ * Computes a character's full state as it would be at a chosen play level,
+ * which may be lower than (but never higher than) the character's maximum
+ * level reached. This is what powers "play this character at an earlier
+ * level" and "let a GM hand out pre-built characters at various levels".
+ *
+ * Unlike findById() (which always returns the character at its maximum
+ * level), this method re-derives everything that depends on level:
+ * proficiency bonus, hit points, unlocked class features, spell slots,
+ * and ability score improvements (only those chosen at a level <= targetLevel).
+ *
+ * @param {number} id - Character id.
+ * @param {number} userId - Owning user id (ownership check, same as findById).
+ * @param {number} targetLevel - The level to play at (1 <= targetLevel <= character's max level).
+ * @returns {Promise<object|null>} The computed character state, or null if not found/not owned.
+ * @throws {Error} If targetLevel exceeds the character's maximum level reached.
+ */
+  static async getCharacterAtLevel(id, userId, targetLevel) {
+    // Réutilise la même requête principale que findById (personnage + jointures
+    // classe/espèce/sous-espèce/historique + caractéristiques pivotées).
+    const characterResult = await db.query(
+      `SELECT
+        p.id,
+        p.name,
+        p.level AS max_level,
+        p.class_id,
+        c.name AS class,
+        c.hit_die,
+        s.name AS species,
+        s.ability_bonuses AS racial_bonuses,
+        sub.name AS subspecies_name,
+        sub.ability_bonuses AS subspecies_bonuses,
+        b.name AS background,
+        b.skill_proficiencies AS background_skills,
+        pc.str,
+        pc.dex,
+        pc.con,
+        pc.int,
+        pc.wis,
+        pc.cha
+      FROM personnage p
+      JOIN dnd_class c ON c.id = p.class_id
+      JOIN dnd_species s ON s.id = p.species_id
+      LEFT JOIN dnd_subspecies sub ON sub.id = p.subspecies_id
+      JOIN dnd_background b ON b.id = p.background_id
+      LEFT JOIN (
+        SELECT personnage_id,
+          MAX(CASE WHEN caracteristique = 'str' THEN valeur END) AS str,
+          MAX(CASE WHEN caracteristique = 'dex' THEN valeur END) AS dex,
+          MAX(CASE WHEN caracteristique = 'con' THEN valeur END) AS con,
+          MAX(CASE WHEN caracteristique = 'int' THEN valeur END) AS int,
+          MAX(CASE WHEN caracteristique = 'wis' THEN valeur END) AS wis,
+          MAX(CASE WHEN caracteristique = 'cha' THEN valeur END) AS cha
+        FROM personnage_caracteristique
+        GROUP BY personnage_id
+      ) pc ON pc.personnage_id = p.id
+      WHERE p.id = $1 AND p.user_id = $2`,
+      [id, userId]
+    );
+  
+    if (!characterResult.rows.length) return null;
+  
+    const row = characterResult.rows[0];
+  
+    if (targetLevel > row.max_level) {
+      throw new Error(
+        `Niveau de jeu demandé (${targetLevel}) supérieur au niveau maximum atteint (${row.max_level})`
+      );
+    }
+  
+    // 1. Caractéristiques de base + bonus raciaux + sous-espèce (identique à findById)
+    const baseAbilities = {
+      str: row.str ?? 10, dex: row.dex ?? 10, con: row.con ?? 10,
+      int: row.int ?? 10, wis: row.wis ?? 10, cha: row.cha ?? 10
+    };
+    const finalAbilities = { ...baseAbilities };
+  
+    for (const [ability, bonus] of Object.entries(row.racial_bonuses || {})) {
+      if (finalAbilities[ability] !== undefined && bonus) finalAbilities[ability] += bonus;
+    }
+    for (const [ability, bonus] of Object.entries(row.subspecies_bonuses || {})) {
+      if (finalAbilities[ability] !== undefined && bonus) finalAbilities[ability] += bonus;
+    }
+  
+    // 2. Améliorations de caractéristiques (ASI) choisies jusqu'au niveau de jeu
+    //    (un personnage niveau max 10 joué à niveau 6 ne doit PAS bénéficier
+    //    de l'ASI qu'il aurait choisi à un palier 8, par exemple)
+    const asiResult = await db.query(
+      `SELECT ability_1, amount_1, ability_2, amount_2
+      FROM personnage_asi
+      WHERE personnage_id = $1 AND level <= $2
+      ORDER BY level`,
+      [id, targetLevel]
+    );
+  
+    for (const asi of asiResult.rows) {
+      if (asi.ability_1 && finalAbilities[asi.ability_1] !== undefined) {
+        finalAbilities[asi.ability_1] += asi.amount_1;
+      }
+      if (asi.ability_2 && finalAbilities[asi.ability_2] !== undefined) {
+        finalAbilities[asi.ability_2] += asi.amount_2;
+      }
+    }
+  
+    // 3. Bonus de maîtrise recalculé pour le niveau de jeu choisi (corrige le
+    //    +2 codé en dur utilisé jusqu'ici partout dans le projet)
+    const proficiencyBonus = getProficiencyBonus(targetLevel);
+  
+    // 4. Points de vie recalculés pour le niveau de jeu choisi
+    const conMod = Math.floor((finalAbilities.con - 10) / 2);
+    const pv = Math.floor(
+      row.hit_die + conMod + ((row.hit_die / 2) + 1 + conMod) * (targetLevel - 1)
+    );
+  
+    // 5. Classe d'armure (inchangé, dépend des objets équipés et de DEX finale)
+    const items = await this.getEquippedItems(row.id, userId);
+    const armorClass = this.calculateArmorClass(finalAbilities, items);
+  
+    // 6. Compétences maîtrisées (identique à findById — non dépendantes du niveau)
+    const skillsResult = await db.query(
+      `SELECT skill_name, source FROM personnage_skill WHERE personnage_id = $1`,
+      [id]
+    );
+    const classSkills = skillsResult.rows.filter(r => r.source === 'class').map(r => r.skill_name);
+    const backgroundSkills = row.background_skills || [];
+    const allSkills = [...new Set([...backgroundSkills, ...classSkills])];
+  
+    // 7. Features de classe débloquées jusqu'au niveau de jeu choisi
+    const featuresResult = await db.query(
+      `SELECT id, level, name, description, action_type, uses_formula, recharge
+      FROM dnd_class_feature
+      WHERE class_id = $1 AND level <= $2
+      ORDER BY level`,
+      [row.class_id, targetLevel]
+    );
+  
+    // 8. Emplacements de sorts EXACTEMENT au niveau de jeu choisi (pas cumulés :
+    //    la ligne dnd_class_spell_slots à ce niveau contient déjà le total)
+    const slotsResult = await db.query(
+      `SELECT cantrips_known, spells_known, slots
+      FROM dnd_class_spell_slots
+      WHERE class_id = $1 AND level = $2`,
+      [row.class_id, targetLevel]
+    );
+    const spellSlots = slotsResult.rows[0] || null; // null = classe non lanceuse de sorts
+  
+    // 9. Sorts connus, filtrés par niveau d'apprentissage <= niveau de jeu
+    //    (uniquement pertinent pour les classes "à sorts connus" ; vide sinon)
+    const knownSpellsResult = await db.query(
+      `SELECT sp.id, sp.name, sp.level, sp.school, sp.concentration, sp.ritual, ks.level_learned
+      FROM personnage_known_spell ks
+      JOIN dnd_spell sp ON sp.id = ks.spell_id
+      WHERE ks.personnage_id = $1 AND ks.level_learned <= $2
+      ORDER BY sp.level, sp.name`,
+      [id, targetLevel]
+    );
+  
+    return {
+      id: row.id,
+      name: row.name,
+      maxLevel: row.max_level,
+      playedAtLevel: targetLevel,
+      class: row.class,
+      species: row.species,
+      subspecies: row.subspecies_name || null,
+      background: row.background,
+      proficiencyBonus,
+      pv,
+      armorClass,
+      abilities: finalAbilities,
+      skills: allSkills,
+      items,
+      features: featuresResult.rows,
+      spellSlots,
+      knownSpells: knownSpellsResult.rows
     };
   }
 

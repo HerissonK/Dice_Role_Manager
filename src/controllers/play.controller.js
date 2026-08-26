@@ -299,3 +299,33 @@ exports.rollFreeDice = (req, res, next) => {
     next(err);
   }
 };
+
+/**
+ * Charge le personnage pour le mode jeu, à un niveau de jeu choisi
+ * (peut être inférieur au niveau maximum atteint, jamais supérieur).
+ * GET /api/play/:id/at-level/:level
+ */
+exports.getPlayCharacterAtLevel = async (req, res, next) => {
+  try {
+    const id = parseId(req.params.id);
+    const targetLevel = parseInt(req.params.level, 10);
+ 
+    if (isNaN(targetLevel) || targetLevel < 1 || targetLevel > 20) {
+      throw new AppError('Niveau de jeu invalide (doit être entre 1 et 20)', 400);
+    }
+ 
+    const character = await Character.getCharacterAtLevel(id, req.user.id, targetLevel);
+ 
+    if (!character) throw new AppError('Personnage introuvable', 404);
+ 
+    res.json(character);
+  } catch (err) {
+    // Character.getCharacterAtLevel lève une erreur explicite si le niveau
+    // demandé dépasse le niveau maximum atteint — on la traduit en 400
+    // plutôt que de laisser errorHandler la traiter comme une 500 générique.
+    if (err.message && err.message.includes('supérieur au niveau maximum')) {
+      return next(new AppError(err.message, 400));
+    }
+    next(err);
+  }
+};

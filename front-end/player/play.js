@@ -62,6 +62,12 @@ function getCharacterIdFromUrl() {
     return id;
 }
 
+function getLevelFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const level = params.get('level');
+    return level ? parseInt(level, 10) : null;
+}
+
 
 function abilityModifier(score) {
     return Math.floor((score - 10) / 2);
@@ -85,8 +91,9 @@ function getAuthHeaders() {
 ========================= */
 
 const characterId = getCharacterIdFromUrl();
+const playedLevel = getLevelFromUrl(); // null = jouer au niveau maximum atteint
 let currentCharacter = null;
-const PROFICIENCY_BONUS = 2;
+const DEFAULT_PROFICIENCY_BONUS = 2; // filet de sécurité si l'API ne renvoie pas proficiencyBonus
 
 /* =========================
    INIT
@@ -158,9 +165,13 @@ async function loadCharacter() {
     try {
         hideError();
 
-        const response = await fetch(`${API_BASE_URL}/play/${characterId}`, {
-            headers: getAuthHeaders(),
-        });
+                const endpoint = playedLevel
+                    ? `${API_BASE_URL}/play/${characterId}/at-level/${playedLevel}`
+                    : `${API_BASE_URL}/play/${characterId}`;
+
+                const response = await fetch(endpoint, {
+                    headers: getAuthHeaders(),
+                });
 
         if (!response.ok) {
             if (response.status === 404) throw new Error('Personnage non trouvé');
@@ -191,8 +202,10 @@ async function loadCharacter() {
 function renderCharacter(character) {
     // Nom et classe
     document.getElementById('charName').textContent = character.name;
-    document.getElementById('charClass').textContent = 
-        `${character.species} ${character.class} - Niveau ${character.level}`;
+    const displayedLevel = character.playedAtLevel ?? character.level;
+    const levelLabel = (character.maxLevel && character.maxLevel !== displayedLevel)
+        ? `Niveau ${displayedLevel} (max ${character.maxLevel})`
+        : `Niveau ${displayedLevel}`;
 
     // Statistiques
     document.getElementById('charPV').textContent = character.pv || '?';
@@ -259,12 +272,13 @@ function renderSkills(character) {
 
     // Récupérer les compétences maîtrisées du personnage
     const proficientSkills = character.skills || [];
+    const proficiencyBonus = character.proficiencyBonus ?? DEFAULT_PROFICIENCY_BONUS;
     
     allSkills.forEach(skill => {
         const abilityScore = character.abilities[skill.ability];
         const mod = abilityModifier(abilityScore);
         const isProficient = proficientSkills.includes(skill.name);
-        const totalBonus = mod + (isProficient ? PROFICIENCY_BONUS : 0);
+        const totalBonus = mod + (isProficient ? proficiencyBonus : 0);
 
         const skillCard = document.createElement('div');
         skillCard.className = `skill-card ${isProficient ? 'skill-proficient' : ''}`;
@@ -309,7 +323,7 @@ function renderWeapons(character) {
     weapons.forEach(weapon => {
         const abilities = character.abilities;
         const attackMod = getWeaponAttackMod(weapon, abilities);
-        const proficiencyBonus = 2;
+        const proficiencyBonus = character.proficiencyBonus ?? DEFAULT_PROFICIENCY_BONUS;
         const attackBonus = attackMod + proficiencyBonus;
 
         // Normaliser les champs (DB = damage_dice/damage_type, data.js = damage/damageType)
@@ -597,7 +611,7 @@ async function rollAbility(ability, modifier, name) {
         const response = await fetch(`${API_BASE_URL}/play/${characterId}/roll/ability`, {
             method: 'POST',
             headers: getAuthHeaders(),
-            body: JSON.stringify({ ability }),
+            body: JSON.stringify({ ability, level: playedLevel }),
         });
 
         if (!response.ok) throw new Error('Erreur jet caractéristique');
@@ -628,7 +642,7 @@ async function rollSkill(skillName, ability, bonus, isProficient) {
         const response = await fetch(`${API_BASE_URL}/play/${characterId}/roll/ability`, {
             method: 'POST',
             headers: getAuthHeaders(),
-            body: JSON.stringify({ ability }),
+            body: JSON.stringify({ ability, level: playedLevel }),
         });
 
         if (!response.ok) throw new Error('Erreur jet compétence');
@@ -663,7 +677,7 @@ async function resolveWeaponAttack(weaponId) {
         const response = await fetch(`${API_BASE_URL}/play/${characterId}/roll/resolve-attack`, {
             method: 'POST',
             headers: getAuthHeaders(),
-            body: JSON.stringify({ weaponId })
+            body: JSON.stringify({ weaponId, level: playedLevel })
         });
         if (!response.ok) throw new Error('Erreur jet d\'attaque');
 
@@ -718,7 +732,7 @@ async function rollWeaponDamage(weaponId) {
         const response = await fetch(`${API_BASE_URL}/play/${characterId}/roll/damage`, {
             method: 'POST',
             headers: getAuthHeaders(),
-            body: JSON.stringify({ weaponId })
+            body: JSON.stringify({ weaponId, level: playedLevel })
         });
         if (!response.ok) throw new Error('Erreur jet de dégâts');
 
