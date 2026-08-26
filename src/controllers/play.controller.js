@@ -12,6 +12,22 @@ function parseId(param) {
 }
 
 /**
+ * Résout le niveau auquel jouer : utilise le niveau explicite envoyé par
+ * le client s'il est fourni, sinon retombe sur le niveau maximum atteint
+ * par le personnage (rétrocompatible avec les appels qui n'envoient pas
+ * de niveau).
+ */
+async function resolveTargetLevel(characterId, userId, requestedLevel) {
+  if (requestedLevel) {
+    const parsed = parseInt(requestedLevel, 10);
+    if (!isNaN(parsed)) return parsed;
+  }
+  const character = await Character.findById(characterId, userId);
+  if (!character) throw new AppError('Personnage introuvable', 404);
+  return character.level;
+}
+
+/**
  * Calcule le modificateur d'attaque/dégâts selon le type d'arme
  * - Armes à distance → DEX
  * - Finesse          → MAX(STR, DEX)
@@ -65,14 +81,15 @@ exports.getPlayCharacter = async (req, res, next) => {
 exports.rollAbility = async (req, res, next) => {
   try {
     const id = parseId(req.params.id);
-    const { ability } = req.body;
+    const { ability, level } = req.body;
 
     const validAbilities = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
     if (!ability || !validAbilities.includes(ability)) {
       throw new AppError(`Caractéristique invalide. Valeurs acceptées : ${validAbilities.join(', ')}`, 400);
     }
 
-    const character = await Character.findById(id, req.user.id);
+    const targetLevel = await resolveTargetLevel(id, req.user.id, level);
+    const character = await Character.getCharacterAtLevel(id, req.user.id, targetLevel);
     if (!character) throw new AppError('Personnage introuvable', 404);
 
     const score = character.abilities[ability];
@@ -141,11 +158,12 @@ exports.rollAttack = async (req, res, next) => {
 exports.rollDamage = async (req, res, next) => {
   try {
     const id = parseId(req.params.id);
-    const { weaponId } = req.body; // isCritical n'est plus jamais lu depuis req.body
+    const { weaponId, level } = req.body; // isCritical n'est plus jamais lu depuis req.body
 
     if (!weaponId) throw new AppError('weaponId est requis', 400);
 
-    const character = await Character.findById(id, req.user.id);
+    const targetLevel = await resolveTargetLevel(id, req.user.id, level);
+    const character = await Character.getCharacterAtLevel(id, req.user.id, targetLevel);
     if (!character) throw new AppError('Personnage introuvable', 404);
 
     const weapon = character.items.find(item =>
@@ -193,10 +211,11 @@ exports.rollDamage = async (req, res, next) => {
 exports.resolveAttack = async (req, res, next) => {
   try {
     const id = parseId(req.params.id);
-    const { weaponId } = req.body;
+    const { weaponId, level } = req.body;
     if (!weaponId) throw new AppError('weaponId est requis', 400);
 
-    const character = await Character.findById(id, req.user.id);
+    const targetLevel = await resolveTargetLevel(id, req.user.id, level);
+    const character = await Character.getCharacterAtLevel(id, req.user.id, targetLevel);
     if (!character) throw new AppError('Personnage introuvable', 404);
 
     const weapon = character.items.find(item =>
@@ -208,7 +227,7 @@ exports.resolveAttack = async (req, res, next) => {
     if (!damageDice) throw new AppError('Cet item n\'est pas une arme', 400);
 
     const attackMod = getWeaponAttackMod(weapon, character.abilities);
-    const proficiencyBonus = 2;
+    const proficiencyBonus = character.proficiencyBonus;
     const attackRoll = Math.floor(Math.random() * 20) + 1;
     const isCritical = attackRoll === 20;
     const isFumble = attackRoll === 1;
