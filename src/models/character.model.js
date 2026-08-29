@@ -709,6 +709,274 @@ static calculateArmorClass(abilities, items) {
     }
   }
 
+/**
+ * Calcule ce qui attend un personnage au prochain niveau, sans rien
+ * modifier : nouvelles features, amélioration de caractéristiques requise
+ * ou non, nombre de nouveaux tours de magie / sorts à choisir, et la
+ * liste des sorts éligibles pour ces choix.
+ *
+ * @param {number} id
+ * @param {number} userId
+ * @returns {Promise<object|null>} L'aperçu, ou null si personnage introuvable/non possédé.
+ * @throws {Error} Si le personnage a déjà atteint le niveau 20.
+ */
+static async getLevelUpPreview(id, userId) {
+  const result = await db.query(
+    `SELECT p.level AS current_level, p.class_id, c.name AS class
+     FROM personnage p
+     JOIN dnd_class c ON c.id = p.class_id
+     WHERE p.id = $1 AND p.user_id = $2`,
+    [id, userId]
+  );
+  if (!result.rows.length) return null;
+
+  const { current_level: currentLevel, class_id: classId, class: className } = result.rows[0];
+  const nextLevel = currentLevel + 1;
+
+  if (nextLevel > 20) {
+    throw new Error('Ce personnage a déjà atteint le niveau maximum (20)');
+  }
+
+  const requiresAbilityScoreImprovement = [4, 8, 12, 16, 19].includes(nextLevel);
+
+  const featuresResult = await db.query(
+    `SELECT id, name, description, action_type, uses_formula, recharge
+     FROM dnd_class_feature
+     WHERE class_id = $1 AND level = $2
+     ORDER BY name`,
+    [classId, nextLevel]
+  );
+
+  const currentSlots = (await db.query(
+    `SELECT cantrips_known, spells_known FROM dnd_class_spell_slots WHERE class_id = $1 AND level = $2`,
+    [classId, currentLevel]
+  )).rows[0] || null;
+
+  const nextSlots = (await db.query(
+    `SELECT cantrips_known, spells_known FROM dnd_class_spell_slots WHERE class_id = $1 AND level = $2`,
+    [classId, nextLevel]
+  )).rows[0] || null;
+
+  let newCantripsCount = 0;
+  let newSpellsKnownCount = 0;
+
+  if (nextSlots) {
+    newCantripsCount = Math.max(0, (nextSlots.cantrips_known || 0) - (currentSlots?.cantrips_known || 0));
+    if (nextSlots.spells_known !== null) {
+      newSpellsKnownCount = Math.max(0, nextSlots.spells_known - (currentSlots?.spells_known || 0));
+    }
+  }
+
+  // Sorts déjà connus, pour ne jamais reproposer un choix déjà fait
+  const knownIds = (await db.query(
+    `SELECT spell_id FROM personnage_known_spell WHERE personnage_id = $1`,
+    [id]
+  )).rows.map(r => r.spell_id);
+
+  let eligibleCantrips = [];
+  if (newCantripsCount > 0) {
+    const params = knownIds.length ? [classId, 0, knownIds] : [classId, 0];
+    const excludeClause = knownIds.length ? 'AND sp.id != ALL($3)' : '';
+    eligibleCantrips = (await db.query(
+      `SELECT sp.id, sp.name, sp.school
+       FROM dnd_spell sp
+       JOIN dnd_spell_class sc ON sc.spell_id = sp.id
+       WHERE sc.class_id = $1 AND sp.level = $2 ${excludeClause}
+       ORDER BY sp.name`,
+      params
+    )).rows;
+  }
+
+  let eligibleSpells = [];
+  if (newSpellsKnownCount > 0) {
+    const params = knownIds.length ? [classId, knownIds] : [classId];
+    const excludeClause = knownIds.length ? 'AND sp.id != ALL($2)' : '';
+    eligibleSpells = (await db.query(
+      `SELECT sp.id, sp.name, sp.level, sp.school
+       FROM dnd_spell sp
+       JOIN dnd_spell_class sc ON sc.spell_id = sp.id
+       WHERE sc.class_id = $1 AND sp.level > 0 ${excludeClause}
+       ORDER BY sp.level, sp.name`,
+      params
+    )).rows;
+  }
+
+  return {
+    characterId: id,
+    class: className,
+    currentLevel,
+    nextLevel,
+    requiresAbilityScoreImprovement,
+    newFeatures: featuresResult.rows,
+    newCantripsCount,
+    eligibleCantrips,
+    newSpellsKnownCount,
+    eligibleSpells
+  };
+}
+
+/**
+ * Applique une montée de niveau, en revalidant intégralement côté serveur
+ * tout ce qui est obligatoire (jamais confiance sur le client concernant
+ * CE QUI doit être choisi — uniquement sur LA VALEUR de ses choix).
+ *
+ * @param {number} id
+ * @param {number} userId
+ * @param {number} nextLevel - Doit être exactement currentLevel + 1.
+ * @param {object} choices
+ * @param {{ability1: string, amount1: number, ability2?: string, amount2?: number}} [choices.abilityImprovement]
+ * @param {number[]} [choices.chosenCantrips] - IDs de sorts (dnd_spell.level = 0)
+ * @param {number[]} [choices.chosenSpells] - IDs de sorts (dnd_spell.level > 0)
+ * @returns {Promise<{success: boolean, newLevel?: number, reason?: string}>}
+ * @throws {Error} Si un choix est manquant, invalide, ou incohérent avec le niveau actuel réel.
+ */
+static async applyLevelUp(id, userId, nextLevel, choices = {}) {
+  const client = await db.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    // Relire l'état réel depuis la base — jamais confiance sur ce que le
+    // client pense être le niveau actuel du personnage.
+    const charResult = await client.query(
+      `SELECT level, class_id FROM personnage WHERE id = $1 AND user_id = $2 FOR UPDATE`,
+      [id, userId]
+    );
+
+    if (!charResult.rows.length) {
+      await client.query('ROLLBACK');
+      return { success: false, reason: 'not_found' };
+    }
+
+    const { level: currentLevel, class_id: classId } = charResult.rows[0];
+    const expectedNextLevel = currentLevel + 1;
+
+    if (nextLevel !== expectedNextLevel) {
+      throw new Error(
+        `Niveau demandé (${nextLevel}) incohérent avec le niveau actuel (${currentLevel}). Une seule montée de niveau à la fois, dans l'ordre.`
+      );
+    }
+    if (nextLevel > 20) {
+      throw new Error('Niveau maximum (20) déjà atteint');
+    }
+
+    // ---- Amélioration de caractéristiques ----
+    const requiresASI = [4, 8, 12, 16, 19].includes(nextLevel);
+
+    if (requiresASI) {
+      const improvement = choices.abilityImprovement;
+      if (!improvement) {
+        throw new Error(`Une amélioration de caractéristiques est requise au niveau ${nextLevel}`);
+      }
+
+      const { ability1, amount1, ability2, amount2 } = improvement;
+      const validAbilities = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+
+      if (!validAbilities.includes(ability1)) {
+        throw new Error('Caractéristique invalide');
+      }
+
+      if (ability2) {
+        // Cas "+1 dans deux caractéristiques"
+        if (!validAbilities.includes(ability2) || amount1 !== 1 || amount2 !== 1) {
+          throw new Error('Pour deux caractéristiques, chacune doit recevoir exactement +1');
+        }
+      } else if (amount1 !== 2) {
+        // Cas "+2 dans une seule caractéristique"
+        throw new Error('Pour une seule caractéristique, le bonus doit être exactement +2');
+      }
+
+      await client.query(
+        `INSERT INTO personnage_asi (personnage_id, level, ability_1, amount_1, ability_2, amount_2)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [id, nextLevel, ability1, amount1, ability2 || null, ability2 ? amount2 : null]
+      );
+    } else if (choices.abilityImprovement) {
+      throw new Error(`Aucune amélioration de caractéristiques attendue au niveau ${nextLevel}`);
+    }
+
+    // ---- Tours de magie et sorts — quantités attendues recalculées ici,
+    // jamais lues depuis ce que le client a pu envoyer en plus ----
+    const currentSlots = (await client.query(
+      `SELECT cantrips_known, spells_known FROM dnd_class_spell_slots WHERE class_id = $1 AND level = $2`,
+      [classId, currentLevel]
+    )).rows[0] || null;
+
+    const nextSlots = (await client.query(
+      `SELECT cantrips_known, spells_known FROM dnd_class_spell_slots WHERE class_id = $1 AND level = $2`,
+      [classId, nextLevel]
+    )).rows[0] || null;
+
+    let expectedCantrips = 0;
+    let expectedSpellsKnown = 0;
+    if (nextSlots) {
+      expectedCantrips = Math.max(0, (nextSlots.cantrips_known || 0) - (currentSlots?.cantrips_known || 0));
+      if (nextSlots.spells_known !== null) {
+        expectedSpellsKnown = Math.max(0, nextSlots.spells_known - (currentSlots?.spells_known || 0));
+      }
+    }
+
+    const chosenCantrips = choices.chosenCantrips || [];
+    const chosenSpells = choices.chosenSpells || [];
+
+    if (chosenCantrips.length !== expectedCantrips) {
+      throw new Error(`Nombre de tours de magie choisis invalide (attendu : ${expectedCantrips})`);
+    }
+    if (chosenSpells.length !== expectedSpellsKnown) {
+      throw new Error(`Nombre de sorts choisis invalide (attendu : ${expectedSpellsKnown})`);
+    }
+
+    for (const spellId of chosenCantrips) {
+      const valid = await client.query(
+        `SELECT sp.id FROM dnd_spell sp
+         JOIN dnd_spell_class sc ON sc.spell_id = sp.id
+         WHERE sp.id = $1 AND sc.class_id = $2 AND sp.level = 0`,
+        [spellId, classId]
+      );
+      if (!valid.rows.length) throw new Error(`Tour de magie id=${spellId} invalide pour cette classe`);
+
+      await client.query(
+        `INSERT INTO personnage_known_spell (personnage_id, spell_id, level_learned)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (personnage_id, spell_id) DO NOTHING`,
+        [id, spellId, nextLevel]
+      );
+    }
+
+    for (const spellId of chosenSpells) {
+      const valid = await client.query(
+        `SELECT sp.id FROM dnd_spell sp
+         JOIN dnd_spell_class sc ON sc.spell_id = sp.id
+         WHERE sp.id = $1 AND sc.class_id = $2 AND sp.level > 0`,
+        [spellId, classId]
+      );
+      if (!valid.rows.length) throw new Error(`Sort id=${spellId} invalide pour cette classe`);
+
+      await client.query(
+        `INSERT INTO personnage_known_spell (personnage_id, spell_id, level_learned)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (personnage_id, spell_id) DO NOTHING`,
+        [id, spellId, nextLevel]
+      );
+    }
+
+    // ---- Enfin, faire progresser le niveau maximum du personnage ----
+    await client.query(
+      `UPDATE personnage SET level = $1 WHERE id = $2 AND user_id = $3`,
+      [nextLevel, id, userId]
+    );
+
+    await client.query('COMMIT');
+    return { success: true, newLevel: nextLevel };
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
   /**
    * Renames a character. Only affects the row owned by the given user.
    *

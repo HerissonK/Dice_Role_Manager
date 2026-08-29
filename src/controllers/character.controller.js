@@ -136,6 +136,55 @@ const deleteCharacter = async (req, res, next) => {
   }
 };
 
+// =====================================================
+// À AJOUTER dans character.controller.js, à côté des autres fonctions,
+// et à ajouter à l'objet module.exports en bas du fichier.
+// =====================================================
+
+/**
+ * Aperçu de la prochaine montée de niveau (lecture seule, ne modifie rien).
+ * GET /api/characters/:id/level-up-preview
+ */
+const getLevelUpPreview = async (req, res, next) => {
+  try {
+    const id = parseId(req.params.id);
+    const preview = await Character.getLevelUpPreview(id, req.user.id);
+
+    if (!preview) throw new AppError('Character not found', 404);
+
+    res.json(preview);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Applique une montée de niveau avec les choix du joueur (amélioration de
+ * caractéristiques, tours de magie, sorts). Toute la logique de
+ * revalidation stricte est dans Character.applyLevelUp().
+ * POST /api/characters/:id/level-up
+ */
+const applyLevelUp = async (req, res, next) => {
+  try {
+    const id = parseId(req.params.id);
+    const { nextLevel, abilityImprovement, chosenCantrips, chosenSpells } = req.body;
+
+    if (!nextLevel) throw new AppError('nextLevel est requis', 400);
+
+    const result = await Character.applyLevelUp(id, req.user.id, nextLevel, {
+      abilityImprovement,
+      chosenCantrips,
+      chosenSpells
+    });
+
+    if (!result.success) throw new AppError('Character not found', 404);
+
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createCharacter,
   getCharacters,
@@ -144,4 +193,6 @@ module.exports = {
   updateCharacter,
   deleteCharacter,
   updateCharacterName,
+  getLevelUpPreview,
+  applyLevelUp
 };

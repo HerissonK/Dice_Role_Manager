@@ -9,6 +9,8 @@ const {
   updateCharacter,
   deleteCharacter,
   updateCharacterName,
+  getLevelUpPreview,
+  applyLevelUp,
 } = require('../controllers/character.controller');
 
 // Auth obligatoire
@@ -21,5 +23,7 @@ router.get('/:id', getCharacterById);
 router.put('/:id', updateCharacter);
 router.delete('/:id', deleteCharacter);
 router.patch('/:id/name', updateCharacterName);
+router.get('/:id/level-up-preview', getLevelUpPreview);
+router.post('/:id/level-up', applyLevelUp);
 
 module.exports = router;
