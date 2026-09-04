@@ -7,6 +7,10 @@
 
 // Application Character Builder D&D 5e
 
+// Base pour les appels API propres à ce fichier (même valeur que celle
+// utilisée dans handleSave — pas de constante API_BASE_URL partagée ici).
+const CLASS_API_BASE = 'http://localhost:3000/api';
+
 // État de l'application
 const appState = {
     currentStep: 0,
@@ -14,6 +18,9 @@ const appState = {
     selectedRace: null,
     selectedSubspecies: null,
     selectedClass: null,
+    classSpellcasting: null, // { cantripsToChoose, spellsToChoose, eligibleCantrips, eligibleSpells }
+    selectedCantrips: [],
+    selectedSpells: [],
     abilityScores: null,
 
     selectedBackground: null,
@@ -27,10 +34,11 @@ const appState = {
     selectedEquipment: {}
 };
 
-// Étape "Sous-espèce" toujours présente dans la liste (pour l'indicateur de
-// progression), mais sautée automatiquement à la navigation si l'espèce
-// choisie n'a pas de sous-race officielle (voir handleNext/handlePrevious).
-const steps = ['Nom', 'Espèce', 'Sous-espèce', 'Classe', 'Caractéristiques', 'Historique', 'Compétences', 'Équipement', 'Fiche'];
+// Étapes "Sous-espèce" (index 2) et "Sorts" (index 4) toujours présentes
+// dans la liste pour l'indicateur de progression, mais sautées
+// automatiquement à la navigation quand elles ne s'appliquent pas
+// (voir handleNext/handlePrevious).
+const steps = ['Nom', 'Espèce', 'Sous-espèce', 'Classe', 'Sorts', 'Caractéristiques', 'Historique', 'Compétences', 'Équipement', 'Fiche'];
 
 // Constantes pour Point Buy
 const POINT_BUY_MAX = 27;
@@ -94,18 +102,21 @@ function renderMainContent() {
             renderClassSelection(container);
             break;
         case 4:
-            renderAbilityScores(container);
+            renderSpellSelection(container);
             break;
         case 5:
-            renderBackgroundSelection(container);
+            renderAbilityScores(container);
             break;
         case 6:
-            renderSkillSelection(container);
+            renderBackgroundSelection(container);
             break;
         case 7:
-            renderEquipmentSelection(container);
+            renderSkillSelection(container);
             break;
         case 8:
+            renderEquipmentSelection(container);
+            break;
+        case 9:
             renderCharacterSheet(container);
             break;
     }
@@ -214,8 +225,6 @@ function renderSubspeciesSelection(container) {
     const options = race?.subspecies || [];
 
     if (options.length === 0) {
-        // Filet de sécurité : ne devrait normalement jamais s'afficher,
-        // handleNext/handlePrevious sautent cette étape dans ce cas.
         container.innerHTML = `
             <div class="card p-6 text-center">
                 <p class="text-gray-600">Cette espèce n'a pas de sous-race officielle.</p>
@@ -321,15 +330,140 @@ function renderClassSelection(container) {
     `;
 
     container.querySelectorAll('[data-class-id]').forEach(card => {
-        card.addEventListener('click', () => {
+        card.addEventListener('click', async () => {
             const classId = Number(card.getAttribute('data-class-id'));
             appState.selectedClass = classes.find(c => c.id === classId);
-            render();
+
+            // Reset des choix de sorts (dépendaient peut-être d'une autre classe)
+            appState.selectedCantrips = [];
+            appState.selectedSpells = [];
+            appState.classSpellcasting = null; // en cours de chargement
+
+            render(); // affichage immédiat, bouton "Suivant" désactivé tant que le chargement n'est pas fini
+
+            appState.classSpellcasting = await fetchClassSpellcasting(classId);
+            render(); // re-render une fois les sorts chargés
         });
     });
 }
 
-// Étape 4: Caractéristiques (Point Buy)
+/**
+ * Récupère depuis l'API combien de tours de magie/sorts la classe choisie
+ * doit choisir au niveau 1, et la liste des options éligibles. Renvoie un
+ * objet "vide" (0 sort à choisir) en cas d'échec, pour ne jamais bloquer
+ * le builder à cause d'une erreur réseau ponctuelle.
+ */
+async function fetchClassSpellcasting(classId) {
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${CLASS_API_BASE}/classes/${classId}/starting-spells`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) throw new Error('Erreur lors du chargement des sorts de la classe');
+        return await response.json();
+    } catch (err) {
+        console.error('Erreur fetchClassSpellcasting:', err);
+        return { cantripsToChoose: 0, spellsToChoose: 0, eligibleCantrips: [], eligibleSpells: [] };
+    }
+}
+
+// Étape 4 (conditionnelle) : Sélection des sorts de départ
+// Ne s'affiche que si la classe choisie a des tours de magie/sorts à
+// choisir au niveau 1 (voir handleNext/handlePrevious pour le saut automatique).
+function renderSpellSelection(container) {
+    const sc = appState.classSpellcasting;
+
+    if (!sc || (sc.cantripsToChoose + sc.spellsToChoose) === 0) {
+        container.innerHTML = `
+            <div class="card p-6 text-center">
+                <p class="text-gray-600">Cette classe n'a aucun sort à choisir au niveau 1.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const cantripsHTML = sc.cantripsToChoose > 0 ? `
+        <div class="card p-6 mb-6">
+            <h3 class="mb-3">Tours de magie</h3>
+            <p class="text-sm text-gray-600 mb-4">
+                Choisissez ${sc.cantripsToChoose} tour${sc.cantripsToChoose > 1 ? 's' : ''} de magie
+                (${appState.selectedCantrips.length} / ${sc.cantripsToChoose})
+            </p>
+            <div class="space-y-2">
+                ${sc.eligibleCantrips.map(spell => `
+                    <label class="flex items-center gap-2 p-2 cursor-pointer">
+                        <input type="checkbox" data-spell-type="cantrip" value="${spell.id}"
+                            ${appState.selectedCantrips.includes(spell.id) ? 'checked' : ''}>
+                        <span>${spell.name}${spell.school ? ` <span class="text-xs text-gray-500">(${spell.school})</span>` : ''}</span>
+                    </label>
+                `).join('')}
+            </div>
+        </div>
+    ` : '';
+
+    const spellsHTML = sc.spellsToChoose > 0 ? `
+        <div class="card p-6 mb-6">
+            <h3 class="mb-3">Sorts</h3>
+            <p class="text-sm text-gray-600 mb-4">
+                Choisissez ${sc.spellsToChoose} sort${sc.spellsToChoose > 1 ? 's' : ''}
+                (${appState.selectedSpells.length} / ${sc.spellsToChoose})
+            </p>
+            <div class="space-y-2">
+                ${sc.eligibleSpells.map(spell => `
+                    <label class="flex items-center gap-2 p-2 cursor-pointer">
+                        <input type="checkbox" data-spell-type="spell" value="${spell.id}"
+                            ${appState.selectedSpells.includes(spell.id) ? 'checked' : ''}>
+                        <span>${spell.name} <span class="text-xs text-gray-500">(niveau ${spell.level}${spell.school ? `, ${spell.school}` : ''})</span></span>
+                    </label>
+                `).join('')}
+            </div>
+        </div>
+    ` : '';
+
+    container.innerHTML = `
+        <div class="max-w-3xl">
+            <h2 class="mb-6 text-center">Choisissez vos sorts</h2>
+            ${cantripsHTML}
+            ${spellsHTML}
+        </div>
+    `;
+
+    container.querySelectorAll('input[data-spell-type="cantrip"]').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const id = Number(cb.value);
+            if (cb.checked) {
+                if (appState.selectedCantrips.length >= sc.cantripsToChoose) {
+                    cb.checked = false;
+                    return;
+                }
+                appState.selectedCantrips.push(id);
+            } else {
+                appState.selectedCantrips = appState.selectedCantrips.filter(x => x !== id);
+            }
+            renderSpellSelection(container);
+            renderNavigationButtons();
+        });
+    });
+
+    container.querySelectorAll('input[data-spell-type="spell"]').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const id = Number(cb.value);
+            if (cb.checked) {
+                if (appState.selectedSpells.length >= sc.spellsToChoose) {
+                    cb.checked = false;
+                    return;
+                }
+                appState.selectedSpells.push(id);
+            } else {
+                appState.selectedSpells = appState.selectedSpells.filter(x => x !== id);
+            }
+            renderSpellSelection(container);
+            renderNavigationButtons();
+        });
+    });
+}
+
+// Étape 5: Caractéristiques (Point Buy)
 function renderAbilityScores(container) {
     if (!appState.abilityScores) {
         appState.abilityScores = {
@@ -465,7 +599,7 @@ function renderAbilityScores(container) {
     });
 }
 
-// Étape 5: Sélection de l'historique
+// Étape 6: Sélection de l'historique
 function renderBackgroundSelection(container) {
     const backgroundsHTML = backgrounds.map(bg => {
         const isSelected = String(appState.selectedBackground?.id) === String(bg.id);
@@ -537,7 +671,7 @@ function renderBackgroundSelection(container) {
 }
 
 
-// Étape 6: Sélection des compétences
+// Étape 7: Sélection des compétences
 function renderSkillSelection(container) {
     console.log('selectedClass:', appState.selectedClass);
 
@@ -665,7 +799,7 @@ function renderSkillSelection(container) {
     });
 }
 
-// Étape 7: Sélection de l'équipement
+// Étape 8: Sélection de l'équipement
     function renderEquipmentSelection(container) {
         console.log('CLASS:', appState.selectedClass);
         console.log('EQUIPMENT CHOICES:', appState.selectedClass?.equipmentChoices);
@@ -808,7 +942,7 @@ function getAttackAbility(weapon, abilities) {
 
 
 
-// Étape 8: Fiche de personnage
+// Étape 9: Fiche de personnage
 function renderCharacterSheet(container) {
     if (!appState.selectedRace || !appState.selectedClass || !appState.abilityScores || !appState.selectedBackground) {
         container.innerHTML = '<p>Données manquantes...</p>';
@@ -931,6 +1065,32 @@ function renderCharacterSheet(container) {
 
     // Traits combinés (espèce + sous-espèce)
     const allTraits = [...race.traits, ...(subspecies?.traits || [])];
+
+    // Sorts choisis (tours de magie + sorts), affichés uniquement si la
+    // classe en propose au niveau 1
+    const sc = appState.classSpellcasting;
+    const chosenCantrips = (sc?.eligibleCantrips || []).filter(sp => appState.selectedCantrips.includes(sp.id));
+    const chosenSpells = (sc?.eligibleSpells || []).filter(sp => appState.selectedSpells.includes(sp.id));
+    const hasSpells = chosenCantrips.length > 0 || chosenSpells.length > 0;
+
+    const spellsSectionHTML = hasSpells ? `
+        <div class="separator"></div>
+        <div class="mb-6">
+            <h3 class="mb-4">Sorts connus</h3>
+            ${chosenCantrips.length > 0 ? `
+                <div class="mb-3">
+                    <span class="font-semibold">Tours de magie :</span>
+                    <p class="text-gray-700">${chosenCantrips.map(sp => sp.name).join(', ')}</p>
+                </div>
+            ` : ''}
+            ${chosenSpells.length > 0 ? `
+                <div>
+                    <span class="font-semibold">Sorts :</span>
+                    <p class="text-gray-700">${chosenSpells.map(sp => sp.name).join(', ')}</p>
+                </div>
+            ` : ''}
+        </div>
+    ` : '';
     
     container.innerHTML = `
         <div class="max-w-5xl">
@@ -1033,6 +1193,8 @@ function renderCharacterSheet(container) {
                     </div>
                 </div>
 
+                ${spellsSectionHTML}
+
                 <div class="separator"></div>
                 
                 <!-- Compétences maîtrisées -->
@@ -1085,8 +1247,8 @@ function renderNavigationButtons() {
     const container = document.getElementById('navigation-buttons');
     
     // Masquer les boutons pour l'étape des caractéristiques (elle a ses propres boutons)
-    // Étape 4 désormais (décalée d'un cran par l'ajout de l'étape Sous-espèce).
-    if (appState.currentStep === 4) {
+    // Étape 5 désormais (décalée par l'ajout des étapes Sous-espèce et Sorts).
+    if (appState.currentStep === 5) {
         container.classList.add('hidden');
         return;
     }
@@ -1139,6 +1301,16 @@ function renderNavigationButtons() {
     if (btnSave) btnSave.addEventListener('click', handleSave);
 }
 
+/**
+ * Indique si l'étape "Sorts" (index 4) doit être sautée pour la classe
+ * actuellement sélectionnée (aucun tour de magie ni sort à choisir au
+ * niveau 1, ou données pas encore chargées / classe non magique).
+ */
+function shouldSkipSpellStep() {
+    const sc = appState.classSpellcasting;
+    return !sc || (sc.cantripsToChoose + sc.spellsToChoose) === 0;
+}
+
 // Navigation
 function handleNext() {
     if (!canGoNext() || appState.currentStep >= steps.length - 1) return;
@@ -1150,6 +1322,12 @@ function handleNext() {
     if (nextStep === 2 && (appState.selectedRace?.subspecies?.length || 0) === 0) {
         appState.selectedSubspecies = null;
         nextStep = 3;
+    }
+
+    // Étape "Sorts" (index 4) sautée si la classe choisie n'a rien à
+    // proposer au niveau 1.
+    if (nextStep === 4 && shouldSkipSpellStep()) {
+        nextStep = 5;
     }
 
     appState.currentStep = nextStep;
@@ -1167,6 +1345,11 @@ function handlePrevious() {
         prevStep = 1;
     }
 
+    // Ni par l'étape Sorts si la classe actuelle n'en propose pas.
+    if (prevStep === 4 && shouldSkipSpellStep()) {
+        prevStep = 3;
+    }
+
     appState.currentStep = prevStep;
     render();
 }
@@ -1179,20 +1362,27 @@ function canGoNext() {
             return appState.selectedRace !== null;
         case 2: {
             const options = appState.selectedRace?.subspecies || [];
-            // Pas de sous-race pour cette espèce : cette étape est de toute
-            // façon sautée par handleNext, mais on reste permissif ici.
             if (options.length === 0) return true;
             return appState.selectedSubspecies !== null;
         }
         case 3:
-            return appState.selectedClass !== null;
-        case 4:
-            return appState.abilityScores !== null;
+            // Le bouton reste désactivé tant que le chargement des sorts
+            // de la classe n'est pas terminé (évite une course avec le fetch).
+            return appState.selectedClass !== null && appState.classSpellcasting !== null;
+        case 4: {
+            const sc = appState.classSpellcasting;
+            if (!sc) return true; // étape sautée de toute façon
+            const cantripsOk = appState.selectedCantrips.length === sc.cantripsToChoose;
+            const spellsOk = appState.selectedSpells.length === sc.spellsToChoose;
+            return cantripsOk && spellsOk;
+        }
         case 5:
-            return appState.selectedBackground !== null;
+            return appState.abilityScores !== null;
         case 6:
-            return appState.classSkills.length === appState.selectedClass.skillChoices;
+            return appState.selectedBackground !== null;
         case 7:
+            return appState.classSkills.length === appState.selectedClass.skillChoices;
+        case 8:
             return Object.keys(appState.selectedEquipment).length ===
                    (appState.selectedClass.equipmentChoices?.length || 0);
         default:
@@ -1217,6 +1407,8 @@ function handleExport() {
         level: 1,
         abilityScores: appState.abilityScores,
         skills: appState.selectedSkills,
+        cantrips: appState.selectedCantrips,
+        spells: appState.selectedSpells,
     };
     
     const dataStr = JSON.stringify(character, null, 2);
@@ -1293,6 +1485,12 @@ async function handleSave() {
         return;
     }
     console.log('🔧 Equipment à envoyer:', buildEquipmentItems());
+
+    // Tours de magie + sorts choisis, combinés en une seule liste d'id
+    // (personnage_known_spell ne distingue pas les deux : le niveau du
+    // sort lui-même, déjà en base, suffit à faire la différence).
+    const knownSpells = [...appState.selectedCantrips, ...appState.selectedSpells];
+
     const characterData = {
         name: appState.characterName,
         level: 1,
@@ -1302,7 +1500,8 @@ async function handleSave() {
         backgroundId: appState.selectedBackground.id,
         abilities: apiAbilities,
         skills: appState.selectedSkills,
-        equipment: buildEquipmentItems()
+        equipment: buildEquipmentItems(),
+        knownSpells
     };
 
     try {

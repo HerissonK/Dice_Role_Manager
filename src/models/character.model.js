@@ -45,6 +45,52 @@ class Character {
    * @returns {Promise<number>} The newly created character's id.
    */
 
+  /**
+   * Indique combien de tours de magie et de sorts un personnage doit choisir
+   * à la création (niveau 1) pour une classe donnée, avec la liste des
+   * options éligibles. Ne dépend d'aucun personnage existant — utilisé par
+   * le builder avant même que le personnage soit créé.
+   *
+   * @param {number} classId
+   * @returns {Promise<{cantripsToChoose: number, spellsToChoose: number, eligibleCantrips: object[], eligibleSpells: object[]}>}
+   */
+  static async getStartingSpellcasting(classId) {
+    const slotsRow = (await db.query(
+      `SELECT cantrips_known, spells_known FROM dnd_class_spell_slots WHERE class_id = $1 AND level = 1`,
+      [classId]
+    )).rows[0] || null;
+  
+    const cantripsToChoose = slotsRow?.cantrips_known || 0;
+    const spellsToChoose = (slotsRow && slotsRow.spells_known !== null) ? slotsRow.spells_known : 0;
+  
+    let eligibleCantrips = [];
+    if (cantripsToChoose > 0) {
+      eligibleCantrips = (await db.query(
+        `SELECT sp.id, sp.name, sp.school
+        FROM dnd_spell sp
+        JOIN dnd_spell_class sc ON sc.spell_id = sp.id
+        WHERE sc.class_id = $1 AND sp.level = 0
+        ORDER BY sp.name`,
+        [classId]
+      )).rows;
+    }
+  
+    let eligibleSpells = [];
+    if (spellsToChoose > 0) {
+      eligibleSpells = (await db.query(
+        `SELECT sp.id, sp.name, sp.level, sp.school
+        FROM dnd_spell sp
+        JOIN dnd_spell_class sc ON sc.spell_id = sp.id
+        WHERE sc.class_id = $1 AND sp.level > 0
+        ORDER BY sp.level, sp.name`,
+        [classId]
+      )).rows;
+    }
+  
+    return { cantripsToChoose, spellsToChoose, eligibleCantrips, eligibleSpells };
+  }
+  
+  
   static async create(data) {
     RuleValidator.validateCharacter(data);
 
@@ -58,7 +104,8 @@ class Character {
       abilities,
       userId,
       skills,
-      equipment
+      equipment,
+      knownSpells
     } = data;
 
     if (!name) {
@@ -104,6 +151,32 @@ class Character {
         }
         console.log(`✅ ${skills.length} compétences sauvegardées pour personnage ${characterId}`);
       }
+
+      if (knownSpells && Array.isArray(knownSpells) && knownSpells.length > 0) {
+        for (const spellId of knownSpells) {
+          // Vérifie que le sort appartient bien à la liste de la classe
+          // choisie, avant de l'enregistrer (même logique de prudence que
+          // pour la montée de niveau : ne jamais faire confiance à un id
+          // envoyé par le client sans le confronter à la base).
+          const valid = await client.query(
+            `SELECT sp.id FROM dnd_spell sp
+             JOIN dnd_spell_class sc ON sc.spell_id = sp.id
+             WHERE sp.id = $1 AND sc.class_id = $2`,
+            [spellId, classId]
+          );
+          if (!valid.rows.length) {
+            throw new Error(`Sort id=${spellId} invalide pour cette classe`);
+          }
+ 
+          await client.query(
+            `INSERT INTO personnage_known_spell (personnage_id, spell_id, level_learned)
+             VALUES ($1, $2, $3)
+             ON CONFLICT (personnage_id, spell_id) DO NOTHING`,
+            [characterId, spellId, level]
+          );
+        }
+        console.log(`✅ ${knownSpells.length} sort(s)/tour(s) de magie sauvegardé(s) pour personnage ${characterId}`);
+      }     
 
       // ✅ 4. Sauvegarder les items équipés
       if (equipment && Array.isArray(equipment) && equipment.length > 0) {

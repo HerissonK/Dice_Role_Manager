@@ -1,4 +1,3 @@
-// REMPLACER tout le fichier par :
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -6,6 +5,7 @@ const rateLimit = require('express-rate-limit');
 const { errorHandler } = require('./utils/errorHandler');
 
 const characterRoutes = require('./routes/character.routes');
+const classRoutes = require('./routes/class.routes');
 const authRoutes = require('./routes/auth.routes');
 const playRoutes = require('./routes/play.routes');
 
@@ -54,6 +54,7 @@ app.use('/api/characters', createLimiter);
 app.use('/api/characters', characterRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api', playRoutes);
+app.use('/api/classes', classRoutes);
 
 /* 6. ERROR HANDLER */
 app.use(errorHandler);
