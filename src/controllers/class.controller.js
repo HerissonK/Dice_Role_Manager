@@ -18,5 +18,17 @@ const getStartingSpells = async (req, res, next) => {
     next(error);
   }
 };
+
+const getStartingFightingStyle = async (req, res, next) => {
+  try {
+    const classId = parseInt(req.params.classId, 10);
+    if (isNaN(classId)) throw new AppError('Invalid class ID', 400);
  
-module.exports = { getStartingSpells };
+    const result = await Character.getFightingStyleChoice(classId, 1);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getStartingSpells, getStartingFightingStyle };

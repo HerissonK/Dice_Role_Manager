@@ -89,8 +89,35 @@ class Character {
   
     return { cantripsToChoose, spellsToChoose, eligibleCantrips, eligibleSpells };
   }
+
+  /**
+   * Indique si une classe débloque un choix de style de combat à un niveau
+   * donné, et renvoie la liste des styles disponibles le cas échéant.
+   * Utilisé à la fois par le builder (niveau 1, à la création) et plus tard
+   * par le flux de montée de niveau (Paladin/Rôdeur, niveau 2).
+   *
+   * @param {number} classId
+   * @param {number} [level=1] - Niveau auquel on vérifie le déblocage (1 par défaut, pour la création).
+   * @returns {Promise<{hasChoice: boolean, options: object[]}>}
+   */
+  static async getFightingStyleChoice(classId, level = 1) {
+    const result = await db.query(
+      `SELECT fighting_style_level FROM dnd_class WHERE id = $1`,
+      [classId]
+    );
   
-  
+    if (result.rows[0]?.fighting_style_level !== level) {
+      return { hasChoice: false, options: [] };
+    }
+
+    const options = (await db.query(
+      `SELECT id, name FROM dnd_fighting_style WHERE class_id = $1`,
+      [classId]
+    )).rows;
+
+    return { hasChoice: true, options };
+  }
+
   static async create(data) {
     RuleValidator.validateCharacter(data);
 
@@ -105,7 +132,8 @@ class Character {
       userId,
       skills,
       equipment,
-      knownSpells
+      knownSpells,
+      fightingStyles
     } = data;
 
     if (!name) {
@@ -117,13 +145,29 @@ class Character {
     try {
       await client.query('BEGIN');
 
+      let validatedFightingStyleId = null;
+      if (fightingStyleId) {
+        const fsCheck = await client.query(
+          `SELECT c.fighting_style_level, fs.id
+           FROM dnd_class c
+           LEFT JOIN dnd_fighting_style fs ON fs.id = $1
+           WHERE c.id = $2`,
+          [fightingStyleId, classId]
+        );
+        const row = fsCheck.rows[0];
+        if (!row || !row.id || row.fighting_style_level !== level) {
+          throw new Error(`Style de combat id=${fightingStyleId} invalide pour cette classe à ce niveau`);
+        }
+        validatedFightingStyleId = fightingStyleId;
+      }
+ 
       // 1. Créer le personnage
       const result = await client.query(
         `INSERT INTO personnage
-         (name, level, class_id, species_id, subspecies_id, background_id, user_id)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         (name, level, class_id, species_id, subspecies_id, background_id, user_id, fighting_style_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          RETURNING id`,
-        [name, level, classId, speciesId, subspeciesId || null, backgroundId, userId]
+        [name, level, classId, speciesId, subspeciesId || null, backgroundId, userId, validatedFightingStyleId]
       );
 
       const characterId = result.rows[0].id;
