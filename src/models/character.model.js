@@ -2,6 +2,29 @@ const db = require('../config/database');
 const RuleValidator = require('../validators/ruleValidator');
 const { getProficiencyBonus } = require('../utils/proficiency.util');
 
+/**
+ * Calcule la différence d'emplacements de sorts entre deux niveaux,
+ * niveau de sort par niveau de sort (ex: {"2": {before: 3, after: 4, gained: 1}}).
+ * Ne renvoie que les niveaux de sort où le nombre augmente.
+ */
+function diffSpellSlots(currentSlots, nextSlots) {
+  const diff = {};
+  const allSpellLevels = new Set([
+    ...Object.keys(currentSlots || {}),
+    ...Object.keys(nextSlots || {})
+  ]);
+ 
+  for (const spellLevel of allSpellLevels) {
+    const before = (currentSlots || {})[spellLevel] || 0;
+    const after = (nextSlots || {})[spellLevel] || 0;
+    if (after > before) {
+      diff[spellLevel] = { before, after, gained: after - before };
+    }
+  }
+ 
+  return diff;
+}
+
 class Character {
 
   /**
@@ -711,9 +734,9 @@ static calculateArmorClass(abilities, items) {
 
 /**
  * Calcule ce qui attend un personnage au prochain niveau, sans rien
- * modifier : nouvelles features, amélioration de caractéristiques requise
- * ou non, nombre de nouveaux tours de magie / sorts à choisir, et la
- * liste des sorts éligibles pour ces choix.
+ * modifier : nouvelles features, PV gagnés, évolution du bonus de
+ * maîtrise, nouveaux emplacements de sorts, amélioration de
+ * caractéristiques requise ou non, et les sorts/tours de magie éligibles.
  *
  * @param {number} id
  * @param {number} userId
@@ -722,23 +745,70 @@ static calculateArmorClass(abilities, items) {
  */
 static async getLevelUpPreview(id, userId) {
   const result = await db.query(
-    `SELECT p.level AS current_level, p.class_id, c.name AS class
+    `SELECT p.level AS current_level, p.class_id, c.name AS class, c.hit_die,
+            s.ability_bonuses AS racial_bonuses,
+            sub.ability_bonuses AS subspecies_bonuses,
+            pc.con
      FROM personnage p
      JOIN dnd_class c ON c.id = p.class_id
+     JOIN dnd_species s ON s.id = p.species_id
+     LEFT JOIN dnd_subspecies sub ON sub.id = p.subspecies_id
+     LEFT JOIN (
+       SELECT personnage_id,
+         MAX(CASE WHEN caracteristique = 'con' THEN valeur END) AS con
+       FROM personnage_caracteristique
+       GROUP BY personnage_id
+     ) pc ON pc.personnage_id = p.id
      WHERE p.id = $1 AND p.user_id = $2`,
     [id, userId]
   );
   if (!result.rows.length) return null;
-
-  const { current_level: currentLevel, class_id: classId, class: className } = result.rows[0];
+ 
+  const {
+    current_level: currentLevel,
+    class_id: classId,
+    class: className,
+    hit_die: hitDie,
+    racial_bonuses: racialBonuses,
+    subspecies_bonuses: subspeciesBonuses,
+    con: baseCon
+  } = result.rows[0];
+ 
   const nextLevel = currentLevel + 1;
-
   if (nextLevel > 20) {
     throw new Error('Ce personnage a déjà atteint le niveau maximum (20)');
   }
-
+ 
+  // ---- Constitution finale (espèce + sous-espèce + ASI déjà choisis
+  // jusqu'au niveau actuel — PAS l'ASI de cette montée de niveau, qui
+  // n'est pas encore choisi au moment de l'aperçu) ----
+  let finalCon = baseCon ?? 10;
+  finalCon += (racialBonuses || {}).con || 0;
+  finalCon += (subspeciesBonuses || {}).con || 0;
+ 
+  const asiRows = (await db.query(
+    `SELECT ability_1, amount_1, ability_2, amount_2
+     FROM personnage_asi WHERE personnage_id = $1 AND level <= $2`,
+    [id, currentLevel]
+  )).rows;
+  for (const asi of asiRows) {
+    if (asi.ability_1 === 'con') finalCon += asi.amount_1;
+    if (asi.ability_2 === 'con') finalCon += asi.amount_2;
+  }
+ 
+  const conMod = Math.floor((finalCon - 10) / 2);
+  const pvAtLevel = (level) =>
+    Math.floor(hitDie + conMod + ((hitDie / 2) + 1 + conMod) * (level - 1));
+ 
+  const currentPv = pvAtLevel(currentLevel);
+  const nextPv = pvAtLevel(nextLevel);
+ 
+  // ---- Bonus de maîtrise ----
+  const currentProficiencyBonus = getProficiencyBonus(currentLevel);
+  const nextProficiencyBonus = getProficiencyBonus(nextLevel);
+ 
   const requiresAbilityScoreImprovement = [4, 8, 12, 16, 19].includes(nextLevel);
-
+ 
   const featuresResult = await db.query(
     `SELECT id, name, description, action_type, uses_formula, recharge
      FROM dnd_class_feature
@@ -746,33 +816,34 @@ static async getLevelUpPreview(id, userId) {
      ORDER BY name`,
     [classId, nextLevel]
   );
-
-  const currentSlots = (await db.query(
-    `SELECT cantrips_known, spells_known FROM dnd_class_spell_slots WHERE class_id = $1 AND level = $2`,
+ 
+  const currentSlotsRow = (await db.query(
+    `SELECT cantrips_known, spells_known, slots FROM dnd_class_spell_slots WHERE class_id = $1 AND level = $2`,
     [classId, currentLevel]
   )).rows[0] || null;
-
-  const nextSlots = (await db.query(
-    `SELECT cantrips_known, spells_known FROM dnd_class_spell_slots WHERE class_id = $1 AND level = $2`,
+ 
+  const nextSlotsRow = (await db.query(
+    `SELECT cantrips_known, spells_known, slots FROM dnd_class_spell_slots WHERE class_id = $1 AND level = $2`,
     [classId, nextLevel]
   )).rows[0] || null;
-
+ 
   let newCantripsCount = 0;
   let newSpellsKnownCount = 0;
-
-  if (nextSlots) {
-    newCantripsCount = Math.max(0, (nextSlots.cantrips_known || 0) - (currentSlots?.cantrips_known || 0));
-    if (nextSlots.spells_known !== null) {
-      newSpellsKnownCount = Math.max(0, nextSlots.spells_known - (currentSlots?.spells_known || 0));
+  let spellSlotChanges = {};
+ 
+  if (nextSlotsRow) {
+    newCantripsCount = Math.max(0, (nextSlotsRow.cantrips_known || 0) - (currentSlotsRow?.cantrips_known || 0));
+    if (nextSlotsRow.spells_known !== null) {
+      newSpellsKnownCount = Math.max(0, nextSlotsRow.spells_known - (currentSlotsRow?.spells_known || 0));
     }
+    spellSlotChanges = diffSpellSlots(currentSlotsRow?.slots, nextSlotsRow.slots);
   }
-
-  // Sorts déjà connus, pour ne jamais reproposer un choix déjà fait
+ 
   const knownIds = (await db.query(
     `SELECT spell_id FROM personnage_known_spell WHERE personnage_id = $1`,
     [id]
   )).rows.map(r => r.spell_id);
-
+ 
   let eligibleCantrips = [];
   if (newCantripsCount > 0) {
     const params = knownIds.length ? [classId, 0, knownIds] : [classId, 0];
@@ -786,7 +857,7 @@ static async getLevelUpPreview(id, userId) {
       params
     )).rows;
   }
-
+ 
   let eligibleSpells = [];
   if (newSpellsKnownCount > 0) {
     const params = knownIds.length ? [classId, knownIds] : [classId];
@@ -800,14 +871,21 @@ static async getLevelUpPreview(id, userId) {
       params
     )).rows;
   }
-
+ 
   return {
     characterId: id,
     class: className,
     currentLevel,
     nextLevel,
+    currentPv,
+    nextPv,
+    hpGain: nextPv - currentPv,
+    currentProficiencyBonus,
+    nextProficiencyBonus,
+    proficiencyBonusIncreases: nextProficiencyBonus > currentProficiencyBonus,
     requiresAbilityScoreImprovement,
     newFeatures: featuresResult.rows,
+    spellSlotChanges,
     newCantripsCount,
     eligibleCantrips,
     newSpellsKnownCount,

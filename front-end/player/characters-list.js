@@ -221,10 +221,43 @@ function showLevelUpModal(characterId, preview) {
     title.style.cssText = 'margin-bottom:6px;color:#d4af37;';
     box.appendChild(title);
 
-    const subtitle = document.createElement('p');
-    subtitle.textContent = `${preview.class} — niveau ${preview.currentLevel} → ${preview.nextLevel}`;
-    subtitle.style.cssText = 'font-size:13px;color:#8a9a7f;margin-bottom:16px;';
-    box.appendChild(subtitle);
+    // ---- Résumé : PV, bonus de maîtrise, emplacements de sorts ----
+    const summarySection = document.createElement('div');
+    summarySection.style.cssText = 'margin-bottom:18px;background:#233524;border-radius:6px;padding:14px;font-size:13px;';
+
+    const pvLine = document.createElement('div');
+    pvLine.style.cssText = 'margin-bottom:6px;';
+    pvLine.innerHTML = `<strong style="color:#d4af37;">Points de vie :</strong> ${preview.currentPv} → ${preview.nextPv} <span style="color:#8a9a7f;">(+${preview.hpGain})</span>`;
+    summarySection.appendChild(pvLine);
+
+    const profLine = document.createElement('div');
+    profLine.style.cssText = 'margin-bottom:6px;';
+    if (preview.proficiencyBonusIncreases) {
+        profLine.innerHTML = `<strong style="color:#d4af37;">Bonus de maîtrise :</strong> +${preview.currentProficiencyBonus} → +${preview.nextProficiencyBonus} <span style="color:#8a9a7f;">(augmente !)</span>`;
+    } else {
+        profLine.innerHTML = `<strong style="color:#d4af37;">Bonus de maîtrise :</strong> +${preview.nextProficiencyBonus} <span style="color:#8a9a7f;">(inchangé)</span>`;
+    }
+    summarySection.appendChild(profLine);
+
+    const slotLevels = Object.keys(preview.spellSlotChanges || {});
+    if (slotLevels.length > 0) {
+        const slotsTitle = document.createElement('div');
+        slotsTitle.style.cssText = 'margin-top:8px;margin-bottom:4px;color:#d4af37;font-weight:600;';
+        slotsTitle.textContent = 'Emplacements de sorts :';
+        summarySection.appendChild(slotsTitle);
+
+        slotLevels
+            .sort((a, b) => Number(a) - Number(b))
+            .forEach(spellLevel => {
+                const change = preview.spellSlotChanges[spellLevel];
+                const line = document.createElement('div');
+                line.style.cssText = 'color:#c8c2a8;';
+                line.textContent = `Niveau ${spellLevel} : ${change.before} → ${change.after} (+${change.gained})`;
+                summarySection.appendChild(line);
+            });
+    }
+
+    box.appendChild(summarySection);
 
     if (preview.newFeatures.length > 0) {
         const featSection = document.createElement('div');
