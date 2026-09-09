@@ -7,57 +7,57 @@
 
 // Application Character Builder D&D 5e
 
-// Base pour les appels API propres à ce fichier (même valeur que celle
-// utilisée dans handleSave — pas de constante API_BASE_URL partagée ici).
 const CLASS_API_BASE = 'http://localhost:3000/api';
 
-// État de l'application
+const FIGHTING_STYLE_IDS = {
+    ARCHERY: 1,
+    DEFENSE: 2,
+    DUELING: 3,
+    TWO_WEAPON: 4,
+    GREAT_WEAPON: 5,
+    PROTECTION: 6
+};
+
 const appState = {
     currentStep: 0,
     characterName: '',
     selectedRace: null,
     selectedSubspecies: null,
     selectedClass: null,
-    classSpellcasting: null, // { cantripsToChoose, spellsToChoose, eligibleCantrips, eligibleSpells }
+    classSpellcasting: null,
     selectedCantrips: [],
     selectedSpells: [],
+    classFightingStyle: null,
+    selectedFightingStyle: null,
+    classSpecialties: null,
+    selectedFavoredEnemy: null,
+    selectedFavoredTerrain: null,
     abilityScores: null,
 
     selectedBackground: null,
 
-    // separation des compétences de background et de classe pour une meilleure gestion
     backgroundSkills: [],
     classSkills: [],
 
-    // compétences finales (fusion des deux)
     selectedSkills: [],
     selectedEquipment: {}
 };
 
-// Étapes "Sous-espèce" (index 2) et "Sorts" (index 4) toujours présentes
-// dans la liste pour l'indicateur de progression, mais sautées
-// automatiquement à la navigation quand elles ne s'appliquent pas
-// (voir handleNext/handlePrevious).
-const steps = ['Nom', 'Espèce', 'Sous-espèce', 'Classe', 'Sorts', 'Caractéristiques', 'Historique', 'Compétences', 'Équipement', 'Fiche'];
+const steps = ['Nom', 'Espèce', 'Sous-espèce', 'Classe', 'Sorts', 'Style de combat', 'Spécialités', 'Caractéristiques', 'Historique', 'Compétences', 'Équipement', 'Fiche'];
 
-// Constantes pour Point Buy
 const POINT_BUY_MAX = 27;
 const MIN_SCORE = 8;
 const MAX_SCORE = 15;
 
-// Initialisation
 document.addEventListener('DOMContentLoaded', () => {
     render();
 });
 
-// Fonction principale de rendu
 function render() {
     renderStepIndicator();
     renderMainContent();
     renderNavigationButtons();
 }
-
-// Rendu de l'indicateur d'étapes
 
 function renderStepIndicator() {
     const container = document.getElementById('step-indicator');
@@ -82,53 +82,31 @@ function renderStepIndicator() {
 
     container.innerHTML = `<div class="steps-container">${stepsHTML}</div>`;
 }
-// Rendu du contenu principal
+
 function renderMainContent() {
     const container = document.getElementById('main-content');
-
     container.innerHTML = '';
 
     switch (appState.currentStep) {
-        case 0:
-            renderCharacterName(container);
-            break;
-        case 1:
-            renderRaceSelection(container);
-            break;
-        case 2:
-            renderSubspeciesSelection(container);
-            break;
-        case 3:
-            renderClassSelection(container);
-            break;
-        case 4:
-            renderSpellSelection(container);
-            break;
-        case 5:
-            renderAbilityScores(container);
-            break;
-        case 6:
-            renderBackgroundSelection(container);
-            break;
-        case 7:
-            renderSkillSelection(container);
-            break;
-        case 8:
-            renderEquipmentSelection(container);
-            break;
-        case 9:
-            renderCharacterSheet(container);
-            break;
+        case 0: renderCharacterName(container); break;
+        case 1: renderRaceSelection(container); break;
+        case 2: renderSubspeciesSelection(container); break;
+        case 3: renderClassSelection(container); break;
+        case 4: renderSpellSelection(container); break;
+        case 5: renderFightingStyleSelection(container); break;
+        case 6: renderSpecialtiesSelection(container); break;
+        case 7: renderAbilityScores(container); break;
+        case 8: renderBackgroundSelection(container); break;
+        case 9: renderSkillSelection(container); break;
+        case 10: renderEquipmentSelection(container); break;
+        case 11: renderCharacterSheet(container); break;
     }
 }
 
-
-// Étape 0: Nom du personnage
 function renderCharacterName(container) {
     container.innerHTML = `
         <div class="max-w-2xl">
             <h2 class="mb-6 text-center">Nommez votre personnage</h2>
-            
             <div class="card p-8">
                 <div class="space-y-4">
                     <div>
@@ -156,7 +134,6 @@ function renderCharacterName(container) {
     });
 }
 
-// Étape 1: Sélection de l'espèce
 function renderRaceSelection(container) {
     const racesHTML = races.map(race => {
         const isSelected = appState.selectedRace?.id === race.id;
@@ -169,18 +146,13 @@ function renderRaceSelection(container) {
             <div class="card selection-card card-clickable ${isSelected ? 'card-selected' : ''}" data-race-id="${race.id}">
                 <h3 class="mb-2">${race.name}</h3>
                 <p class="text-gray-600 mb-4 text-sm">${race.description}</p>
-                
                 <div class="space-y-2 text-sm">
                     <div>
                         <span class="font-semibold">Bonus de caractéristiques :</span>
                         <div class="text-gray-700 mt-1">${bonusesHTML}</div>
                     </div>
-                    <div>
-                        <span class="font-semibold">Vitesse :</span> ${race.speed} pieds
-                    </div>
-                    <div>
-                        <span class="font-semibold">Langues :</span> ${race.languages.join(', ')}
-                    </div>
+                    <div><span class="font-semibold">Vitesse :</span> ${race.speed} pieds</div>
+                    <div><span class="font-semibold">Langues :</span> ${race.languages.join(', ')}</div>
                     <div>
                         <span class="font-semibold">Traits :</span>
                         <ul class="list-disc text-gray-700 mt-1">
@@ -205,8 +177,6 @@ function renderRaceSelection(container) {
             const raceId = Number(card.getAttribute('data-race-id'));
             const newRace = races.find(r => r.id === raceId);
 
-            // Si l'espèce change, la sous-espèce précédemment choisie
-            // n'a plus de sens (elle appartenait à une autre espèce).
             if (appState.selectedRace?.id !== newRace.id) {
                 appState.selectedSubspecies = null;
             }
@@ -217,9 +187,6 @@ function renderRaceSelection(container) {
     });
 }
 
-// Étape 2 (conditionnelle) : Sélection de la sous-espèce
-// Ne s'affiche dans le parcours que si l'espèce choisie a des sous-races
-// officielles (voir handleNext/handlePrevious pour le saut automatique).
 function renderSubspeciesSelection(container) {
     const race = appState.selectedRace;
     const options = race?.subspecies || [];
@@ -244,16 +211,13 @@ function renderSubspeciesSelection(container) {
             <div class="card selection-card card-clickable ${isSelected ? 'card-selected' : ''}" data-subspecies-id="${sub.id}">
                 <h3 class="mb-2">${sub.name}</h3>
                 <p class="text-gray-600 mb-4 text-sm">${sub.description}</p>
-
                 <div class="space-y-2 text-sm">
                     <div>
                         <span class="font-semibold">Bonus de caractéristiques :</span>
                         <div class="text-gray-700 mt-1">${bonusesHTML}</div>
                     </div>
                     ${sub.speedOverride ? `
-                        <div>
-                            <span class="font-semibold">Vitesse :</span> ${sub.speedOverride} pieds (au lieu de ${race.speed})
-                        </div>
+                        <div><span class="font-semibold">Vitesse :</span> ${sub.speedOverride} pieds (au lieu de ${race.speed})</div>
                     ` : ''}
                     <div>
                         <span class="font-semibold">Traits :</span>
@@ -269,9 +233,7 @@ function renderSubspeciesSelection(container) {
     container.innerHTML = `
         <div class="max-w-6xl">
             <h2 class="mb-6 text-center">Choisissez votre sous-espèce</h2>
-            <p class="text-center text-gray-600 mb-6">
-                ${race.name} propose ${options.length} sous-races officielles.
-            </p>
+            <p class="text-center text-gray-600 mb-6">${race.name} propose ${options.length} sous-races officielles.</p>
             <div class="grid grid-cols-1 md-grid-cols-2 lg-grid-cols-3">${optionsHTML}</div>
         </div>
     `;
@@ -285,7 +247,6 @@ function renderSubspeciesSelection(container) {
     });
 }
 
-// Étape 3: Sélection de la classe
 function renderClassSelection(container) {
     const classesHTML = classes.map(cls => {
         const isSelected = appState.selectedClass?.id === cls.id;
@@ -295,7 +256,6 @@ function renderClassSelection(container) {
             <div class="card selection-card card-clickable ${isSelected ? 'card-selected' : ''}" data-class-id="${cls.id}">
                 <h3 class="mb-2">${cls.name}</h3>
                 <p class="text-gray-600 mb-4 text-sm">${cls.description}</p>
-                
                 <div class="space-y-2 text-sm">
                     <div class="flex items-center gap-2">
                         <span class="font-semibold">Dé de vie :</span>
@@ -334,25 +294,30 @@ function renderClassSelection(container) {
             const classId = Number(card.getAttribute('data-class-id'));
             appState.selectedClass = classes.find(c => c.id === classId);
 
-            // Reset des choix de sorts (dépendaient peut-être d'une autre classe)
             appState.selectedCantrips = [];
             appState.selectedSpells = [];
-            appState.classSpellcasting = null; // en cours de chargement
+            appState.classSpellcasting = null;
+            appState.selectedFightingStyle = null;
+            appState.classFightingStyle = null;
+            appState.selectedFavoredEnemy = null;
+            appState.selectedFavoredTerrain = null;
+            appState.classSpecialties = null;
 
-            render(); // affichage immédiat, bouton "Suivant" désactivé tant que le chargement n'est pas fini
+            render();
 
-            appState.classSpellcasting = await fetchClassSpellcasting(classId);
-            render(); // re-render une fois les sorts chargés
+            const [spellcasting, fightingStyle, specialties] = await Promise.all([
+                fetchClassSpellcasting(classId),
+                fetchClassFightingStyle(classId),
+                fetchClassSpecialties(classId)
+            ]);
+            appState.classSpellcasting = spellcasting;
+            appState.classFightingStyle = fightingStyle;
+            appState.classSpecialties = specialties;
+            render();
         });
     });
 }
 
-/**
- * Récupère depuis l'API combien de tours de magie/sorts la classe choisie
- * doit choisir au niveau 1, et la liste des options éligibles. Renvoie un
- * objet "vide" (0 sort à choisir) en cas d'échec, pour ne jamais bloquer
- * le builder à cause d'une erreur réseau ponctuelle.
- */
 async function fetchClassSpellcasting(classId) {
     try {
         const token = localStorage.getItem('authToken');
@@ -367,9 +332,43 @@ async function fetchClassSpellcasting(classId) {
     }
 }
 
-// Étape 4 (conditionnelle) : Sélection des sorts de départ
-// Ne s'affiche que si la classe choisie a des tours de magie/sorts à
-// choisir au niveau 1 (voir handleNext/handlePrevious pour le saut automatique).
+async function fetchClassFightingStyle(classId) {
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${CLASS_API_BASE}/classes/${classId}/starting-fighting-style`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) throw new Error('Erreur lors du chargement du style de combat');
+        return await response.json();
+    } catch (err) {
+        console.error('Erreur fetchClassFightingStyle:', err);
+        return { hasChoice: false, options: [] };
+    }
+}
+
+async function fetchClassSpecialties(classId) {
+    const empty = { hasChoice: false, options: [] };
+    try {
+        const token = localStorage.getItem('authToken');
+        const headers = { 'Authorization': `Bearer ${token}` };
+
+        const [enemyRes, terrainRes] = await Promise.all([
+            fetch(`${CLASS_API_BASE}/classes/${classId}/starting-favored-enemy`, { headers }),
+            fetch(`${CLASS_API_BASE}/classes/${classId}/starting-favored-terrain`, { headers })
+        ]);
+
+        if (!enemyRes.ok || !terrainRes.ok) throw new Error('Erreur lors du chargement des spécialités');
+
+        const favoredEnemy = await enemyRes.json();
+        const favoredTerrain = await terrainRes.json();
+
+        return { favoredEnemy, favoredTerrain };
+    } catch (err) {
+        console.error('Erreur fetchClassSpecialties:', err);
+        return { favoredEnemy: empty, favoredTerrain: empty };
+    }
+}
+
 function renderSpellSelection(container) {
     const sc = appState.classSpellcasting;
 
@@ -463,16 +462,113 @@ function renderSpellSelection(container) {
     });
 }
 
-// Étape 5: Caractéristiques (Point Buy)
+function renderFightingStyleSelection(container) {
+    const fs = appState.classFightingStyle;
+
+    if (!fs || !fs.hasChoice) {
+        container.innerHTML = `
+            <div class="card p-6 text-center">
+                <p class="text-gray-600">Cette classe n'a pas de style de combat à choisir pour l'instant.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const optionsHTML = fs.options.map(style => {
+        const isSelected = appState.selectedFightingStyle === style.id;
+        return `
+            <div class="card selection-card card-clickable ${isSelected ? 'card-selected' : ''}" data-style-id="${style.id}">
+                <h3 class="mb-2">${style.name}</h3>
+                <p class="text-gray-600 text-sm">${style.description}</p>
+            </div>
+        `;
+    }).join('');
+
+    container.innerHTML = `
+        <div class="max-w-5xl">
+            <h2 class="mb-6 text-center">Choisissez votre style de combat</h2>
+            <div class="grid grid-cols-1 md-grid-cols-2 lg-grid-cols-3">${optionsHTML}</div>
+        </div>
+    `;
+
+    container.querySelectorAll('[data-style-id]').forEach(card => {
+        card.addEventListener('click', () => {
+            appState.selectedFightingStyle = Number(card.getAttribute('data-style-id'));
+            render();
+        });
+    });
+}
+
+function renderSpecialtiesSelection(container) {
+    const sp = appState.classSpecialties;
+
+    if (!sp || (!sp.favoredEnemy.hasChoice && !sp.favoredTerrain.hasChoice)) {
+        container.innerHTML = `
+            <div class="card p-6 text-center">
+                <p class="text-gray-600">Cette classe n'a pas de spécialité à choisir pour l'instant.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const enemyHTML = sp.favoredEnemy.hasChoice ? `
+        <div class="card p-6 mb-6">
+            <h3 class="mb-3">Ennemi juré</h3>
+            <div class="grid grid-cols-2 md-grid-cols-3 gap-2">
+                ${sp.favoredEnemy.options.map(opt => `
+                    <label class="flex items-center gap-2 p-2 cursor-pointer">
+                        <input type="radio" name="favored-enemy" value="${opt.id}"
+                            ${appState.selectedFavoredEnemy === opt.id ? 'checked' : ''}>
+                        <span>${opt.name}</span>
+                    </label>
+                `).join('')}
+            </div>
+        </div>
+    ` : '';
+
+    const terrainHTML = sp.favoredTerrain.hasChoice ? `
+        <div class="card p-6 mb-6">
+            <h3 class="mb-3">Terrain de prédilection</h3>
+            <div class="grid grid-cols-2 md-grid-cols-3 gap-2">
+                ${sp.favoredTerrain.options.map(opt => `
+                    <label class="flex items-center gap-2 p-2 cursor-pointer">
+                        <input type="radio" name="favored-terrain" value="${opt.id}"
+                            ${appState.selectedFavoredTerrain === opt.id ? 'checked' : ''}>
+                        <span>${opt.name}</span>
+                    </label>
+                `).join('')}
+            </div>
+        </div>
+    ` : '';
+
+    container.innerHTML = `
+        <div class="max-w-3xl">
+            <h2 class="mb-6 text-center">Choisissez vos spécialités</h2>
+            ${enemyHTML}
+            ${terrainHTML}
+        </div>
+    `;
+
+    container.querySelectorAll('input[name="favored-enemy"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+            appState.selectedFavoredEnemy = Number(radio.value);
+            renderNavigationButtons();
+        });
+    });
+
+    container.querySelectorAll('input[name="favored-terrain"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+            appState.selectedFavoredTerrain = Number(radio.value);
+            renderNavigationButtons();
+        });
+    });
+}
+
 function renderAbilityScores(container) {
     if (!appState.abilityScores) {
         appState.abilityScores = {
-            strength: 8,
-            dexterity: 8,
-            constitution: 8,
-            intelligence: 8,
-            wisdom: 8,
-            charisma: 8,
+            strength: 8, dexterity: 8, constitution: 8,
+            intelligence: 8, wisdom: 8, charisma: 8,
         };
     }
 
@@ -505,32 +601,18 @@ function renderAbilityScores(container) {
                         <div class="font-semibold text-lg">${abilityNames[ability]}</div>
                         <div class="text-sm text-gray-600">${abilityDescriptions[ability]}</div>
                     </div>
-
                     <div class="ability-controls">
-                        <button 
-                            class="btn btn-outline btn-icon btn-sm" 
-                            data-ability="${ability}" 
-                            data-action="decrease"
-                            ${!canDec ? 'disabled' : ''}
-                        >
+                        <button class="btn btn-outline btn-icon btn-sm" data-ability="${ability}" data-action="decrease" ${!canDec ? 'disabled' : ''}>
                             <svg class="icon"><use href="#icon-minus"/></svg>
                         </button>
-
                         <div class="ability-score-display">
                             <div class="score-value">${score}</div>
                             <div class="score-modifier">${modifier >= 0 ? '+' : ''}${modifier}</div>
                         </div>
-
-                        <button 
-                            class="btn btn-outline btn-icon btn-sm" 
-                            data-ability="${ability}" 
-                            data-action="increase"
-                            ${!canInc ? 'disabled' : ''}
-                        >
+                        <button class="btn btn-outline btn-icon btn-sm" data-ability="${ability}" data-action="increase" ${!canInc ? 'disabled' : ''}>
                             <svg class="icon"><use href="#icon-plus"/></svg>
                         </button>
                     </div>
-
                     ${costInfoHTML}
                 </div>
             </div>
@@ -543,35 +625,24 @@ function renderAbilityScores(container) {
             <p class="text-center text-gray-600 mb-6">
                 Utilisez le système de points pour créer votre personnage. Vous disposez de <strong>27 points</strong> à répartir.
             </p>
-
             <div class="card p-6 mb-6">
                 <div class="point-buy-info">
                     <div>
                         <h3 class="mb-1">Budget de points</h3>
-                        <p class="text-sm text-gray-600">
-                            Les scores vont de 8 à 15. Chaque augmentation coûte plus cher.
-                        </p>
+                        <p class="text-sm text-gray-600">Les scores vont de 8 à 15. Chaque augmentation coûte plus cher.</p>
                     </div>
                     <div class="text-right">
-                        <span class="badge ${badgeClass} point-buy-badge">
-                            ${pointsRemaining} / ${POINT_BUY_MAX}
-                        </span>
+                        <span class="badge ${badgeClass} point-buy-badge">${pointsRemaining} / ${POINT_BUY_MAX}</span>
                         <p class="text-xs text-gray-600 mt-1">Points restants</p>
                     </div>
                 </div>
             </div>
-
             <div class="card p-6 mb-6">
                 <div class="space-y-4">${abilitiesHTML}</div>
             </div>
-
             <div class="flex justify-between">
                 <button class="btn btn-outline" id="btn-back-abilities">Retour</button>
-                <button 
-                    class="btn btn-primary btn-lg ml-auto" 
-                    id="btn-confirm-abilities"
-                    ${pointsRemaining < 0 ? 'disabled' : ''}
-                >
+                <button class="btn btn-primary btn-lg ml-auto" id="btn-confirm-abilities" ${pointsRemaining < 0 ? 'disabled' : ''}>
                     Confirmer les caractéristiques
                 </button>
             </div>
@@ -582,13 +653,11 @@ function renderAbilityScores(container) {
         btn.addEventListener('click', () => {
             const ability = btn.getAttribute('data-ability');
             const action = btn.getAttribute('data-action');
-
             if (action === 'increase') {
                 appState.abilityScores[ability]++;
             } else {
                 appState.abilityScores[ability]--;
             }
-
             renderAbilityScores(container);
         });
     });
@@ -599,16 +668,13 @@ function renderAbilityScores(container) {
     });
 }
 
-// Étape 6: Sélection de l'historique
 function renderBackgroundSelection(container) {
     const backgroundsHTML = backgrounds.map(bg => {
         const isSelected = String(appState.selectedBackground?.id) === String(bg.id);
-
         return `
             <div class="card selection-card card-clickable ${isSelected ? 'card-selected' : ''}" data-bg-id="${bg.id}">
                 <h3 class="mb-2">${bg.name}</h3>
                 <p class="text-gray-600 mb-4 text-sm">${bg.description}</p>
-
                 <div class="space-y-2 text-sm">
                     <div>
                         <span class="font-semibold">Maîtrise de compétences :</span>
@@ -654,33 +720,20 @@ function renderBackgroundSelection(container) {
             const bg = backgrounds.find(b => b.id === bgId);
 
             appState.selectedBackground = bg;
-
-            // ✅ compétences automatiques du background
             appState.backgroundSkills = [...bg.skillProficiencies];
-
-            // reset compétences de classe
             appState.classSkills = [];
-
-            // rebuild compétences finales
             appState.selectedSkills = [...appState.backgroundSkills];
 
             render();
         });
     });
-
 }
 
-
-// Étape 7: Sélection des compétences
 function renderSkillSelection(container) {
-    console.log('selectedClass:', appState.selectedClass);
-
     if (!appState.selectedClass) {
         container.innerHTML = `
             <div class="card p-6 text-center">
-                <p class="text-red-600 font-semibold">
-                    Aucune classe sélectionnée.
-                </p>
+                <p class="text-red-600 font-semibold">Aucune classe sélectionnée.</p>
             </div>
         `;
         return;
@@ -693,10 +746,7 @@ function renderSkillSelection(container) {
     const selectedClassSkillsCount = appState.classSkills.length;
     const canSelectMore = selectedClassSkillsCount < maxClassSkills;
 
-    const badgeClass =
-        selectedClassSkillsCount === maxClassSkills
-            ? 'badge-primary'
-            : 'badge-secondary';
+    const badgeClass = selectedClassSkillsCount === maxClassSkills ? 'badge-primary' : 'badge-secondary';
 
     const skillsHTML = allSkills.map(skill => {
         const name = skill.name;
@@ -709,28 +759,16 @@ function renderSkillSelection(container) {
         if (fromBackground) buttonClass += ' from-background';
 
         return `
-            <button
-                class="${buttonClass}"
-                data-skill="${name}"
-                ${!isSelectable && !fromBackground ? 'disabled' : ''}
-            >
+            <button class="${buttonClass}" data-skill="${name}" ${!isSelectable && !fromBackground ? 'disabled' : ''}>
                 <div class="skill-content">
                     <div class="flex-1">
                         <div class="flex items-center gap-2">
                             <span class="font-semibold">${name}</span>
-                            <span class="badge badge-outline text-xs">
-                                ${abilityAbbrev[skill.ability]}
-                            </span>
+                            <span class="badge badge-outline text-xs">${abilityAbbrev[skill.ability]}</span>
                         </div>
-                        ${
-                            fromBackground
-                                ? '<span class="text-xs text-green-600 mt-1 block">Historique</span>'
-                                : ''
-                        }
+                        ${fromBackground ? '<span class="text-xs text-green-600 mt-1 block">Historique</span>' : ''}
                     </div>
-                    ${(fromBackground || fromClass)
-                        ? '<svg class="icon icon-lg text-blue-600"><use href="#icon-check"/></svg>'
-                        : ''}
+                    ${(fromBackground || fromClass) ? '<svg class="icon icon-lg text-blue-600"><use href="#icon-check"/></svg>' : ''}
                 </div>
             </button>
         `;
@@ -739,35 +777,21 @@ function renderSkillSelection(container) {
     container.innerHTML = `
         <div class="max-w-4xl">
             <h2 class="mb-4 text-center">Sélectionnez vos compétences maîtrisées</h2>
-
             <div class="card p-6 mb-6">
                 <p class="text-gray-600">
-                    Votre classe <strong>${appState.selectedClass.name}</strong>
-                    vous permet de choisir
+                    Votre classe <strong>${appState.selectedClass.name}</strong> vous permet de choisir
                     <strong>${maxClassSkills} compétence${maxClassSkills > 1 ? 's' : ''}</strong>.
                 </p>
-
-                ${
-                    backgroundSkills.length
-                        ? `<p class="mt-2 text-gray-600">
-                            Historique :
-                            <strong>${backgroundSkills.join(', ')}</strong>
-                          </p>`
-                        : ''
-                }
-
+                ${backgroundSkills.length ? `
+                    <p class="mt-2 text-gray-600">Historique : <strong>${backgroundSkills.join(', ')}</strong></p>
+                ` : ''}
                 <div class="flex items-center justify-between mt-4 p-4 bg-gray-50 rounded-lg">
                     <span class="font-semibold">Compétences de classe</span>
-                    <span class="badge ${badgeClass} text-lg">
-                        ${selectedClassSkillsCount} / ${maxClassSkills}
-                    </span>
+                    <span class="badge ${badgeClass} text-lg">${selectedClassSkillsCount} / ${maxClassSkills}</span>
                 </div>
             </div>
-
             <div class="card p-6">
-                <div class="grid grid-cols-1 md-grid-cols-2 gap-4">
-                    ${skillsHTML}
-                </div>
+                <div class="grid grid-cols-1 md-grid-cols-2 gap-4">${skillsHTML}</div>
             </div>
         </div>
     `;
@@ -775,23 +799,16 @@ function renderSkillSelection(container) {
     container.querySelectorAll('[data-skill]').forEach(btn => {
         btn.addEventListener('click', () => {
             const skill = btn.getAttribute('data-skill');
-
-            // interdit de retirer une compétence de background
             if (backgroundSkills.includes(skill)) return;
 
             const index = appState.classSkills.indexOf(skill);
-
             if (index >= 0) {
                 appState.classSkills.splice(index, 1);
             } else if (canSelectMore) {
                 appState.classSkills.push(skill);
             }
 
-            // 🔥 rebuild compétences finales
-            appState.selectedSkills = [
-                ...appState.backgroundSkills,
-                ...appState.classSkills
-            ];
+            appState.selectedSkills = [...appState.backgroundSkills, ...appState.classSkills];
 
             renderSkillSelection(container);
             renderNavigationButtons();
@@ -799,73 +816,55 @@ function renderSkillSelection(container) {
     });
 }
 
-// Étape 8: Sélection de l'équipement
-    function renderEquipmentSelection(container) {
-        console.log('CLASS:', appState.selectedClass);
-        console.log('EQUIPMENT CHOICES:', appState.selectedClass?.equipmentChoices);
-        if (!appState.selectedClass) {
-            container.innerHTML = `
-                <div class="card p-6 text-center text-red-600">
-                    Aucune classe sélectionnée.
-                </div>
-            `;
-            return;
-        }
+function renderEquipmentSelection(container) {
+    if (!appState.selectedClass) {
+        container.innerHTML = `<div class="card p-6 text-center text-red-600">Aucune classe sélectionnée.</div>`;
+        return;
+    }
 
-        const choices = appState.selectedClass.equipmentChoices || [];
+    const choices = appState.selectedClass.equipmentChoices || [];
 
-        const choicesHTML = choices.map(choice => {
-            const selectedOption = appState.selectedEquipment[choice.id];
+    const choicesHTML = choices.map(choice => {
+        const selectedOption = appState.selectedEquipment[choice.id];
 
-            const optionsHTML = choice.options.map(option => {
-                const isSelected = selectedOption === option.id;
-
-                return `
-                    <button
-                        class="card selection-card card-clickable ${isSelected ? 'card-selected' : ''}"
-                        data-choice="${choice.id}"
-                        data-option="${option.id}"
-                    >
-                        <h4>${option.name}</h4>
-                        <ul class="text-sm text-gray-700 mt-2">
-                            ${option.items.map(i => `<li>${i}</li>`).join('')}
-                        </ul>
-                    </button>
-                `;
-            }).join('');
-
+        const optionsHTML = choice.options.map(option => {
+            const isSelected = selectedOption === option.id;
             return `
-                <div class="mb-6">
-                    <h3 class="mb-3">${choice.label}</h3>
-                    <div class="grid grid-cols-1 md-grid-cols-2 gap-4">
-                        ${optionsHTML}
-                    </div>
-                </div>
+                <button class="card selection-card card-clickable ${isSelected ? 'card-selected' : ''}" data-choice="${choice.id}" data-option="${option.id}">
+                    <h4>${option.name}</h4>
+                    <ul class="text-sm text-gray-700 mt-2">
+                        ${option.items.map(i => `<li>${i}</li>`).join('')}
+                    </ul>
+                </button>
             `;
         }).join('');
 
-        container.innerHTML = `
-            <div class="max-w-4xl">
-                <h2 class="mb-6 text-center">Choisissez votre équipement</h2>
-                ${choicesHTML}
+        return `
+            <div class="mb-6">
+                <h3 class="mb-3">${choice.label}</h3>
+                <div class="grid grid-cols-1 md-grid-cols-2 gap-4">${optionsHTML}</div>
             </div>
         `;
+    }).join('');
 
-        container.querySelectorAll('[data-choice]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const choiceId = btn.getAttribute('data-choice');
-                const optionId = btn.getAttribute('data-option');
+    container.innerHTML = `
+        <div class="max-w-4xl">
+            <h2 class="mb-6 text-center">Choisissez votre équipement</h2>
+            ${choicesHTML}
+        </div>
+    `;
 
-                appState.selectedEquipment[choiceId] = optionId;
-
-                renderEquipmentSelection(container);
-                renderNavigationButtons();
-            });
+    container.querySelectorAll('[data-choice]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const choiceId = btn.getAttribute('data-choice');
+            const optionId = btn.getAttribute('data-option');
+            appState.selectedEquipment[choiceId] = optionId;
+            renderEquipmentSelection(container);
+            renderNavigationButtons();
         });
-    }
+    });
+}
 
-
-// calcul de la CA
 function computeArmorClass(dexModifier) {
     let baseArmor = null;
     let dexRule = 'full';
@@ -883,14 +882,14 @@ function computeArmorClass(dexModifier) {
                 baseArmor = item.armor_class;
                 dexRule = item.dex_modifier_rule;
             }
-
             if (item.category === 'shield') {
                 shieldBonus += item.armor_class || 2;
             }
         }
     }
 
-    // Pas d’armure
+    const defenseBonus = (baseArmor && appState.selectedFightingStyle === FIGHTING_STYLE_IDS.DEFENSE) ? 1 : 0;
+
     if (!baseArmor) {
         return 10 + dexModifier + shieldBonus;
     }
@@ -900,18 +899,16 @@ function computeArmorClass(dexModifier) {
     if (dexRule === 'max2') dexBonus = Math.min(dexModifier, 2);
     if (dexRule === 'none') dexBonus = 0;
 
-    return baseArmor + dexBonus + shieldBonus;
+    return baseArmor + dexBonus + shieldBonus + defenseBonus;
 }
 
 function getEquippedWeapons() {
     const weapons = [];
-
     const choices = appState.selectedClass.equipmentChoices || [];
 
     for (const choice of choices) {
         const optionId = appState.selectedEquipment[choice.id];
         const option = choice.options.find(o => o.id === optionId);
-
         if (!option?.itemsData) continue;
 
         for (const item of option.itemsData) {
@@ -926,113 +923,99 @@ function getAttackAbility(weapon, abilities) {
     const strMod = getAbilityModifier(abilities.strength);
     const dexMod = getAbilityModifier(abilities.dexterity);
 
-    // 🎯 Armes à distance → DEX
-    if (weapon.category?.includes('ranged')) {
-        return dexMod;
-    }
-
-    // 🗡️ Armes finesse → meilleur des deux
-    if (weapon.properties?.includes('finesse')) {
-        return Math.max(strMod, dexMod);
-    }
-
-    // 🪓 Mêlée classique → STR
+    if (weapon.category?.includes('ranged')) return dexMod;
+    if (weapon.properties?.includes('finesse')) return Math.max(strMod, dexMod);
     return strMod;
 }
 
+function getFightingStyleAttackBonus(weapon) {
+    if (appState.selectedFightingStyle === FIGHTING_STYLE_IDS.ARCHERY && weapon.category?.includes('ranged')) {
+        return 2;
+    }
+    return 0;
+}
 
+function getFightingStyleDamageBonus(weapon, allEquippedWeapons) {
+    const isOneHandedMelee = !weapon.category?.includes('ranged') && !weapon.properties?.includes('two-handed');
+    if (appState.selectedFightingStyle === FIGHTING_STYLE_IDS.DUELING && isOneHandedMelee && allEquippedWeapons.length === 1) {
+        return 2;
+    }
+    return 0;
+}
 
-// Étape 9: Fiche de personnage
 function renderCharacterSheet(container) {
     if (!appState.selectedRace || !appState.selectedClass || !appState.abilityScores || !appState.selectedBackground) {
         container.innerHTML = '<p>Données manquantes...</p>';
         return;
     }
-    
+
     const race = appState.selectedRace;
-    const subspecies = appState.selectedSubspecies; // peut être null si l'espèce n'en a pas
+    const subspecies = appState.selectedSubspecies;
     const cls = appState.selectedClass;
     const bg = appState.selectedBackground;
     const level = 1;
-    
-    // Appliquer les bonus raciaux (espèce)
+
     const finalScores = { ...appState.abilityScores };
     Object.entries(race.abilityBonuses).forEach(([ability, bonus]) => {
-        if (bonus) {
-            finalScores[ability] += bonus;
-        }
+        if (bonus) finalScores[ability] += bonus;
     });
 
-    // Appliquer les bonus de sous-espèce, s'il y en a une sélectionnée
     if (subspecies) {
         Object.entries(subspecies.abilityBonuses || {}).forEach(([ability, bonus]) => {
-            if (bonus) {
-                finalScores[ability] += bonus;
-            }
+            if (bonus) finalScores[ability] += bonus;
         });
     }
 
-    // La sous-espèce peut remplacer la vitesse de base (ex: Elfe sylvestre = 35)
     const effectiveSpeed = subspecies?.speedOverride || race.speed;
-    
+
     const dexMod = getAbilityModifier(finalScores.dexterity);
     const armorClass = computeArmorClass(dexMod);
 
-    // Calculer les points de vie
     const constitutionMod = getAbilityModifier(finalScores.constitution);
     const maxHP = cls.hitDie + constitutionMod;
     const proficiencyBonus = 2;
-    
-    // Caractéristiques (le badge de bonus combine espèce + sous-espèce)
+
     const abilitiesHTML = Object.keys(abilityNames).map(ability => {
         const score = finalScores[ability];
         const modifier = getAbilityModifier(score);
         const raceBonus = race.abilityBonuses[ability] || 0;
         const subspeciesBonus = subspecies?.abilityBonuses?.[ability] || 0;
         const totalBonus = raceBonus + subspeciesBonus;
-        
+
         return `
             <div class="ability-card">
                 <div class="ability-card-abbr">${abilityAbbrev[ability]}</div>
                 <div class="ability-card-score">${score}</div>
-                <div class="badge badge-secondary">
-                    ${modifier >= 0 ? '+' : ''}${modifier}
-                </div>
+                <div class="badge badge-secondary">${modifier >= 0 ? '+' : ''}${modifier}</div>
                 ${totalBonus > 0 ? `<div class="ability-card-bonus">+${totalBonus} racial</div>` : ''}
             </div>
         `;
     }).join('');
-    
+
     const equippedWeapons = getEquippedWeapons();
 
     const weaponsHTML = equippedWeapons.map(w => {
         const abilityMod = getAttackAbility(w, finalScores);
-        const attackBonus = abilityMod + proficiencyBonus;
+        const styleAttackBonus = getFightingStyleAttackBonus(w);
+        const attackBonus = abilityMod + proficiencyBonus + styleAttackBonus;
+
+        const styleDamageBonus = getFightingStyleDamageBonus(w, equippedWeapons);
+        const totalDamageMod = abilityMod + styleDamageBonus;
 
         return `
             <div class="weapon-card">
                 <h4>${w.name}</h4>
-                <p>
-                    Attaque :
-                    <strong>${attackBonus >= 0 ? '+' : ''}${attackBonus}</strong>
-                </p>
-                <p>
-                    Dégâts :
-                    <strong>${w.damage}</strong>
-                    (${w.damageType})
-                    ${abilityMod >= 0 ? '+' : ''}${abilityMod}
-                </p>
+                <p>Attaque : <strong>${attackBonus >= 0 ? '+' : ''}${attackBonus}</strong></p>
+                <p>Dégâts : <strong>${w.damage}</strong> (${w.damageType}) ${totalDamageMod >= 0 ? '+' : ''}${totalDamageMod}</p>
             </div>
         `;
     }).join('');
 
-
-    // Jets de sauvegarde
     const savesHTML = Object.keys(abilityNames).map(ability => {
         const modifier = getAbilityModifier(finalScores[ability]);
         const isProficient = cls.savingThrows.includes(ability);
         const total = modifier + (isProficient ? proficiencyBonus : 0);
-        
+
         return `
             <div class="save-item">
                 <div class="save-item-content">
@@ -1043,15 +1026,14 @@ function renderCharacterSheet(container) {
             </div>
         `;
     }).join('');
-    
-    // Compétences maîtrisées
+
     const skillsHTML = allSkills
         .filter(skill => appState.selectedSkills.includes(skill.name))
         .map(skill => {
             const abilityScore = finalScores[skill.ability];
             const modifier = getAbilityModifier(abilityScore);
             const total = modifier + proficiencyBonus;
-            
+
             return `
                 <div class="skill-item">
                     <div class="skill-item-content">
@@ -1063,14 +1045,11 @@ function renderCharacterSheet(container) {
             `;
         }).join('');
 
-    // Traits combinés (espèce + sous-espèce)
     const allTraits = [...race.traits, ...(subspecies?.traits || [])];
 
-    // Sorts choisis (tours de magie + sorts), affichés uniquement si la
-    // classe en propose au niveau 1
     const sc = appState.classSpellcasting;
-    const chosenCantrips = (sc?.eligibleCantrips || []).filter(sp => appState.selectedCantrips.includes(sp.id));
-    const chosenSpells = (sc?.eligibleSpells || []).filter(sp => appState.selectedSpells.includes(sp.id));
+    const chosenCantrips = (sc?.eligibleCantrips || []).filter(spItem => appState.selectedCantrips.includes(spItem.id));
+    const chosenSpells = (sc?.eligibleSpells || []).filter(spItem => appState.selectedSpells.includes(spItem.id));
     const hasSpells = chosenCantrips.length > 0 || chosenSpells.length > 0;
 
     const spellsSectionHTML = hasSpells ? `
@@ -1080,24 +1059,47 @@ function renderCharacterSheet(container) {
             ${chosenCantrips.length > 0 ? `
                 <div class="mb-3">
                     <span class="font-semibold">Tours de magie :</span>
-                    <p class="text-gray-700">${chosenCantrips.map(sp => sp.name).join(', ')}</p>
+                    <p class="text-gray-700">${chosenCantrips.map(spItem => spItem.name).join(', ')}</p>
                 </div>
             ` : ''}
             ${chosenSpells.length > 0 ? `
                 <div>
                     <span class="font-semibold">Sorts :</span>
-                    <p class="text-gray-700">${chosenSpells.map(sp => sp.name).join(', ')}</p>
+                    <p class="text-gray-700">${chosenSpells.map(spItem => spItem.name).join(', ')}</p>
                 </div>
             ` : ''}
         </div>
     ` : '';
-    
+
+    const fs = appState.classFightingStyle;
+    const chosenStyle = (fs?.options || []).find(s => s.id === appState.selectedFightingStyle);
+
+    const fightingStyleSectionHTML = chosenStyle ? `
+        <div class="separator"></div>
+        <div class="mb-6">
+            <h3 class="mb-4">Style de combat</h3>
+            <p class="text-gray-700"><strong>${chosenStyle.name}</strong> — ${chosenStyle.description}</p>
+        </div>
+    ` : '';
+
+    const specialties = appState.classSpecialties;
+    const chosenEnemy = (specialties?.favoredEnemy?.options || []).find(o => o.id === appState.selectedFavoredEnemy);
+    const chosenTerrain = (specialties?.favoredTerrain?.options || []).find(o => o.id === appState.selectedFavoredTerrain);
+    const hasSpecialties = chosenEnemy || chosenTerrain;
+
+    const specialtiesSectionHTML = hasSpecialties ? `
+        <div class="separator"></div>
+        <div class="mb-6">
+            <h3 class="mb-4">Spécialités</h3>
+            ${chosenEnemy ? `<div class="mb-2"><span class="font-semibold">Ennemi juré :</span> <span class="text-gray-700">${chosenEnemy.name}</span></div>` : ''}
+            ${chosenTerrain ? `<div><span class="font-semibold">Terrain de prédilection :</span> <span class="text-gray-700">${chosenTerrain.name}</span></div>` : ''}
+        </div>
+    ` : '';
+
     container.innerHTML = `
         <div class="max-w-5xl">
             <h2 class="mb-6 text-center">Fiche de personnage</h2>
-            
             <div class="card p-8">
-                <!-- Informations de base -->
                 <div class="character-sheet-grid cols-3 mb-6">
                     <div>
                         <label class="stat-label">Nom du personnage</label>
@@ -1112,15 +1114,14 @@ function renderCharacterSheet(container) {
                         <p class="text-xl font-semibold">${race.name}${subspecies ? ` — ${subspecies.name}` : ''}</p>
                     </div>
                 </div>
-                
+
                 <div class="mb-6">
                     <label class="stat-label">Historique</label>
                     <p class="text-lg font-semibold">${bg.name}</p>
                 </div>
-                
+
                 <div class="separator"></div>
-                
-                <!-- Stats de combat -->
+
                 <div class="character-sheet-grid cols-4 mb-6">
                     <div class="stat-box">
                         <label class="stat-label">Points de vie</label>
@@ -1132,55 +1133,38 @@ function renderCharacterSheet(container) {
                     </div>
                     <div class="stat-box">
                         <label class="stat-label">Initiative</label>
-                        <p class="stat-value">
-                            ${getAbilityModifier(finalScores.dexterity) >= 0 ? '+' : ''}${getAbilityModifier(finalScores.dexterity)}
-                        </p>
+                        <p class="stat-value">${getAbilityModifier(finalScores.dexterity) >= 0 ? '+' : ''}${getAbilityModifier(finalScores.dexterity)}</p>
                     </div>
                     <div class="stat-box">
                         <label class="stat-label">Vitesse</label>
                         <p class="stat-value">${effectiveSpeed} pi</p>
                     </div>
                 </div>
-                
+
                 <div class="separator"></div>
-                
-                <!-- Caractéristiques -->
+
                 <div class="mb-6">
                     <h3 class="mb-4">Caractéristiques</h3>
-                    <div class="grid grid-cols-2 md-grid-cols-3 lg-grid-cols-6 gap-4">
-                        ${abilitiesHTML}
-                    </div>
+                    <div class="grid grid-cols-2 md-grid-cols-3 lg-grid-cols-6 gap-4">${abilitiesHTML}</div>
                 </div>
-                
+
                 <div class="separator"></div>
-                
-                <!-- Jets de sauvegarde et maîtrises -->
+
                 <div class="character-sheet-grid cols-2 mb-6">
                     <div>
                         <h3 class="mb-4">Jets de sauvegarde</h3>
                         <div class="space-y-2">${savesHTML}</div>
                     </div>
-                    
                     <div>
                         <h3 class="mb-4">Bonus de maîtrise</h3>
                         <div class="text-center p-4 card mb-4">
                             <span class="text-3xl font-bold">+${proficiencyBonus}</span>
                         </div>
-                        
                         <h3 class="mb-4">Maîtrises</h3>
                         <div class="space-y-2 text-sm">
-                            <div>
-                                <span class="font-semibold">Armures :</span>
-                                <p class="text-gray-700">${cls.armorProficiencies.join(', ')}</p>
-                            </div>
-                            <div>
-                                <span class="font-semibold">Armes :</span>
-                                <p class="text-gray-700">${cls.weaponProficiencies.join(', ')}</p>
-                            </div>
-                            <div>
-                                <span class="font-semibold">Langues :</span>
-                                <p class="text-gray-700">${race.languages.join(', ')}</p>
-                            </div>
+                            <div><span class="font-semibold">Armures :</span> <p class="text-gray-700">${cls.armorProficiencies.join(', ')}</p></div>
+                            <div><span class="font-semibold">Armes :</span> <p class="text-gray-700">${cls.weaponProficiencies.join(', ')}</p></div>
+                            <div><span class="font-semibold">Langues :</span> <p class="text-gray-700">${race.languages.join(', ')}</p></div>
                         </div>
                     </div>
                 </div>
@@ -1188,52 +1172,39 @@ function renderCharacterSheet(container) {
 
                 <div class="mb-6">
                     <h3 class="mb-4">Armes</h3>
-                    <div class="grid grid-cols-1 md-grid-cols-2 gap-4">
-                        ${weaponsHTML || '<p>Aucune arme équipée</p>'}
-                    </div>
+                    <div class="grid grid-cols-1 md-grid-cols-2 gap-4">${weaponsHTML || '<p>Aucune arme équipée</p>'}</div>
                 </div>
 
                 ${spellsSectionHTML}
+                ${fightingStyleSectionHTML}
+                ${specialtiesSectionHTML}
 
                 <div class="separator"></div>
-                
-                <!-- Compétences maîtrisées -->
+
                 <div class="mb-6">
                     <h3 class="mb-4">Compétences maîtrisées</h3>
-                    <div class="grid grid-cols-1 md-grid-cols-2 gap-2">
-                        ${skillsHTML}
-                    </div>
+                    <div class="grid grid-cols-1 md-grid-cols-2 gap-2">${skillsHTML}</div>
                 </div>
-                
+
                 <div class="separator"></div>
-                
-                <!-- Traits raciaux (espèce + sous-espèce) -->
+
                 <div class="mb-6">
                     <h3 class="mb-4">Traits raciaux</h3>
                     <div class="grid grid-cols-1 md-grid-cols-2 gap-2">
                         ${allTraits.map(trait => `<span class="badge badge-outline">${trait}</span>`).join('')}
                     </div>
                 </div>
-                
+
                 <div class="separator"></div>
-                
-                <!-- Détails de l'historique -->
+
                 <div>
                     <h3 class="mb-4">Historique : ${bg.name}</h3>
                     <div class="space-y-2 text-sm">
-                        <div>
-                            <span class="font-semibold">Compétences :</span>
-                            <p class="text-gray-700">${bg.skillProficiencies.join(', ')}</p>
-                        </div>
-                        <div>
-                            <span class="font-semibold">Aptitude :</span>
-                            <p class="text-gray-700">${bg.feature}</p>
-                        </div>
+                        <div><span class="font-semibold">Compétences :</span> <p class="text-gray-700">${bg.skillProficiencies.join(', ')}</p></div>
+                        <div><span class="font-semibold">Aptitude :</span> <p class="text-gray-700">${bg.feature}</p></div>
                         <div>
                             <span class="font-semibold">Équipement :</span>
-                            <ul class="list-disc text-gray-700">
-                                ${bg.equipment.map(item => `<li>${item}</li>`).join('')}
-                            </ul>
+                            <ul class="list-disc text-gray-700">${bg.equipment.map(item => `<li>${item}</li>`).join('')}</ul>
                         </div>
                     </div>
                 </div>
@@ -1242,92 +1213,83 @@ function renderCharacterSheet(container) {
     `;
 }
 
-// Rendu des boutons de navigation
 function renderNavigationButtons() {
     const container = document.getElementById('navigation-buttons');
-    
-    // Masquer les boutons pour l'étape des caractéristiques (elle a ses propres boutons)
-    // Étape 5 désormais (décalée par l'ajout des étapes Sous-espèce et Sorts).
-    if (appState.currentStep === 5) {
+
+    if (appState.currentStep === 7) {
         container.classList.add('hidden');
         return;
     }
-    
+
     container.classList.remove('hidden');
-    
+
     const canNext = canGoNext();
     const isLastStep = appState.currentStep === steps.length - 1;
-    
+
     container.innerHTML = `
-        <button 
-            class="btn btn-outline" 
-            id="btn-previous"
-            ${appState.currentStep === 0 ? 'disabled' : ''}
-        >
+        <button class="btn btn-outline" id="btn-previous" ${appState.currentStep === 0 ? 'disabled' : ''}>
             <svg class="icon"><use href="#icon-chevron-left"/></svg>
             Précédent
         </button>
-        
         ${isLastStep ? `
             <div class="flex gap-4">
-                <button class="btn btn-primary" id="btn-save">
-                    Enregistrer le personnage
-                </button>
+                <button class="btn btn-primary" id="btn-save">Enregistrer le personnage</button>
                 <button class="btn btn-outline" id="btn-export">
                     <svg class="icon"><use href="#icon-download"/></svg>
                     Exporter la fiche
                 </button>
             </div>
         ` : `
-            <button 
-                class="btn btn-primary" 
-                id="btn-next"
-                ${!canNext ? 'disabled' : ''}
-            >
+            <button class="btn btn-primary" id="btn-next" ${!canNext ? 'disabled' : ''}>
                 Suivant
                 <svg class="icon"><use href="#icon-chevron-right"/></svg>
             </button>
         `}
     `;
-    
+
     const btnPrev = document.getElementById('btn-previous');
     const btnNext = document.getElementById('btn-next');
     const btnExport = document.getElementById('btn-export');
     const btnSave = document.getElementById('btn-save');
-    
+
     if (btnPrev) btnPrev.addEventListener('click', handlePrevious);
     if (btnNext) btnNext.addEventListener('click', handleNext);
     if (btnExport) btnExport.addEventListener('click', handleExport);
     if (btnSave) btnSave.addEventListener('click', handleSave);
 }
 
-/**
- * Indique si l'étape "Sorts" (index 4) doit être sautée pour la classe
- * actuellement sélectionnée (aucun tour de magie ni sort à choisir au
- * niveau 1, ou données pas encore chargées / classe non magique).
- */
 function shouldSkipSpellStep() {
     const sc = appState.classSpellcasting;
     return !sc || (sc.cantripsToChoose + sc.spellsToChoose) === 0;
 }
 
-// Navigation
+function shouldSkipFightingStyleStep() {
+    const fs = appState.classFightingStyle;
+    return !fs || !fs.hasChoice;
+}
+
+function shouldSkipSpecialtiesStep() {
+    const sp = appState.classSpecialties;
+    return !sp || (!sp.favoredEnemy.hasChoice && !sp.favoredTerrain.hasChoice);
+}
+
 function handleNext() {
     if (!canGoNext() || appState.currentStep >= steps.length - 1) return;
 
     let nextStep = appState.currentStep + 1;
 
-    // Étape "Sous-espèce" (index 2) sautée si l'espèce choisie n'a pas de
-    // sous-race officielle.
     if (nextStep === 2 && (appState.selectedRace?.subspecies?.length || 0) === 0) {
         appState.selectedSubspecies = null;
         nextStep = 3;
     }
-
-    // Étape "Sorts" (index 4) sautée si la classe choisie n'a rien à
-    // proposer au niveau 1.
     if (nextStep === 4 && shouldSkipSpellStep()) {
         nextStep = 5;
+    }
+    if (nextStep === 5 && shouldSkipFightingStyleStep()) {
+        nextStep = 6;
+    }
+    if (nextStep === 6 && shouldSkipSpecialtiesStep()) {
+        nextStep = 7;
     }
 
     appState.currentStep = nextStep;
@@ -1339,15 +1301,17 @@ function handlePrevious() {
 
     let prevStep = appState.currentStep - 1;
 
-    // Même règle au retour : on ne repasse pas par l'étape Sous-espèce
-    // si l'espèce actuelle n'en a pas.
-    if (prevStep === 2 && (appState.selectedRace?.subspecies?.length || 0) === 0) {
-        prevStep = 1;
+    if (prevStep === 6 && shouldSkipSpecialtiesStep()) {
+        prevStep = 5;
     }
-
-    // Ni par l'étape Sorts si la classe actuelle n'en propose pas.
+    if (prevStep === 5 && shouldSkipFightingStyleStep()) {
+        prevStep = 4;
+    }
     if (prevStep === 4 && shouldSkipSpellStep()) {
         prevStep = 3;
+    }
+    if (prevStep === 2 && (appState.selectedRace?.subspecies?.length || 0) === 0) {
+        prevStep = 1;
     }
 
     appState.currentStep = prevStep;
@@ -1366,23 +1330,36 @@ function canGoNext() {
             return appState.selectedSubspecies !== null;
         }
         case 3:
-            // Le bouton reste désactivé tant que le chargement des sorts
-            // de la classe n'est pas terminé (évite une course avec le fetch).
-            return appState.selectedClass !== null && appState.classSpellcasting !== null;
+            return appState.selectedClass !== null
+                && appState.classSpellcasting !== null
+                && appState.classFightingStyle !== null
+                && appState.classSpecialties !== null;
         case 4: {
             const sc = appState.classSpellcasting;
-            if (!sc) return true; // étape sautée de toute façon
+            if (!sc) return true;
             const cantripsOk = appState.selectedCantrips.length === sc.cantripsToChoose;
             const spellsOk = appState.selectedSpells.length === sc.spellsToChoose;
             return cantripsOk && spellsOk;
         }
-        case 5:
-            return appState.abilityScores !== null;
-        case 6:
-            return appState.selectedBackground !== null;
+        case 5: {
+            const fs = appState.classFightingStyle;
+            if (!fs || !fs.hasChoice) return true;
+            return appState.selectedFightingStyle !== null;
+        }
+        case 6: {
+            const sp = appState.classSpecialties;
+            if (!sp) return true;
+            const enemyOk = !sp.favoredEnemy.hasChoice || appState.selectedFavoredEnemy !== null;
+            const terrainOk = !sp.favoredTerrain.hasChoice || appState.selectedFavoredTerrain !== null;
+            return enemyOk && terrainOk;
+        }
         case 7:
-            return appState.classSkills.length === appState.selectedClass.skillChoices;
+            return appState.abilityScores !== null;
         case 8:
+            return appState.selectedBackground !== null;
+        case 9:
+            return appState.classSkills.length === appState.selectedClass.skillChoices;
+        case 10:
             return Object.keys(appState.selectedEquipment).length ===
                    (appState.selectedClass.equipmentChoices?.length || 0);
         default:
@@ -1390,14 +1367,9 @@ function canGoNext() {
     }
 }
 
-
-
-
-
-// Export
 function handleExport() {
     if (!appState.selectedRace || !appState.selectedClass || !appState.abilityScores || !appState.selectedBackground) return;
-    
+
     const character = {
         name: appState.characterName,
         race: appState.selectedRace.name,
@@ -1409,42 +1381,35 @@ function handleExport() {
         skills: appState.selectedSkills,
         cantrips: appState.selectedCantrips,
         spells: appState.selectedSpells,
+        fightingStyleId: appState.selectedFightingStyle,
+        favoredEnemyId: appState.selectedFavoredEnemy,
+        favoredTerrainId: appState.selectedFavoredTerrain,
     };
-    
+
     const dataStr = JSON.stringify(character, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
     const exportFileDefaultName = `${appState.characterName.replace(/\s+/g, '_')}_DnD5e.json`;
-    
+
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
     linkElement.setAttribute('download', exportFileDefaultName);
     linkElement.click();
 }
 
-// Mapping Front → API
 const abilityKeyMap = {
-    strength: 'str',
-    dexterity: 'dex',
-    constitution: 'con',
-    intelligence: 'int',
-    wisdom: 'wis',
-    charisma: 'cha',
+    strength: 'str', dexterity: 'dex', constitution: 'con',
+    intelligence: 'int', wisdom: 'wis', charisma: 'cha',
 };
 
-// Convert abilities from UI format to API format
 function buildApiAbilities(frontAbilities) {
     const apiAbilities = {};
-
     for (const [frontKey, apiKey] of Object.entries(abilityKeyMap)) {
         const value = frontAbilities[frontKey];
-
         if (typeof value !== 'number') {
             throw new Error(`Ability invalide: ${frontKey}`);
         }
-
         apiAbilities[apiKey] = value;
     }
-
     return apiAbilities;
 }
 
@@ -1455,10 +1420,8 @@ function buildEquipmentItems() {
     for (const choice of choices) {
         const optionId = appState.selectedEquipment[choice.id];
         const option = choice.options.find(o => o.id === optionId);
-
         if (!option) continue;
 
-        // itemsData contient les vrais objets avec armor_class, damage_dice, etc.
         if (option.itemsData && option.itemsData.length > 0) {
             items.push(...option.itemsData);
         } else if (option.items) {
@@ -1469,9 +1432,7 @@ function buildEquipmentItems() {
     return items;
 }
 
-
 async function handleSave() {
-    // Vérification des données du personnage
     if (!appState.selectedRace || !appState.selectedClass || !appState.abilityScores || !appState.selectedBackground) {
         alert('Données du personnage incomplètes');
         return;
@@ -1484,11 +1445,7 @@ async function handleSave() {
         alert(err.message);
         return;
     }
-    console.log('🔧 Equipment à envoyer:', buildEquipmentItems());
 
-    // Tours de magie + sorts choisis, combinés en une seule liste d'id
-    // (personnage_known_spell ne distingue pas les deux : le niveau du
-    // sort lui-même, déjà en base, suffit à faire la différence).
     const knownSpells = [...appState.selectedCantrips, ...appState.selectedSpells];
 
     const characterData = {
@@ -1501,7 +1458,10 @@ async function handleSave() {
         abilities: apiAbilities,
         skills: appState.selectedSkills,
         equipment: buildEquipmentItems(),
-        knownSpells
+        knownSpells,
+        fightingStyleId: appState.selectedFightingStyle,
+        favoredEnemyId: appState.selectedFavoredEnemy,
+        favoredTerrainId: appState.selectedFavoredTerrain
     };
 
     try {
@@ -1512,15 +1472,12 @@ async function handleSave() {
         }
 
         const API_URL = 'http://localhost:3000/api/characters';
-
-        // ✅ Récupérer le token depuis localStorage
         const token = localStorage.getItem('authToken');
         if (!token) {
             alert('Vous devez être connecté pour enregistrer un personnage.');
             return;
         }
 
-        // ✅ Envoyer le token dans l'en-tête Authorization
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
@@ -1530,42 +1487,26 @@ async function handleSave() {
             body: JSON.stringify(characterData)
         });
 
-        // Gestion des erreurs
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.error || 'Erreur lors de l’enregistrement');
         }
 
         const result = await response.json();
-        
-        // ✅ Dialog de succès stylisé
+
         const goToCharacters = await customConfirm(
             `Personnage "${appState.characterName}" créé avec succès !\n\nVoulez-vous aller voir vos personnages ?`,
-            {
-                title: 'Création réussie !',
-                confirmText: 'Voir mes personnages',
-                cancelText: 'Créer un autre',
-                type: 'success'
-            }
+            { title: 'Création réussie !', confirmText: 'Voir mes personnages', cancelText: 'Créer un autre', type: 'success' }
         );
-        
+
         if (goToCharacters) {
             window.location.href = '/front-end/player/my-characters.html';
         } else {
-            // Proposer de recommencer
             const restart = await customConfirm(
                 'Voulez-vous créer un nouveau personnage ?',
-                {
-                    title: 'Nouveau personnage',
-                    confirmText: 'Oui',
-                    cancelText: 'Non',
-                    type: 'question'
-                }
+                { title: 'Nouveau personnage', confirmText: 'Oui', cancelText: 'Non', type: 'question' }
             );
-            
-            if (restart) {
-                window.location.reload();
-            }
+            if (restart) window.location.reload();
         }
 
     } catch (error) {
@@ -1580,51 +1521,18 @@ async function handleSave() {
     }
 }
 
-
-// Point Buy utility functions
-// Note: this client-side calculation is a UX convenience only (instant visual
-// feedback while the user adjusts scores). It is never trusted as-is: every
-// value is re-validated server-side by RuleValidator.validatePointBuy()
-// before a character is persisted (see src/validators/ruleValidator.js).
-
-/**
- * Computes the total Point Buy cost of a full set of ability scores,
- * using the official D&D 5e cost table (pointBuyCosts).
- * @param {Object<string, number>} scores - Current scores (8-15) for str, dex, con, int, wis, cha.
- * @returns {number} Total points spent.
- */
 function calculatePointsUsed(scores) {
-    return Object.values(scores).reduce((total, score) => {
-        return total + (pointBuyCosts[score] || 0);
-    }, 0);
+    return Object.values(scores).reduce((total, score) => total + (pointBuyCosts[score] || 0), 0);
 }
 
-/**
- * Checks whether a given ability can be increased by 1 point, i.e. it is
- * not already at MAX_SCORE and enough points remain to cover the marginal
- * cost of the next value (the cost per point increases as the score rises).
- * @param {string} ability - Ability key (e.g. 'str', 'dex'...).
- * @param {Object<string, number>} scores - Current scores.
- * @param {number} pointsRemaining - Points left in the 27-point budget.
- * @returns {boolean} True if the increase is allowed.
- */
 function canIncrease(ability, scores, pointsRemaining) {
     const currentScore = scores[ability];
     if (currentScore >= MAX_SCORE) return false;
-    
     const nextScore = currentScore + 1;
     const costDiff = pointBuyCosts[nextScore] - pointBuyCosts[currentScore];
-    
     return pointsRemaining >= costDiff;
 }
 
-/**
- * Checks whether a given ability can be decreased by 1 point, i.e. it is
- * strictly above MIN_SCORE.
- * @param {string} ability - Ability key (e.g. 'str', 'dex'...).
- * @param {Object<string, number>} scores - Current scores.
- * @returns {boolean} True if the decrease is allowed.
- */
 function canDecrease(ability, scores) {
     return scores[ability] > MIN_SCORE;
 }

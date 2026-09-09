@@ -136,11 +136,6 @@ const deleteCharacter = async (req, res, next) => {
   }
 };
 
-// =====================================================
-// À AJOUTER dans character.controller.js, à côté des autres fonctions,
-// et à ajouter à l'objet module.exports en bas du fichier.
-// =====================================================
-
 /**
  * Aperçu de la prochaine montée de niveau (lecture seule, ne modifie rien).
  * GET /api/characters/:id/level-up-preview

@@ -111,10 +111,55 @@ class Character {
     }
 
     const options = (await db.query(
-      `SELECT id, name FROM dnd_fighting_style WHERE class_id = $1`,
-      [classId]
+      `SELECT id, name FROM dnd_fighting_style ORDER BY name`,
     )).rows;
 
+    return { hasChoice: true, options };
+  }
+
+  /**
+   * Indique si une classe débloque un choix d'Ennemi juré à un niveau donné.
+   * @param {number} classId
+   * @param {number} [level=1]
+   * @returns {Promise<{hasChoice: boolean, options: object[]}>}
+   */
+  static async getFavoredEnemyChoice(classId, level = 1) {
+    const result = await db.query(
+      `SELECT favored_enemy_level FROM dnd_class WHERE id = $1`,
+      [classId]
+    );
+  
+    if (result.rows[0]?.favored_enemy_level !== level) {
+      return { hasChoice: false, options: [] };
+    }
+  
+    const options = (await db.query(
+      `SELECT id, name FROM dnd_favored_enemy ORDER BY name`
+    )).rows;
+  
+    return { hasChoice: true, options };
+  }
+  
+  /**
+   * Indique si une classe débloque un choix de Terrain de prédilection à un niveau donné.
+   * @param {number} classId
+   * @param {number} [level=1]
+   * @returns {Promise<{hasChoice: boolean, options: object[]}>}
+   */
+  static async getFavoredTerrainChoice(classId, level = 1) {
+    const result = await db.query(
+      `SELECT favored_terrain_level FROM dnd_class WHERE id = $1`,
+      [classId]
+    );
+  
+    if (result.rows[0]?.favored_terrain_level !== level) {
+      return { hasChoice: false, options: [] };
+    }
+  
+    const options = (await db.query(
+      `SELECT id, name FROM dnd_favored_terrain ORDER BY name`
+    )).rows;
+  
     return { hasChoice: true, options };
   }
 
@@ -133,7 +178,9 @@ class Character {
       skills,
       equipment,
       knownSpells,
-      fightingStyles
+      fightingStyleId,
+      favoredEnemyId,
+      favoredTerrainId
     } = data;
 
     if (!name) {
@@ -160,7 +207,39 @@ class Character {
         }
         validatedFightingStyleId = fightingStyleId;
       }
+
+      let validatedFavoredEnemyId = null;
+      if (favoredEnemyId) {
+        const feCheck = await client.query(
+          `SELECT c.favored_enemy_level, fe.id
+           FROM dnd_class c
+           LEFT JOIN dnd_favored_enemy fe ON fe.id = $1
+           WHERE c.id = $2`,
+          [favoredEnemyId, classId]
+        );
+        const row = feCheck.rows[0];
+        if (!row || !row.id || row.favored_enemy_level !== level) {
+          throw new Error(`Ennemi juré id=${favoredEnemyId} invalide pour cette classe à ce niveau`);
+        }
+        validatedFavoredEnemyId = favoredEnemyId;
+      }
  
+      let validatedFavoredTerrainId = null;
+      if (favoredTerrainId) {
+        const ftCheck = await client.query(
+          `SELECT c.favored_terrain_level, ft.id
+           FROM dnd_class c
+           LEFT JOIN dnd_favored_terrain ft ON ft.id = $1
+           WHERE c.id = $2`,
+          [favoredTerrainId, classId]
+        );
+        const row = ftCheck.rows[0];
+        if (!row || !row.id || row.favored_terrain_level !== level) {
+          throw new Error(`Terrain de prédilection id=${favoredTerrainId} invalide pour cette classe à ce niveau`);
+        }
+        validatedFavoredTerrainId = favoredTerrainId;
+      }
+
       // 1. Créer le personnage
       const result = await client.query(
         `INSERT INTO personnage

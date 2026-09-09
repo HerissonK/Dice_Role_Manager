@@ -31,4 +31,33 @@ const getStartingFightingStyle = async (req, res, next) => {
   }
 };
 
-module.exports = { getStartingSpells, getStartingFightingStyle };
+const getStartingFavoredEnemy = async (req, res, next) => {
+  try {
+    const classId = parseInt(req.params.classId, 10);
+    if (isNaN(classId)) throw new AppError('Invalid class ID', 400);
+ 
+    const result = await Character.getFavoredEnemyChoice(classId, 1);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+ 
+const getStartingFavoredTerrain = async (req, res, next) => {
+  try {
+    const classId = parseInt(req.params.classId, 10);
+    if (isNaN(classId)) throw new AppError('Invalid class ID', 400);
+ 
+    const result = await Character.getFavoredTerrainChoice(classId, 1);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+ 
+module.exports = {
+  getStartingSpells,
+  getStartingFightingStyle,
+  getStartingFavoredEnemy,
+  getStartingFavoredTerrain
+};
