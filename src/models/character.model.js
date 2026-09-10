@@ -163,6 +163,31 @@ class Character {
     return { hasChoice: true, options };
   }
 
+  /**
+   * Indique si une classe débloque un choix d'Expertise à un niveau donné,
+   * et pour combien de compétences. Contrairement aux autres choix, il n'y
+   * a pas de liste d'options à renvoyer : les compétences éligibles sont
+   * celles que le personnage maîtrise déjà (choisies à l'étape Compétences
+   * du builder), pas une liste de référence en base.
+   *
+   * @param {number} classId
+   * @param {number} [level=1]
+   * @returns {Promise<{hasChoice: boolean, count: number}>}
+   */
+  static async getExpertiseChoice(classId, level = 1) {
+    const result = await db.query(
+      `SELECT expertise_level, expertise_count FROM dnd_class WHERE id = $1`,
+      [classId]
+    );
+  
+    const row = result.rows[0];
+    if (!row || row.expertise_level !== level) {
+      return { hasChoice: false, count: 0 };
+    }
+  
+    return { hasChoice: true, count: row.expertise_count };
+  }
+
   static async create(data) {
     RuleValidator.validateCharacter(data);
 
@@ -180,7 +205,8 @@ class Character {
       knownSpells,
       fightingStyleId,
       favoredEnemyId,
-      favoredTerrainId
+      favoredTerrainId,
+      expertiseSkills
     } = data;
 
     if (!name) {
@@ -240,6 +266,30 @@ class Character {
         validatedFavoredTerrainId = favoredTerrainId;
       }
 
+      let validatedExpertiseSkills = [];
+      if (expertiseSkills && Array.isArray(expertiseSkills) && expertiseSkills.length > 0) {
+        const classResult = await client.query(
+          `SELECT expertise_level, expertise_count FROM dnd_class WHERE id = $1`,
+          [classId]
+        );
+        const expertiseInfo = classResult.rows[0];
+        const expectedCount = (expertiseInfo && expertiseInfo.expertise_level === level)
+          ? expertiseInfo.expertise_count
+          : 0;
+ 
+        if (expertiseSkills.length !== expectedCount) {
+          throw new Error(`Nombre de compétences d'expertise invalide (attendu : ${expectedCount})`);
+        }
+ 
+        for (const skillName of expertiseSkills) {
+          if (!skills.includes(skillName)) {
+            throw new Error(`La compétence "${skillName}" doit déjà être maîtrisée pour bénéficier de l'expertise`);
+          }
+        }
+ 
+        validatedExpertiseSkills = expertiseSkills;
+      }
+
       // 1. Créer le personnage
       const result = await client.query(
         `INSERT INTO personnage
@@ -273,6 +323,18 @@ class Character {
           );
         }
         console.log(`✅ ${skills.length} compétences sauvegardées pour personnage ${characterId}`);
+      }
+
+      if (validatedExpertiseSkills.length > 0) {
+        for (const skillName of validatedExpertiseSkills) {
+          await client.query(
+            `INSERT INTO personnage_expertise (personnage_id, skill_name, level_gained)
+             VALUES ($1, $2, $3)
+             ON CONFLICT (personnage_id, skill_name) DO NOTHING`,
+            [characterId, skillName, level]
+          );
+        }
+        console.log(`✅ ${validatedExpertiseSkills.length} compétence(s) d'expertise sauvegardée(s) pour personnage ${characterId}`);
       }
 
       if (knownSpells && Array.isArray(knownSpells) && knownSpells.length > 0) {

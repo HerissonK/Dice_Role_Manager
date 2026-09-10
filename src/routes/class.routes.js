@@ -5,7 +5,8 @@ const {
   getStartingSpells,
   getStartingFightingStyle,
   getStartingFavoredEnemy,
-  getStartingFavoredTerrain
+  getStartingFavoredTerrain,
+  getStartingExpertise
 } = require('../controllers/class.controller');
  
 router.use(authenticate);
@@ -13,5 +14,6 @@ router.get('/:classId/starting-fighting-style', getStartingFightingStyle);
 router.get('/:classId/starting-spells', getStartingSpells);
 router.get('/:classId/starting-favored-enemy', getStartingFavoredEnemy);
 router.get('/:classId/starting-favored-terrain', getStartingFavoredTerrain);
+router.get('/:classId/starting-expertise', getStartingExpertise);
  
 module.exports = router;

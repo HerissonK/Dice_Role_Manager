@@ -54,10 +54,23 @@ const getStartingFavoredTerrain = async (req, res, next) => {
     next(error);
   }
 };
+
+const getStartingExpertise = async (req, res, next) => {
+  try {
+    const classId = parseInt(req.params.classId, 10);
+    if (isNaN(classId)) throw new AppError('Invalid class ID', 400);
+ 
+    const result = await Character.getExpertiseChoice(classId, 1);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
  
 module.exports = {
   getStartingSpells,
   getStartingFightingStyle,
   getStartingFavoredEnemy,
-  getStartingFavoredTerrain
+  getStartingFavoredTerrain,
+  getStartingExpertise
 };
