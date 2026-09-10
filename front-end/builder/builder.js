@@ -32,6 +32,8 @@ const appState = {
     classSpecialties: null,
     selectedFavoredEnemy: null,
     selectedFavoredTerrain: null,
+    classExpertise: null,
+    selectedExpertise: [],
     abilityScores: null,
 
     selectedBackground: null,
@@ -43,7 +45,7 @@ const appState = {
     selectedEquipment: {}
 };
 
-const steps = ['Nom', 'Espèce', 'Sous-espèce', 'Classe', 'Sorts', 'Style de combat', 'Spécialités', 'Caractéristiques', 'Historique', 'Compétences', 'Équipement', 'Fiche'];
+const steps = ['Nom', 'Espèce', 'Sous-espèce', 'Classe', 'Sorts', 'Style de combat', 'Spécialités', 'Caractéristiques', 'Historique', 'Compétences', 'Expertise', 'Équipement', 'Fiche'];
 
 const POINT_BUY_MAX = 27;
 const MIN_SCORE = 8;
@@ -98,8 +100,9 @@ function renderMainContent() {
         case 7: renderAbilityScores(container); break;
         case 8: renderBackgroundSelection(container); break;
         case 9: renderSkillSelection(container); break;
-        case 10: renderEquipmentSelection(container); break;
-        case 11: renderCharacterSheet(container); break;
+        case 10: renderExpertiseSelection(container); break;
+        case 11: renderEquipmentSelection(container); break;
+        case 12: renderCharacterSheet(container); break;
     }
 }
 
@@ -302,17 +305,21 @@ function renderClassSelection(container) {
             appState.selectedFavoredEnemy = null;
             appState.selectedFavoredTerrain = null;
             appState.classSpecialties = null;
+            appState.selectedExpertise = [];
+            appState.classExpertise = null;
 
             render();
 
-            const [spellcasting, fightingStyle, specialties] = await Promise.all([
+            const [spellcasting, fightingStyle, specialties, expertise] = await Promise.all([
                 fetchClassSpellcasting(classId),
                 fetchClassFightingStyle(classId),
-                fetchClassSpecialties(classId)
+                fetchClassSpecialties(classId),
+                fetchClassExpertise(classId)
             ]);
             appState.classSpellcasting = spellcasting;
             appState.classFightingStyle = fightingStyle;
             appState.classSpecialties = specialties;
+            appState.classExpertise = expertise;
             render();
         });
     });
@@ -366,6 +373,20 @@ async function fetchClassSpecialties(classId) {
     } catch (err) {
         console.error('Erreur fetchClassSpecialties:', err);
         return { favoredEnemy: empty, favoredTerrain: empty };
+    }
+}
+
+async function fetchClassExpertise(classId) {
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${CLASS_API_BASE}/classes/${classId}/starting-expertise`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) throw new Error('Erreur lors du chargement de l\'expertise');
+        return await response.json();
+    } catch (err) {
+        console.error('Erreur fetchClassExpertise:', err);
+        return { hasChoice: false, count: 0 };
     }
 }
 
@@ -810,7 +831,62 @@ function renderSkillSelection(container) {
 
             appState.selectedSkills = [...appState.backgroundSkills, ...appState.classSkills];
 
+            appState.selectedExpertise = appState.selectedExpertise.filter(s => appState.selectedSkills.includes(s));
+
             renderSkillSelection(container);
+            renderNavigationButtons();
+        });
+    });
+}
+
+function renderExpertiseSelection(container) {
+    const ex = appState.classExpertise;
+
+    if (!ex || !ex.hasChoice) {
+        container.innerHTML = `
+            <div class="card p-6 text-center">
+                <p class="text-gray-600">Cette classe n'a pas d'expertise à choisir pour l'instant.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const availableSkills = appState.selectedSkills;
+
+    container.innerHTML = `
+        <div class="max-w-2xl">
+            <h2 class="mb-4 text-center">Choisissez vos compétences d'expertise</h2>
+            <p class="text-center text-gray-600 mb-6">
+                Choisissez ${ex.count} compétences parmi celles déjà maîtrisées : leur bonus de maîtrise sera doublé.
+                (${appState.selectedExpertise.length} / ${ex.count})
+            </p>
+            <div class="card p-6">
+                <div class="space-y-2">
+                    ${availableSkills.map(skill => `
+                        <label class="flex items-center gap-2 p-2 cursor-pointer">
+                            <input type="checkbox" data-expertise-skill value="${skill}"
+                                ${appState.selectedExpertise.includes(skill) ? 'checked' : ''}>
+                            <span>${skill}</span>
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+
+    container.querySelectorAll('[data-expertise-skill]').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const skill = cb.value;
+            if (cb.checked) {
+                if (appState.selectedExpertise.length >= ex.count) {
+                    cb.checked = false;
+                    return;
+                }
+                appState.selectedExpertise.push(skill);
+            } else {
+                appState.selectedExpertise = appState.selectedExpertise.filter(s => s !== skill);
+            }
+            renderExpertiseSelection(container);
             renderNavigationButtons();
         });
     });
@@ -1032,13 +1108,14 @@ function renderCharacterSheet(container) {
         .map(skill => {
             const abilityScore = finalScores[skill.ability];
             const modifier = getAbilityModifier(abilityScore);
-            const total = modifier + proficiencyBonus;
+            const isExpertise = appState.selectedExpertise.includes(skill.name);
+            const total = modifier + proficiencyBonus * (isExpertise ? 2 : 1);
 
             return `
                 <div class="skill-item">
                     <div class="skill-item-content">
                         <span class="badge badge-secondary text-xs">${abilityAbbrev[skill.ability]}</span>
-                        <span>${skill.name}</span>
+                        <span>${skill.name}${isExpertise ? ' ⭐' : ''}</span>
                     </div>
                     <span class="badge">${total >= 0 ? '+' : ''}${total}</span>
                 </div>
@@ -1183,6 +1260,7 @@ function renderCharacterSheet(container) {
 
                 <div class="mb-6">
                     <h3 class="mb-4">Compétences maîtrisées</h3>
+                    ${appState.selectedExpertise.length > 0 ? '<p class="text-xs text-gray-500 mb-2">⭐ = Expertise (bonus doublé)</p>' : ''}
                     <div class="grid grid-cols-1 md-grid-cols-2 gap-2">${skillsHTML}</div>
                 </div>
 
@@ -1273,6 +1351,11 @@ function shouldSkipSpecialtiesStep() {
     return !sp || (!sp.favoredEnemy.hasChoice && !sp.favoredTerrain.hasChoice);
 }
 
+function shouldSkipExpertiseStep() {
+    const ex = appState.classExpertise;
+    return !ex || !ex.hasChoice;
+}
+
 function handleNext() {
     if (!canGoNext() || appState.currentStep >= steps.length - 1) return;
 
@@ -1291,6 +1374,9 @@ function handleNext() {
     if (nextStep === 6 && shouldSkipSpecialtiesStep()) {
         nextStep = 7;
     }
+    if (nextStep === 10 && shouldSkipExpertiseStep()) {
+        nextStep = 11;
+    }
 
     appState.currentStep = nextStep;
     render();
@@ -1301,6 +1387,9 @@ function handlePrevious() {
 
     let prevStep = appState.currentStep - 1;
 
+    if (prevStep === 10 && shouldSkipExpertiseStep()) {
+        prevStep = 9;
+    }
     if (prevStep === 6 && shouldSkipSpecialtiesStep()) {
         prevStep = 5;
     }
@@ -1333,7 +1422,8 @@ function canGoNext() {
             return appState.selectedClass !== null
                 && appState.classSpellcasting !== null
                 && appState.classFightingStyle !== null
-                && appState.classSpecialties !== null;
+                && appState.classSpecialties !== null
+                && appState.classExpertise !== null;
         case 4: {
             const sc = appState.classSpellcasting;
             if (!sc) return true;
@@ -1359,7 +1449,12 @@ function canGoNext() {
             return appState.selectedBackground !== null;
         case 9:
             return appState.classSkills.length === appState.selectedClass.skillChoices;
-        case 10:
+        case 10: {
+            const ex = appState.classExpertise;
+            if (!ex || !ex.hasChoice) return true;
+            return appState.selectedExpertise.length === ex.count;
+        }
+        case 11:
             return Object.keys(appState.selectedEquipment).length ===
                    (appState.selectedClass.equipmentChoices?.length || 0);
         default:
@@ -1384,6 +1479,7 @@ function handleExport() {
         fightingStyleId: appState.selectedFightingStyle,
         favoredEnemyId: appState.selectedFavoredEnemy,
         favoredTerrainId: appState.selectedFavoredTerrain,
+        expertiseSkills: appState.selectedExpertise,
     };
 
     const dataStr = JSON.stringify(character, null, 2);
@@ -1461,7 +1557,8 @@ async function handleSave() {
         knownSpells,
         fightingStyleId: appState.selectedFightingStyle,
         favoredEnemyId: appState.selectedFavoredEnemy,
-        favoredTerrainId: appState.selectedFavoredTerrain
+        favoredTerrainId: appState.selectedFavoredTerrain,
+        expertiseSkills: appState.selectedExpertise
     };
 
     try {
