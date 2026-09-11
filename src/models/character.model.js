@@ -45,50 +45,81 @@ class Character {
    * @returns {Promise<number>} The newly created character's id.
    */
 
-  /**
-   * Indique combien de tours de magie et de sorts un personnage doit choisir
-   * à la création (niveau 1) pour une classe donnée, avec la liste des
-   * options éligibles. Ne dépend d'aucun personnage existant — utilisé par
-   * le builder avant même que le personnage soit créé.
-   *
-   * @param {number} classId
-   * @returns {Promise<{cantripsToChoose: number, spellsToChoose: number, eligibleCantrips: object[], eligibleSpells: object[]}>}
-   */
-  static async getStartingSpellcasting(classId) {
-    const slotsRow = (await db.query(
-      `SELECT cantrips_known, spells_known FROM dnd_class_spell_slots WHERE class_id = $1 AND level = 1`,
+/**
+ * Indique combien de tours de magie et de sorts un personnage doit
+ * choisir à la création (niveau 1) pour une classe donnée.
+ *
+ * Deux mécaniques distinctes pour les sorts (les tours de magie suivent
+ * toujours le même mécanisme, un nombre fixe) :
+ * - "Sorts connus" (Barde, Ensorceleur, Occultiste, Rôdeur) : nombre fixe
+ *   de sorts choisis une fois pour toutes (spellsToChoose > 0).
+ * - "À préparation" (Magicien, Clerc, Druide, Paladin) : pas de nombre
+ *   fixe en base (spells_known = NULL) — le nombre réel dépend du
+ *   modificateur de caractéristique du joueur, connu seulement après
+ *   l'étape Caractéristiques du builder. On renvoie ici seulement le
+ *   signal isPreparedCaster + la liste complète des sorts éligibles
+ *   (preparedEligibleSpells) ; c'est au builder de calculer le nombre
+ *   exact une fois les caractéristiques connues.
+ *
+ * @param {number} classId
+ * @returns {Promise<{cantripsToChoose: number, spellsToChoose: number, eligibleCantrips: object[], eligibleSpells: object[], isPreparedCaster: boolean, preparedEligibleSpells: object[]}>}
+ */
+static async getStartingSpellcasting(classId) {
+  const slotsRow = (await db.query(
+    `SELECT cantrips_known, spells_known FROM dnd_class_spell_slots WHERE class_id = $1 AND level = 1`,
+    [classId]
+  )).rows[0] || null;
+ 
+  const cantripsToChoose = slotsRow?.cantrips_known || 0;
+  const isKnownCaster = !!slotsRow && slotsRow.spells_known !== null;
+  const isPreparedCaster = !!slotsRow && slotsRow.spells_known === null;
+  const spellsToChoose = isKnownCaster ? slotsRow.spells_known : 0;
+ 
+  let eligibleCantrips = [];
+  if (cantripsToChoose > 0) {
+    eligibleCantrips = (await db.query(
+      `SELECT sp.id, sp.name, sp.school
+       FROM dnd_spell sp
+       JOIN dnd_spell_class sc ON sc.spell_id = sp.id
+       WHERE sc.class_id = $1 AND sp.level = 0
+       ORDER BY sp.name`,
       [classId]
-    )).rows[0] || null;
-  
-    const cantripsToChoose = slotsRow?.cantrips_known || 0;
-    const spellsToChoose = (slotsRow && slotsRow.spells_known !== null) ? slotsRow.spells_known : 0;
-  
-    let eligibleCantrips = [];
-    if (cantripsToChoose > 0) {
-      eligibleCantrips = (await db.query(
-        `SELECT sp.id, sp.name, sp.school
-        FROM dnd_spell sp
-        JOIN dnd_spell_class sc ON sc.spell_id = sp.id
-        WHERE sc.class_id = $1 AND sp.level = 0
-        ORDER BY sp.name`,
-        [classId]
-      )).rows;
-    }
-  
-    let eligibleSpells = [];
-    if (spellsToChoose > 0) {
-      eligibleSpells = (await db.query(
-        `SELECT sp.id, sp.name, sp.level, sp.school
-        FROM dnd_spell sp
-        JOIN dnd_spell_class sc ON sc.spell_id = sp.id
-        WHERE sc.class_id = $1 AND sp.level > 0
-        ORDER BY sp.level, sp.name`,
-        [classId]
-      )).rows;
-    }
-  
-    return { cantripsToChoose, spellsToChoose, eligibleCantrips, eligibleSpells };
+    )).rows;
   }
+ 
+  let eligibleSpells = [];
+  if (spellsToChoose > 0) {
+    eligibleSpells = (await db.query(
+      `SELECT sp.id, sp.name, sp.level, sp.school
+       FROM dnd_spell sp
+       JOIN dnd_spell_class sc ON sc.spell_id = sp.id
+       WHERE sc.class_id = $1 AND sp.level > 0
+       ORDER BY sp.level, sp.name`,
+      [classId]
+    )).rows;
+  }
+ 
+  let preparedEligibleSpells = [];
+  if (isPreparedCaster) {
+    preparedEligibleSpells = (await db.query(
+      `SELECT sp.id, sp.name, sp.level, sp.school
+       FROM dnd_spell sp
+       JOIN dnd_spell_class sc ON sc.spell_id = sp.id
+       WHERE sc.class_id = $1 AND sp.level > 0
+       ORDER BY sp.level, sp.name`,
+      [classId]
+    )).rows;
+  }
+ 
+  return {
+    cantripsToChoose,
+    spellsToChoose,
+    eligibleCantrips,
+    eligibleSpells,
+    isPreparedCaster,
+    preparedEligibleSpells
+  };
+}
 
   /**
    * Indique si une classe débloque un choix de style de combat à un niveau
