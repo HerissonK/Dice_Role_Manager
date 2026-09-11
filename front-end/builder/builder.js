@@ -6,6 +6,16 @@
  */
 
 // Application Character Builder D&D 5e
+//
+// Architecture des étapes : contrairement à la version précédente (liste
+// fixe d'étapes avec logique de saut), la liste des étapes visibles est
+// désormais RECALCULÉE à chaque affichage à partir de l'état actuel
+// (STEP_DEFINITIONS + getVisibleSteps()). Une étape n'apparaît dans
+// l'indicateur que si elle est pertinente pour les choix déjà faits —
+// pas besoin de "sauter" une étape non pertinente, elle n'existe
+// simplement pas dans la liste à ce moment-là. L'étape courante est
+// identifiée par une clé (currentStepKey), pas un index numérique, pour
+// rester valide même quand la liste change de taille.
 
 const CLASS_API_BASE = 'http://localhost:3000/api';
 
@@ -19,7 +29,7 @@ const FIGHTING_STYLE_IDS = {
 };
 
 const appState = {
-    currentStep: 0,
+    currentStepKey: 'name',
     characterName: '',
     selectedRace: null,
     selectedSubspecies: null,
@@ -27,6 +37,7 @@ const appState = {
     classSpellcasting: null,
     selectedCantrips: [],
     selectedSpells: [],
+    selectedPreparedSpells: [],
     classFightingStyle: null,
     selectedFightingStyle: null,
     classSpecialties: null,
@@ -45,7 +56,28 @@ const appState = {
     selectedEquipment: {}
 };
 
-const steps = ['Nom', 'Espèce', 'Sous-espèce', 'Classe', 'Sorts', 'Style de combat', 'Spécialités', 'Caractéristiques', 'Historique', 'Compétences', 'Expertise', 'Équipement', 'Fiche'];
+// Définition de toutes les étapes possibles, dans l'ordre. isVisible()
+// détermine si l'étape doit apparaître dans l'indicateur ET dans le
+// parcours de navigation, en fonction de l'état actuel.
+const STEP_DEFINITIONS = [
+    { key: 'name', label: 'Nom', isVisible: () => true },
+    { key: 'race', label: 'Espèce', isVisible: () => true },
+    { key: 'subspecies', label: 'Sous-espèce', isVisible: (s) => (s.selectedRace?.subspecies?.length || 0) > 0 },
+    { key: 'class', label: 'Classe', isVisible: () => true },
+    { key: 'fightingStyle', label: 'Style de combat', isVisible: (s) => !!s.classFightingStyle?.hasChoice },
+    { key: 'specialties', label: 'Spécialités', isVisible: (s) => !!s.classSpecialties && (s.classSpecialties.favoredEnemy.hasChoice || s.classSpecialties.favoredTerrain.hasChoice) },
+    { key: 'abilities', label: 'Caractéristiques', isVisible: () => true },
+    { key: 'spells', label: 'Sorts', isVisible: (s) => !!s.classSpellcasting && (s.classSpellcasting.cantripsToChoose > 0 || s.classSpellcasting.spellsToChoose > 0 || s.classSpellcasting.isPreparedCaster) },
+    { key: 'background', label: 'Historique', isVisible: () => true },
+    { key: 'skills', label: 'Compétences', isVisible: () => true },
+    { key: 'expertise', label: 'Expertise', isVisible: (s) => !!s.classExpertise?.hasChoice },
+    { key: 'equipment', label: 'Équipement', isVisible: () => true },
+    { key: 'sheet', label: 'Fiche', isVisible: () => true },
+];
+
+function getVisibleSteps() {
+    return STEP_DEFINITIONS.filter(step => step.isVisible(appState));
+}
 
 const POINT_BUY_MAX = 27;
 const MIN_SCORE = 8;
@@ -61,48 +93,64 @@ function render() {
     renderNavigationButtons();
 }
 
+// Indicateur d'étapes : recalculé dynamiquement, et chaque étape déjà
+// atteinte (ou l'étape courante) est cliquable pour y revenir directement.
 function renderStepIndicator() {
     const container = document.getElementById('step-indicator');
+    const visible = getVisibleSteps();
+    const currentIndex = visible.findIndex(s => s.key === appState.currentStepKey);
 
-    const stepsHTML = steps.map((step, index) => {
-        const isCompleted = index < appState.currentStep;
-        const isActive = index === appState.currentStep;
+    const stepsHTML = visible.map((step, index) => {
+        const isCompleted = index < currentIndex;
+        const isActive = index === currentIndex;
+        const isClickable = index <= currentIndex;
         const circleClass = isCompleted ? 'completed' : isActive ? 'active' : '';
         const labelClass = isCompleted || isActive ? 'active' : '';
 
         return `
-            <div class="step-item">
+            <div class="step-item ${isClickable ? 'step-clickable' : ''}" data-step-key="${step.key}" style="${isClickable ? 'cursor:pointer;' : ''}">
                 <div class="step-content">
                     <div class="step-circle ${circleClass}">
                         ${isCompleted ? '✓' : index + 1}
                     </div>
-                    <span class="step-label ${labelClass}">${step}</span>
+                    <span class="step-label ${labelClass}">${step.label}</span>
                 </div>
             </div>
         `;
     }).join('');
 
     container.innerHTML = `<div class="steps-container">${stepsHTML}</div>`;
+
+    container.querySelectorAll('[data-step-key]').forEach(el => {
+        const key = el.getAttribute('data-step-key');
+        const idx = visible.findIndex(s => s.key === key);
+        if (idx <= currentIndex) {
+            el.addEventListener('click', () => {
+                appState.currentStepKey = key;
+                render();
+            });
+        }
+    });
 }
 
 function renderMainContent() {
     const container = document.getElementById('main-content');
     container.innerHTML = '';
 
-    switch (appState.currentStep) {
-        case 0: renderCharacterName(container); break;
-        case 1: renderRaceSelection(container); break;
-        case 2: renderSubspeciesSelection(container); break;
-        case 3: renderClassSelection(container); break;
-        case 4: renderSpellSelection(container); break;
-        case 5: renderFightingStyleSelection(container); break;
-        case 6: renderSpecialtiesSelection(container); break;
-        case 7: renderAbilityScores(container); break;
-        case 8: renderBackgroundSelection(container); break;
-        case 9: renderSkillSelection(container); break;
-        case 10: renderExpertiseSelection(container); break;
-        case 11: renderEquipmentSelection(container); break;
-        case 12: renderCharacterSheet(container); break;
+    switch (appState.currentStepKey) {
+        case 'name': renderCharacterName(container); break;
+        case 'race': renderRaceSelection(container); break;
+        case 'subspecies': renderSubspeciesSelection(container); break;
+        case 'class': renderClassSelection(container); break;
+        case 'fightingStyle': renderFightingStyleSelection(container); break;
+        case 'specialties': renderSpecialtiesSelection(container); break;
+        case 'abilities': renderAbilityScores(container); break;
+        case 'spells': renderSpellSelection(container); break;
+        case 'background': renderBackgroundSelection(container); break;
+        case 'skills': renderSkillSelection(container); break;
+        case 'expertise': renderExpertiseSelection(container); break;
+        case 'equipment': renderEquipmentSelection(container); break;
+        case 'sheet': renderCharacterSheet(container); break;
     }
 }
 
@@ -299,6 +347,7 @@ function renderClassSelection(container) {
 
             appState.selectedCantrips = [];
             appState.selectedSpells = [];
+            appState.selectedPreparedSpells = [];
             appState.classSpellcasting = null;
             appState.selectedFightingStyle = null;
             appState.classFightingStyle = null;
@@ -335,7 +384,7 @@ async function fetchClassSpellcasting(classId) {
         return await response.json();
     } catch (err) {
         console.error('Erreur fetchClassSpellcasting:', err);
-        return { cantripsToChoose: 0, spellsToChoose: 0, eligibleCantrips: [], eligibleSpells: [] };
+        return { cantripsToChoose: 0, spellsToChoose: 0, eligibleCantrips: [], eligibleSpells: [], isPreparedCaster: false, preparedEligibleSpells: [] };
     }
 }
 
@@ -388,99 +437,6 @@ async function fetchClassExpertise(classId) {
         console.error('Erreur fetchClassExpertise:', err);
         return { hasChoice: false, count: 0 };
     }
-}
-
-function renderSpellSelection(container) {
-    const sc = appState.classSpellcasting;
-
-    if (!sc || (sc.cantripsToChoose + sc.spellsToChoose) === 0) {
-        container.innerHTML = `
-            <div class="card p-6 text-center">
-                <p class="text-gray-600">Cette classe n'a aucun sort à choisir au niveau 1.</p>
-            </div>
-        `;
-        return;
-    }
-
-    const cantripsHTML = sc.cantripsToChoose > 0 ? `
-        <div class="card p-6 mb-6">
-            <h3 class="mb-3">Tours de magie</h3>
-            <p class="text-sm text-gray-600 mb-4">
-                Choisissez ${sc.cantripsToChoose} tour${sc.cantripsToChoose > 1 ? 's' : ''} de magie
-                (${appState.selectedCantrips.length} / ${sc.cantripsToChoose})
-            </p>
-            <div class="space-y-2">
-                ${sc.eligibleCantrips.map(spell => `
-                    <label class="flex items-center gap-2 p-2 cursor-pointer">
-                        <input type="checkbox" data-spell-type="cantrip" value="${spell.id}"
-                            ${appState.selectedCantrips.includes(spell.id) ? 'checked' : ''}>
-                        <span>${spell.name}${spell.school ? ` <span class="text-xs text-gray-500">(${spell.school})</span>` : ''}</span>
-                    </label>
-                `).join('')}
-            </div>
-        </div>
-    ` : '';
-
-    const spellsHTML = sc.spellsToChoose > 0 ? `
-        <div class="card p-6 mb-6">
-            <h3 class="mb-3">Sorts</h3>
-            <p class="text-sm text-gray-600 mb-4">
-                Choisissez ${sc.spellsToChoose} sort${sc.spellsToChoose > 1 ? 's' : ''}
-                (${appState.selectedSpells.length} / ${sc.spellsToChoose})
-            </p>
-            <div class="space-y-2">
-                ${sc.eligibleSpells.map(spell => `
-                    <label class="flex items-center gap-2 p-2 cursor-pointer">
-                        <input type="checkbox" data-spell-type="spell" value="${spell.id}"
-                            ${appState.selectedSpells.includes(spell.id) ? 'checked' : ''}>
-                        <span>${spell.name} <span class="text-xs text-gray-500">(niveau ${spell.level}${spell.school ? `, ${spell.school}` : ''})</span></span>
-                    </label>
-                `).join('')}
-            </div>
-        </div>
-    ` : '';
-
-    container.innerHTML = `
-        <div class="max-w-3xl">
-            <h2 class="mb-6 text-center">Choisissez vos sorts</h2>
-            ${cantripsHTML}
-            ${spellsHTML}
-        </div>
-    `;
-
-    container.querySelectorAll('input[data-spell-type="cantrip"]').forEach(cb => {
-        cb.addEventListener('change', () => {
-            const id = Number(cb.value);
-            if (cb.checked) {
-                if (appState.selectedCantrips.length >= sc.cantripsToChoose) {
-                    cb.checked = false;
-                    return;
-                }
-                appState.selectedCantrips.push(id);
-            } else {
-                appState.selectedCantrips = appState.selectedCantrips.filter(x => x !== id);
-            }
-            renderSpellSelection(container);
-            renderNavigationButtons();
-        });
-    });
-
-    container.querySelectorAll('input[data-spell-type="spell"]').forEach(cb => {
-        cb.addEventListener('change', () => {
-            const id = Number(cb.value);
-            if (cb.checked) {
-                if (appState.selectedSpells.length >= sc.spellsToChoose) {
-                    cb.checked = false;
-                    return;
-                }
-                appState.selectedSpells.push(id);
-            } else {
-                appState.selectedSpells = appState.selectedSpells.filter(x => x !== id);
-            }
-            renderSpellSelection(container);
-            renderNavigationButtons();
-        });
-    });
 }
 
 function renderFightingStyleSelection(container) {
@@ -686,6 +642,163 @@ function renderAbilityScores(container) {
     document.getElementById('btn-back-abilities').addEventListener('click', handlePrevious);
     document.getElementById('btn-confirm-abilities').addEventListener('click', () => {
         if (pointsRemaining >= 0) handleNext();
+    });
+}
+
+function getPrimaryAbilityModifierFinal() {
+    const ability = appState.selectedClass.primaryAbility;
+    let score = appState.abilityScores[ability];
+    score += (appState.selectedRace.abilityBonuses[ability] || 0);
+    if (appState.selectedSubspecies) {
+        score += (appState.selectedSubspecies.abilityBonuses?.[ability] || 0);
+    }
+    return getAbilityModifier(score);
+}
+
+function getPreparedSpellCount() {
+    const mod = getPrimaryAbilityModifierFinal();
+    return Math.max(1, mod + 1);
+}
+
+// Étape "Sorts" (fusionnée) : tours de magie, sorts connus (nombre fixe)
+// et sorts préparés (nombre dépendant du modificateur) sont tous choisis
+// sur cette même page, placée après Caractéristiques — les
+// caractéristiques sont donc toujours connues à ce stade, ce qui
+// simplifie le calcul des sorts préparés (plus besoin d'une étape séparée
+// après les caractéristiques).
+function renderSpellSelection(container) {
+    const sc = appState.classSpellcasting;
+
+    if (!sc) {
+        container.innerHTML = `
+            <div class="card p-6 text-center">
+                <p class="text-gray-600">Cette classe n'a aucun sort à choisir au niveau 1.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const cantripsHTML = sc.cantripsToChoose > 0 ? `
+        <div class="card p-6 mb-6">
+            <h3 class="mb-3">Tours de magie</h3>
+            <p class="text-sm text-gray-600 mb-4">
+                Choisissez ${sc.cantripsToChoose} tour${sc.cantripsToChoose > 1 ? 's' : ''} de magie
+                (${appState.selectedCantrips.length} / ${sc.cantripsToChoose})
+            </p>
+            <div class="space-y-2">
+                ${sc.eligibleCantrips.map(spell => `
+                    <label class="flex items-center gap-2 p-2 cursor-pointer">
+                        <input type="checkbox" data-spell-type="cantrip" value="${spell.id}"
+                            ${appState.selectedCantrips.includes(spell.id) ? 'checked' : ''}>
+                        <span>${spell.name}${spell.school ? ` <span class="text-xs text-gray-500">(${spell.school})</span>` : ''}</span>
+                    </label>
+                `).join('')}
+            </div>
+        </div>
+    ` : '';
+
+    const spellsHTML = sc.spellsToChoose > 0 ? `
+        <div class="card p-6 mb-6">
+            <h3 class="mb-3">Sorts connus</h3>
+            <p class="text-sm text-gray-600 mb-4">
+                Choisissez ${sc.spellsToChoose} sort${sc.spellsToChoose > 1 ? 's' : ''}
+                (${appState.selectedSpells.length} / ${sc.spellsToChoose})
+            </p>
+            <div class="space-y-2">
+                ${sc.eligibleSpells.map(spell => `
+                    <label class="flex items-center gap-2 p-2 cursor-pointer">
+                        <input type="checkbox" data-spell-type="spell" value="${spell.id}"
+                            ${appState.selectedSpells.includes(spell.id) ? 'checked' : ''}>
+                        <span>${spell.name} <span class="text-xs text-gray-500">(niveau ${spell.level}${spell.school ? `, ${spell.school}` : ''})</span></span>
+                    </label>
+                `).join('')}
+            </div>
+        </div>
+    ` : '';
+
+    let preparedHTML = '';
+    let preparedCount = 0;
+    if (sc.isPreparedCaster) {
+        preparedCount = getPreparedSpellCount();
+        const eligible = sc.preparedEligibleSpells.filter(sp => sp.level <= 1);
+        preparedHTML = `
+            <div class="card p-6 mb-6">
+                <h3 class="mb-3">Sorts préparés</h3>
+                <p class="text-sm text-gray-600 mb-4">
+                    Modificateur de ${abilityNames[appState.selectedClass.primaryAbility]} + niveau : préparez ${preparedCount} sort${preparedCount > 1 ? 's' : ''}
+                    (${appState.selectedPreparedSpells.length} / ${preparedCount})
+                </p>
+                <div class="space-y-2">
+                    ${eligible.map(spell => `
+                        <label class="flex items-center gap-2 p-2 cursor-pointer">
+                            <input type="checkbox" data-spell-type="prepared" value="${spell.id}"
+                                ${appState.selectedPreparedSpells.includes(spell.id) ? 'checked' : ''}>
+                            <span>${spell.name} <span class="text-xs text-gray-500">(niveau ${spell.level}${spell.school ? `, ${spell.school}` : ''})</span></span>
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    container.innerHTML = `
+        <div class="max-w-3xl">
+            <h2 class="mb-6 text-center">Choisissez vos sorts</h2>
+            ${cantripsHTML}
+            ${spellsHTML}
+            ${preparedHTML}
+        </div>
+    `;
+
+    container.querySelectorAll('input[data-spell-type="cantrip"]').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const id = Number(cb.value);
+            if (cb.checked) {
+                if (appState.selectedCantrips.length >= sc.cantripsToChoose) {
+                    cb.checked = false;
+                    return;
+                }
+                appState.selectedCantrips.push(id);
+            } else {
+                appState.selectedCantrips = appState.selectedCantrips.filter(x => x !== id);
+            }
+            renderSpellSelection(container);
+            renderNavigationButtons();
+        });
+    });
+
+    container.querySelectorAll('input[data-spell-type="spell"]').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const id = Number(cb.value);
+            if (cb.checked) {
+                if (appState.selectedSpells.length >= sc.spellsToChoose) {
+                    cb.checked = false;
+                    return;
+                }
+                appState.selectedSpells.push(id);
+            } else {
+                appState.selectedSpells = appState.selectedSpells.filter(x => x !== id);
+            }
+            renderSpellSelection(container);
+            renderNavigationButtons();
+        });
+    });
+
+    container.querySelectorAll('input[data-spell-type="prepared"]').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const id = Number(cb.value);
+            if (cb.checked) {
+                if (appState.selectedPreparedSpells.length >= preparedCount) {
+                    cb.checked = false;
+                    return;
+                }
+                appState.selectedPreparedSpells.push(id);
+            } else {
+                appState.selectedPreparedSpells = appState.selectedPreparedSpells.filter(x => x !== id);
+            }
+            renderSpellSelection(container);
+            renderNavigationButtons();
+        });
     });
 }
 
@@ -1127,7 +1240,8 @@ function renderCharacterSheet(container) {
     const sc = appState.classSpellcasting;
     const chosenCantrips = (sc?.eligibleCantrips || []).filter(spItem => appState.selectedCantrips.includes(spItem.id));
     const chosenSpells = (sc?.eligibleSpells || []).filter(spItem => appState.selectedSpells.includes(spItem.id));
-    const hasSpells = chosenCantrips.length > 0 || chosenSpells.length > 0;
+    const chosenPrepared = (sc?.preparedEligibleSpells || []).filter(spItem => appState.selectedPreparedSpells.includes(spItem.id));
+    const hasSpells = chosenCantrips.length > 0 || chosenSpells.length > 0 || chosenPrepared.length > 0;
 
     const spellsSectionHTML = hasSpells ? `
         <div class="separator"></div>
@@ -1140,9 +1254,15 @@ function renderCharacterSheet(container) {
                 </div>
             ` : ''}
             ${chosenSpells.length > 0 ? `
-                <div>
+                <div class="mb-3">
                     <span class="font-semibold">Sorts :</span>
                     <p class="text-gray-700">${chosenSpells.map(spItem => spItem.name).join(', ')}</p>
+                </div>
+            ` : ''}
+            ${chosenPrepared.length > 0 ? `
+                <div>
+                    <span class="font-semibold">Sorts préparés :</span>
+                    <p class="text-gray-700">${chosenPrepared.map(spItem => spItem.name).join(', ')}</p>
                 </div>
             ` : ''}
         </div>
@@ -1294,18 +1414,21 @@ function renderCharacterSheet(container) {
 function renderNavigationButtons() {
     const container = document.getElementById('navigation-buttons');
 
-    if (appState.currentStep === 7) {
+    // Étape "Caractéristiques" a ses propres boutons (Retour / Confirmer).
+    if (appState.currentStepKey === 'abilities') {
         container.classList.add('hidden');
         return;
     }
 
     container.classList.remove('hidden');
 
+    const visible = getVisibleSteps();
+    const currentIndex = visible.findIndex(s => s.key === appState.currentStepKey);
+    const isLastStep = currentIndex === visible.length - 1;
     const canNext = canGoNext();
-    const isLastStep = appState.currentStep === steps.length - 1;
 
     container.innerHTML = `
-        <button class="btn btn-outline" id="btn-previous" ${appState.currentStep === 0 ? 'disabled' : ''}>
+        <button class="btn btn-outline" id="btn-previous" ${currentIndex === 0 ? 'disabled' : ''}>
             <svg class="icon"><use href="#icon-chevron-left"/></svg>
             Précédent
         </button>
@@ -1336,125 +1459,70 @@ function renderNavigationButtons() {
     if (btnSave) btnSave.addEventListener('click', handleSave);
 }
 
-function shouldSkipSpellStep() {
-    const sc = appState.classSpellcasting;
-    return !sc || (sc.cantripsToChoose + sc.spellsToChoose) === 0;
-}
-
-function shouldSkipFightingStyleStep() {
-    const fs = appState.classFightingStyle;
-    return !fs || !fs.hasChoice;
-}
-
-function shouldSkipSpecialtiesStep() {
-    const sp = appState.classSpecialties;
-    return !sp || (!sp.favoredEnemy.hasChoice && !sp.favoredTerrain.hasChoice);
-}
-
-function shouldSkipExpertiseStep() {
-    const ex = appState.classExpertise;
-    return !ex || !ex.hasChoice;
-}
-
+// Navigation simplifiée : plus besoin de logique de saut (shouldSkipX,
+// cascades de if) — la liste des étapes visibles est déjà filtrée par
+// getVisibleSteps(), donc "suivant"/"précédent" avancent simplement d'une
+// position dans CETTE liste.
 function handleNext() {
-    if (!canGoNext() || appState.currentStep >= steps.length - 1) return;
-
-    let nextStep = appState.currentStep + 1;
-
-    if (nextStep === 2 && (appState.selectedRace?.subspecies?.length || 0) === 0) {
-        appState.selectedSubspecies = null;
-        nextStep = 3;
+    if (!canGoNext()) return;
+    const visible = getVisibleSteps();
+    const idx = visible.findIndex(s => s.key === appState.currentStepKey);
+    if (idx < visible.length - 1) {
+        appState.currentStepKey = visible[idx + 1].key;
+        render();
     }
-    if (nextStep === 4 && shouldSkipSpellStep()) {
-        nextStep = 5;
-    }
-    if (nextStep === 5 && shouldSkipFightingStyleStep()) {
-        nextStep = 6;
-    }
-    if (nextStep === 6 && shouldSkipSpecialtiesStep()) {
-        nextStep = 7;
-    }
-    if (nextStep === 10 && shouldSkipExpertiseStep()) {
-        nextStep = 11;
-    }
-
-    appState.currentStep = nextStep;
-    render();
 }
 
 function handlePrevious() {
-    if (appState.currentStep <= 0) return;
-
-    let prevStep = appState.currentStep - 1;
-
-    if (prevStep === 10 && shouldSkipExpertiseStep()) {
-        prevStep = 9;
+    const visible = getVisibleSteps();
+    const idx = visible.findIndex(s => s.key === appState.currentStepKey);
+    if (idx > 0) {
+        appState.currentStepKey = visible[idx - 1].key;
+        render();
     }
-    if (prevStep === 6 && shouldSkipSpecialtiesStep()) {
-        prevStep = 5;
-    }
-    if (prevStep === 5 && shouldSkipFightingStyleStep()) {
-        prevStep = 4;
-    }
-    if (prevStep === 4 && shouldSkipSpellStep()) {
-        prevStep = 3;
-    }
-    if (prevStep === 2 && (appState.selectedRace?.subspecies?.length || 0) === 0) {
-        prevStep = 1;
-    }
-
-    appState.currentStep = prevStep;
-    render();
 }
 
 function canGoNext() {
-    switch (appState.currentStep) {
-        case 0:
+    switch (appState.currentStepKey) {
+        case 'name':
             return appState.characterName.trim().length > 0;
-        case 1:
+        case 'race':
             return appState.selectedRace !== null;
-        case 2: {
-            const options = appState.selectedRace?.subspecies || [];
-            if (options.length === 0) return true;
+        case 'subspecies':
             return appState.selectedSubspecies !== null;
-        }
-        case 3:
+        case 'class':
+            // Le bouton reste désactivé tant que les 4 chargements dépendant
+            // de la classe ne sont pas terminés (évite une course).
             return appState.selectedClass !== null
                 && appState.classSpellcasting !== null
                 && appState.classFightingStyle !== null
                 && appState.classSpecialties !== null
                 && appState.classExpertise !== null;
-        case 4: {
-            const sc = appState.classSpellcasting;
-            if (!sc) return true;
-            const cantripsOk = appState.selectedCantrips.length === sc.cantripsToChoose;
-            const spellsOk = appState.selectedSpells.length === sc.spellsToChoose;
-            return cantripsOk && spellsOk;
-        }
-        case 5: {
-            const fs = appState.classFightingStyle;
-            if (!fs || !fs.hasChoice) return true;
+        case 'fightingStyle':
             return appState.selectedFightingStyle !== null;
-        }
-        case 6: {
+        case 'specialties': {
             const sp = appState.classSpecialties;
-            if (!sp) return true;
             const enemyOk = !sp.favoredEnemy.hasChoice || appState.selectedFavoredEnemy !== null;
             const terrainOk = !sp.favoredTerrain.hasChoice || appState.selectedFavoredTerrain !== null;
             return enemyOk && terrainOk;
         }
-        case 7:
+        case 'abilities':
             return appState.abilityScores !== null;
-        case 8:
-            return appState.selectedBackground !== null;
-        case 9:
-            return appState.classSkills.length === appState.selectedClass.skillChoices;
-        case 10: {
-            const ex = appState.classExpertise;
-            if (!ex || !ex.hasChoice) return true;
-            return appState.selectedExpertise.length === ex.count;
+        case 'spells': {
+            const sc = appState.classSpellcasting;
+            if (!sc) return true;
+            const cantripsOk = appState.selectedCantrips.length === sc.cantripsToChoose;
+            const spellsOk = appState.selectedSpells.length === sc.spellsToChoose;
+            const preparedOk = !sc.isPreparedCaster || appState.selectedPreparedSpells.length === getPreparedSpellCount();
+            return cantripsOk && spellsOk && preparedOk;
         }
-        case 11:
+        case 'background':
+            return appState.selectedBackground !== null;
+        case 'skills':
+            return appState.classSkills.length === appState.selectedClass.skillChoices;
+        case 'expertise':
+            return appState.selectedExpertise.length === appState.classExpertise.count;
+        case 'equipment':
             return Object.keys(appState.selectedEquipment).length ===
                    (appState.selectedClass.equipmentChoices?.length || 0);
         default:
@@ -1476,6 +1544,7 @@ function handleExport() {
         skills: appState.selectedSkills,
         cantrips: appState.selectedCantrips,
         spells: appState.selectedSpells,
+        preparedSpells: appState.selectedPreparedSpells,
         fightingStyleId: appState.selectedFightingStyle,
         favoredEnemyId: appState.selectedFavoredEnemy,
         favoredTerrainId: appState.selectedFavoredTerrain,
@@ -1542,7 +1611,11 @@ async function handleSave() {
         return;
     }
 
-    const knownSpells = [...appState.selectedCantrips, ...appState.selectedSpells];
+    const knownSpells = [
+        ...appState.selectedCantrips,
+        ...appState.selectedSpells,
+        ...appState.selectedPreparedSpells
+    ];
 
     const characterData = {
         name: appState.characterName,
@@ -1586,7 +1659,7 @@ async function handleSave() {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Erreur lors de l’enregistrement');
+            throw new Error(errorData.error || 'Erreur lors de l enregistrement');
         }
 
         const result = await response.json();
